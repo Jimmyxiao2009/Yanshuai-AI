@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mv OnEmbedder.cs AI/)",
+      "Bash(mv RagMemory.cs AI/)",
+      "Bash(mv AppSettings.cs AppState.cs DataManager.cs ApiLogger.cs Tools.cs Core/)",
+      "Bash(mv Models.cs Models/)",
+      "Bash(mv MainPage.xaml MainPage.xaml.cs Pages/Chat/)",
+      "Bash(grep -v 'obj\\\\\\\\')"
+    ]
+  }
+}

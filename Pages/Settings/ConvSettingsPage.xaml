@@ -1,0 +1,178 @@
+<Page
+    x:Class="yanshuai.ConvSettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid x:Name="RootGrid" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Margin="14,16,14,16">
+            <TextBlock Text="对话设置" FontSize="32" FontWeight="Light"/>
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="1">
+            <StackPanel>
+
+                <!-- API Profile -->
+                <StackPanel Margin="14,0,14,8">
+                    <TextBlock Text="API 配置" FontSize="12" FontWeight="SemiBold"
+                               Foreground="{ThemeResource SystemAccentColor}" CharacterSpacing="80"/>
+                    <Border BorderBrush="{ThemeResource SystemAccentColor}"
+                            BorderThickness="0,0,0,1" Margin="0,3,0,0" Opacity="0.4"/>
+                </StackPanel>
+                <ComboBox x:Name="ApiProfilePicker" HorizontalAlignment="Stretch"
+                          SelectionChanged="ApiProfilePicker_SelectionChanged"
+                          Margin="14,0,14,20"/>
+
+                <!-- Rename -->
+                <StackPanel Margin="14,0,14,8">
+                    <TextBlock Text="对话名称" FontSize="12" FontWeight="SemiBold"
+                               Foreground="{ThemeResource SystemAccentColor}" CharacterSpacing="80"/>
+                    <Border BorderBrush="{ThemeResource SystemAccentColor}"
+                            BorderThickness="0,0,0,1" Margin="0,3,0,0" Opacity="0.4"/>
+                </StackPanel>
+                <Grid Margin="14,0,14,20">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox x:Name="TitleBox" Grid.Column="0" Margin="0,0,8,0" Height="40"/>
+                    <Button Grid.Column="1" Content="重命名"
+                            Click="RenameBtn_Click" Height="40" Padding="14,0"/>
+                </Grid>
+
+                <!-- Context Window -->
+                <StackPanel Margin="14,0,14,8">
+                    <TextBlock Text="上下文窗口" FontSize="12" FontWeight="SemiBold"
+                               Foreground="{ThemeResource SystemAccentColor}" CharacterSpacing="80"/>
+                    <Border BorderBrush="{ThemeResource SystemAccentColor}"
+                            BorderThickness="0,0,0,1" Margin="0,3,0,0" Opacity="0.4"/>
+                </StackPanel>
+                <Grid Margin="14,0,14,4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Slider x:Name="ContextWindowSlider" Grid.Column="0"
+                            Minimum="0" Maximum="100" StepFrequency="5"
+                            ValueChanged="ContextWindowSlider_ValueChanged"
+                            VerticalAlignment="Center"/>
+                    <TextBlock x:Name="ContextWindowLabel" Grid.Column="1"
+                               Width="52" TextAlignment="Right"
+                               VerticalAlignment="Center" FontSize="14"
+                               Margin="10,0,0,0"/>
+                </Grid>
+                <TextBlock Text="0 = 不限（发送全部消息）。长记忆开启时建议设 20～40。"
+                           FontSize="11" Opacity="0.5" TextWrapping="Wrap"
+                           Margin="14,0,14,20"/>
+
+                <!-- Long Memory (per-conversation) -->
+                <StackPanel Margin="14,0,14,8">
+                    <TextBlock Text="长记忆" FontSize="12" FontWeight="SemiBold"
+                               Foreground="{ThemeResource SystemAccentColor}" CharacterSpacing="80"/>
+                    <Border BorderBrush="{ThemeResource SystemAccentColor}"
+                            BorderThickness="0,0,0,1" Margin="0,3,0,0" Opacity="0.4"/>
+                </StackPanel>
+                <TextBlock Text="每隔 X 轮对话 AI 自动总结记忆，每隔 Y 轮将记忆注入上下文"
+                           TextWrapping="Wrap" Opacity="0.55" FontSize="13"
+                           Margin="14,0,14,10"/>
+
+                <Grid Margin="14,0,14,0"
+                      BorderBrush="{ThemeResource SystemControlForegroundBaseLowBrush}"
+                      BorderThickness="0,0,0,1" Padding="0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                        <TextBlock Text="启用长记忆" FontSize="15"/>
+                        <TextBlock Text="仅对此对话生效" FontSize="12" Opacity="0.55" Margin="0,2,0,0"/>
+                    </StackPanel>
+                    <ToggleSwitch x:Name="MemEnabledToggle" Grid.Column="1"
+                                  VerticalAlignment="Center"
+                                  Toggled="MemEnabledToggle_Toggled"
+                                  Margin="0,0,-90,0"/>
+                </Grid>
+
+                <TextBlock Text="总结使用的 API" FontSize="13" Opacity="0.6" Margin="14,14,14,6"/>
+                <ComboBox x:Name="MemApiPicker" HorizontalAlignment="Stretch"
+                          SelectionChanged="MemApiPicker_SelectionChanged"
+                          Margin="14,0,14,14"/>
+
+                <TextBlock x:Name="MemSumLabel" Text="每 10 轮总结一次"
+                           FontSize="13" Margin="14,0,14,4"/>
+                <Slider x:Name="MemSumSlider" Minimum="2" Maximum="50" StepFrequency="1"
+                        ValueChanged="MemSumSlider_ValueChanged" Margin="14,0,14,14"/>
+
+                <TextBlock x:Name="MemInjLabel" Text="每 1 轮注入一次记忆"
+                           FontSize="13" Margin="14,0,14,4"/>
+                <Slider x:Name="MemInjSlider" Minimum="1" Maximum="20" StepFrequency="1"
+                        ValueChanged="MemInjSlider_ValueChanged" Margin="14,0,14,20"/>
+
+                <!-- Memory list -->
+                <StackPanel Margin="14,0,14,8">
+                    <TextBlock Text="长期记忆内容" FontSize="12" FontWeight="SemiBold"
+                               Foreground="{ThemeResource SystemAccentColor}" CharacterSpacing="80"/>
+                    <Border BorderBrush="{ThemeResource SystemAccentColor}"
+                            BorderThickness="0,0,0,1" Margin="0,3,0,0" Opacity="0.4"/>
+                </StackPanel>
+                <TextBlock Text="由 AI 自动生成，完成一轮总结后在此显示"
+                           FontSize="12" Opacity="0.5" Margin="14,0,14,8" TextWrapping="Wrap"/>
+
+                <ListView x:Name="MemoryList" SelectionMode="None"
+                          Background="Transparent" BorderThickness="0" Margin="0,0,0,8">
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                            <Setter Property="Padding" Value="0"/>
+                            <Setter Property="MinHeight" Value="0"/>
+                        </Style>
+                    </ListView.ItemContainerStyle>
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Border BorderBrush="{ThemeResource SystemControlForegroundBaseLowBrush}"
+                                    BorderThickness="0,0,0,1" Padding="14,8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="{Binding}"
+                                               TextWrapping="Wrap" FontSize="14"
+                                               VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <Button Grid.Column="1" Tag="{Binding}"
+                                            Click="DeleteMemoryItem_Click"
+                                            Background="Transparent" BorderThickness="0"
+                                            Width="36" Height="36" Padding="0">
+                                        <FontIcon Glyph="&#xE74D;" FontSize="14" Opacity="0.5"/>
+                                    </Button>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+
+                <Button Content="清除全部记忆" Click="ClearMemoryBtn_Click"
+                        Foreground="Red" Background="Transparent"
+                        HorizontalAlignment="Left" Padding="14,8" Margin="14,0,0,24"/>
+
+            </StackPanel>
+        </ScrollViewer>
+
+    </Grid>
+
+    <Page.BottomAppBar>
+        <CommandBar>
+            <AppBarButton x:Name="DeleteConvBtn" Icon="Delete" Label="删除对话" Click="DeleteConvBtn_Click"/>
+            <CommandBar.Content>
+                <AppBarButton Icon="Back" Label="" Click="BackBtn_Click"/>
+            </CommandBar.Content>
+        </CommandBar>
+    </Page.BottomAppBar>
+</Page>

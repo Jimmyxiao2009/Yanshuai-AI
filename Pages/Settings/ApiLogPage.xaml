@@ -1,0 +1,108 @@
+<Page
+    x:Class="yanshuai.ApiLogPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid x:Name="RootGrid" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- 标题 -->
+        <StackPanel Grid.Row="0" Margin="14,16,14,8">
+            <TextBlock Text="API 日志" FontSize="32" FontWeight="Light"/>
+            <TextBlock Text="最近 30 条请求，仅保存在内存中，重启后清除"
+                       FontSize="12" Opacity="0.5" Margin="0,4,0,0"/>
+        </StackPanel>
+
+        <!-- 列表 / 空状态 -->
+        <Grid Grid.Row="1">
+            <ListView x:Name="LogList"
+                      SelectionMode="Single"
+                      IsTabStop="False"
+                      SelectionChanged="LogList_SelectionChanged">
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                        <Setter Property="Padding" Value="0"/>
+                        <Setter Property="Margin" Value="0"/>
+                        <Setter Property="MinHeight" Value="0"/>
+                    </Style>
+                </ListView.ItemContainerStyle>
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <Border BorderBrush="{ThemeResource SystemControlForegroundBaseLowBrush}"
+                                BorderThickness="0,0,0,1" Padding="14,10">
+                            <StackPanel>
+                                <TextBlock Text="{Binding Title}" FontSize="14"/>
+                                <TextBlock Text="{Binding Provider}" FontSize="11" Opacity="0.5" Margin="0,2,0,0"/>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+
+            <StackPanel x:Name="EmptyState"
+                        VerticalAlignment="Center" HorizontalAlignment="Center"
+                        Visibility="Collapsed">
+                <FontIcon Glyph="&#xE8BD;" FontSize="48" Opacity="0.2"/>
+                <TextBlock Text="暂无日志" FontSize="18" FontWeight="Light"
+                           Opacity="0.45" HorizontalAlignment="Center" Margin="0,14,0,0"/>
+                <TextBlock Text="发送一条消息后日志会出现在这里"
+                           FontSize="13" Opacity="0.35"
+                           HorizontalAlignment="Center" Margin="0,4,0,0"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- 详情面板 -->
+        <Border x:Name="DetailPanel"
+                Grid.Row="2"
+                BorderBrush="{ThemeResource SystemControlForegroundBaseLowBrush}"
+                BorderThickness="0,1,0,0"
+                MaxHeight="280"
+                Visibility="Collapsed">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- tab 切换 -->
+                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="8,6,8,0">
+                    <Button x:Name="ShowRequestBtn" Content="请求"
+                            Click="ShowRequestBtn_Click"
+                            Background="{ThemeResource SystemAccentColor}"
+                            Foreground="White"
+                            Padding="12,6" Margin="0,0,6,0"/>
+                    <Button x:Name="ShowResponseBtn" Content="响应"
+                            Click="ShowResponseBtn_Click"
+                            Background="Transparent"
+                            Padding="12,6" Margin="0,0,6,0"/>
+                    <Button Content="复制" Click="CopyDetailBtn_Click"
+                            Padding="12,6"/>
+                </StackPanel>
+
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="8,6,8,8">
+                    <TextBlock x:Name="DetailText"
+                               FontSize="11" FontFamily="Courier New"
+                               TextWrapping="Wrap" IsTextSelectionEnabled="True"
+                               Opacity="0.85"/>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+    </Grid>
+
+    <Page.BottomAppBar>
+        <CommandBar>
+            <AppBarButton Icon="Delete" Label="清除日志" Click="ClearBtn_Click"/>
+            <CommandBar.Content>
+                <AppBarButton Icon="Back" Label="" Click="BackBtn_Click"/>
+            </CommandBar.Content>
+        </CommandBar>
+    </Page.BottomAppBar>
+</Page>

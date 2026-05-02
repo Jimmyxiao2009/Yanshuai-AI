@@ -1,0 +1,2477 @@
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.IO;
+using System.Linq;
+using System.Net.Http;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices.WindowsRuntime;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Json;
+using System.Text;
+using System.Threading.Tasks;
+using Windows.Graphics.Imaging;
+using Windows.UI;
+using Windows.UI.ViewManagement;
+using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Navigation;
+
+namespace yanshuai
+{
+    // ══════════════════════════════════════════════════════════════════════════
+    // Chat bubble view-model
+    // ══════════════════════════════════════════════════════════════════════════
+
+    public class ChatBubble : INotifyPropertyChanged
+    {
+        private static readonly string[] _thinkingVerbs =
+        {
+            "Thinking", "Pondering", "Reflecting", "Reasoning", "Analyzing",
+            "Considering", "Processing", "Deliberating", "Contemplating", "Mustering",
+            "Wondering", "Exploring", "Examining", "Evaluating", "Synthesizing"
+        };
+        private static readonly Random _rng = new Random();
+
+        private string _content = "";
+        private string _reasoningContent = "";
+        private bool _reasoningExpanded = false;
+        private bool _isStreaming = false;
+        private bool _isStreamingReasoning = false;
+        private string _streamingVerb = "";
+
+        public string Role { get; set; }
+
+        public string Content
+        {
+            get => _content;
+            set { _content = value; OnProp(); }
+        }
+
+        public string ReasoningContent
+        {
+            get => _reasoningContent;
+            set
+            {
+                _reasoningContent = value;
+                OnProp();
+                OnProp(nameof(HasReasoning));
+                OnProp(nameof(HasReasoningVisibility));
+                OnProp(nameof(ReasoningLabel));
+            }
+        }
+
+        public bool HasReasoning => !string.IsNullOrEmpty(_reasoningContent);
+
+        public bool ReasoningExpanded
+        {
+            get => _reasoningExpanded;
+            set
+            {
+                _reasoningExpanded = value;
+                OnProp();
+                OnProp(nameof(ReasoningBodyVisibility));
+                OnProp(nameof(ReasoningLabel));
+            }
+        }
+
+        public Visibility HasReasoningVisibility =>
+            HasReasoning ? Visibility.Visible : Visibility.Collapsed;
+        public Visibility ReasoningBodyVisibility =>
+            ReasoningExpanded ? Visibility.Visible : Visibility.Collapsed;
+        public string ReasoningLabel
+        {
+            get
+            {
+                if (_isStreamingReasoning)
+                    return _streamingVerb + "…";
+                return ReasoningExpanded ? "思考过程 ▲" : "思考过程 ▼";
+            }
+        }
+
+        /// <summary>
+        /// Call when reasoning stream begins to pick a random verb and show it.
+        /// Call with false when reasoning stream ends.
+        /// </summary>
+        public bool IsStreamingReasoning
+        {
+            get => _isStreamingReasoning;
+            set
+            {
+                if (value && !_isStreamingReasoning)
+                    _streamingVerb = _thinkingVerbs[_rng.Next(_thinkingVerbs.Length)];
+                _isStreamingReasoning = value;
+                OnProp(nameof(ReasoningLabel));
+            }
+        }
+
+        public HorizontalAlignment Align =>
+            Role == "user" ? HorizontalAlignment.Right : HorizontalAlignment.Left;
+
+        // ── Streaming flag controls which content view is shown ───────────────
+
+        /// <summary>
+        /// Set to true while the AI is streaming. The bubble shows a plain TextBlock.
+        /// Set to false when the stream finishes; the bubble switches to the
+        /// markdown-rendered RichTextBlock.
+        /// </summary>
+        public bool IsStreaming
+        {
+            get => _isStreaming;
+            set
+            {
+                _isStreaming = value;
+                OnProp();
+                OnProp(nameof(UserVisibility));
+                OnProp(nameof(AiStreamingVisibility));
+                OnProp(nameof(AiRenderedVisibility));
+                OnProp(nameof(RegenerateBtnVisibility)); // show after stream ends
+            }
+        }
+
+        // User bubbles: always plain text (left column)
+        public Visibility UserVisibility =>
+            Role == "user" ? Visibility.Visible : Visibility.Collapsed;
+
+        // AI bubble while streaming: plain TextBlock (updates smoothly every token)
+        public Visibility AiStreamingVisibility =>
+            Role != "user" && _isStreaming ? Visibility.Visible : Visibility.Collapsed;
+
+        // AI bubble after stream completes: RichTextBlock with markdown
+        public Visibility AiRenderedVisibility =>
+            Role != "user" && !_isStreaming ? Visibility.Visible : Visibility.Collapsed;
+
+        public SolidColorBrush BackgroundColor { get; set; }
+        public SolidColorBrush ForegroundColor { get; set; }
+        public SolidColorBrush ReasoningBgColor { get; set; }
+
+        // Inline highlight colors passed to MarkdownBlock (hex strings, empty = default)
+        public string QuoteColor   { get; set; } = "";
+        public string BracketColor { get; set; } = "";
+
+        // ── Attached image (user messages only) ───────────────────────────────
+        private Windows.UI.Xaml.Media.ImageSource _imageSource;
+        public Windows.UI.Xaml.Media.ImageSource ImageSource
+        {
+            get => _imageSource;
+            set { _imageSource = value; OnProp(); OnProp(nameof(HasImageVisibility)); }
+        }
+        public Visibility HasImageVisibility =>
+            _imageSource != null && Role == "user" ? Visibility.Visible : Visibility.Collapsed;
+
+        // ── Message identity (for actions) ────────────────────────────────────
+        public string MessageId { get; set; }   // maps to ConversationMessage.Id
+        public int    MessageIndex { get; set; } // index in _conv.Messages at render time
+
+        // ── Branch data (set by MainPage after creating bubble) ───────────────
+        private BranchPoint _branchData;
+        public BranchPoint BranchData
+        {
+            get => _branchData;
+            set
+            {
+                _branchData = value;
+                OnProp();
+                OnProp(nameof(BranchNavVisibility));
+                OnProp(nameof(BranchLabel));
+            }
+        }
+        public Visibility BranchNavVisibility =>
+            Role == "user" && _branchData != null && _branchData.Count > 1
+                ? Visibility.Visible : Visibility.Collapsed;
+        public string BranchLabel =>
+            _branchData != null ? $"{_branchData.ActiveIndex + 1} / {_branchData.Count}" : "";
+
+        // ── Per-bubble action button visibility ───────────────────────────────
+        public Visibility EditBtnVisibility =>
+            Role == "user" ? Visibility.Visible : Visibility.Collapsed;
+        public Visibility RegenerateBtnVisibility =>
+            Role != "user" && !_isStreaming ? Visibility.Visible : Visibility.Collapsed;
+        public Visibility ContinueBtnVisibility =>
+            Role != "user" && !_isStreaming ? Visibility.Visible : Visibility.Collapsed;
+
+        // ── Search status (tool use 进行中显示在气泡下方) ─────────────────────
+        private string _searchStatusText = "";
+        public string SearchStatusText
+        {
+            get => _searchStatusText;
+            set { _searchStatusText = value; OnProp(); OnProp(nameof(SearchStatusVisibility)); }
+        }
+        public Visibility SearchStatusVisibility =>
+            !string.IsNullOrEmpty(_searchStatusText) && Role != "user"
+                ? Visibility.Visible : Visibility.Collapsed;
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        private void OnProp([CallerMemberName] string n = null)
+            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(n));
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // API types
+    // ══════════════════════════════════════════════════════════════════════════
+
+    [DataContract] internal class ApiRequestMessage
+    {
+        [DataMember(Name = "role")]    public string Role    { get; set; }
+        [DataMember(Name = "content")] public string Content { get; set; }
+        // 多模态附件（不序列化，手动拼JSON）
+        public string ImageBase64    { get; set; }
+        public string ImageMimeType  { get; set; }
+        // 当非空时，直接作为content的JSON值输出（用于Claude content block数组）
+        public string RawContentJson { get; set; }
+        // OpenAI tool消息的tool_call_id
+        public string ToolCallId { get; set; }
+    }
+    [DataContract] internal class ApiRequest
+    {
+        [DataMember(Name = "model")]    public string Model    { get; set; }
+        [DataMember(Name = "messages")] public List<ApiRequestMessage> Messages { get; set; }
+        [DataMember(Name = "stream")]   public bool Stream { get; set; } = true;
+    }
+    [DataContract] internal class ApiResponseMessage  { [DataMember(Name = "content")] public string Content { get; set; } }
+    [DataContract] internal class ApiResponseChoice   { [DataMember(Name = "message")] public ApiResponseMessage Message { get; set; } }
+    [DataContract] internal class ApiResponse
+    {
+        [DataMember(Name = "choices")] public List<ApiResponseChoice> Choices { get; set; }
+        [DataMember(Name = "error")]   public ApiErrorDetail Error { get; set; }
+    }
+    [DataContract] internal class ApiErrorDetail { [DataMember(Name = "message")] public string Message { get; set; } }
+    [DataContract] internal class StreamDelta
+    {
+        [DataMember(Name = "content")]           public string Content          { get; set; }
+        [DataMember(Name = "reasoning_content")] public string ReasoningContent { get; set; }
+    }
+    [DataContract] internal class StreamChoice  { [DataMember(Name = "delta")] public StreamDelta Delta { get; set; } }
+    [DataContract] internal class StreamChunk   { [DataMember(Name = "choices")] public List<StreamChoice> Choices { get; set; } }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // MainPage
+    // ══════════════════════════════════════════════════════════════════════════
+
+    public sealed partial class MainPage : Page
+    {
+        private static readonly HttpClient _http = new HttpClient { Timeout = System.TimeSpan.FromSeconds(300) };
+        private readonly ObservableCollection<ChatBubble> _bubbles = new ObservableCollection<ChatBubble>();
+        private Conversation _conv;
+        private string _loadedConvId;  // 上次渲染的对话 ID
+        private bool _isSending = false;
+        private bool _isPendingConv = false;  // true = _conv not yet added to DataManager
+        private string _pendingImageBase64 = null;
+        private string _pendingImageMimeType = null;
+        private System.Threading.CancellationTokenSource _streamCts = null;
+
+        // ── Cached brushes (rebuilt once per conversation, not once per bubble) ─
+        private static readonly SolidColorBrush _whiteBrush      = new SolidColorBrush(Colors.White);
+        private static readonly SolidColorBrush _reasoningBrush  = new SolidColorBrush(Color.FromArgb(40, 150, 150, 170));
+        private SolidColorBrush _cachedUserBg;
+        private SolidColorBrush _cachedUserFg;
+        private SolidColorBrush _cachedAiBg;
+        private SolidColorBrush _cachedAiFg;
+        // Accent color: UISettings construction is expensive on W10M — cache it
+        private static Color    _accentColor;
+        private static bool     _accentCached = false;
+
+        public MainPage()
+        {
+            InitializeComponent();
+            ChatItems.ItemsSource = _bubbles;
+            SetStatusBarColor();
+        }
+
+        // ── Navigation ────────────────────────────────────────────────────────
+
+        protected override async void OnNavigatedTo(NavigationEventArgs e)
+        {
+            base.OnNavigatedTo(e);
+            _isPendingConv = false;
+            if (DataManager.Data.Conversations == null ||
+                (DataManager.Data.Conversations.Count == 0 && DataManager.Data.ApiProfiles.Count == 0))
+            {
+                await DataManager.LoadAsync();
+            }
+            AppSettings.ApplyTheme(RootGrid, this);
+            SetSendButtonColor();
+            // 刷新侧边栏用户名显示
+            var up = DataManager.GetActiveUserProfile();
+            if (NavProfileName != null)
+                NavProfileName.Text = (!string.IsNullOrEmpty(up?.Name))
+                    ? up.Name : AppSettings.S("用户资料", "User Profile");
+
+            // 启动行为：每次从外部导航到MainPage（不是返回）时触发
+            if (AppState.IsFirstLaunch)
+            {
+                AppState.IsFirstLaunch = false;
+                int startup = AppSettings.StartupBehavior;
+                if (startup == 2) // 启动直接进对话列表
+                {
+                    AppState.ActiveConversation = DataManager.GetOrCreateDefaultConversation();
+                    // Calling Frame.Navigate inside OnNavigatedTo corrupts the Frame
+                    // journal — defer to the next dispatcher tick so the current
+                    // navigation completes first.
+                    var f = Frame;
+                    _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                    {
+                        f.Navigate(typeof(ConversationsListPage));
+                        if (f.BackStack.Count > 0)
+                            f.BackStack.RemoveAt(f.BackStack.Count - 1);
+                    });
+                    return;
+                }
+                else if (startup == 1) // 启动新建对话（延迟到第一条消息才写入）
+                {
+                    _conv = new Conversation
+                    {
+                        Title           = "新对话",
+                        ApiProfileId    = DataManager.Data.SelectedApiProfileId    ?? "",
+                        CharacterCardId = DataManager.Data.SelectedCharacterCardId ?? "",
+                    };
+                    _isPendingConv = true;
+                }
+                else // 最近对话（默认）
+                {
+                    _conv = DataManager.GetOrCreateDefaultConversation();
+                }
+            }
+            else if (AppState.ActiveConversation != null)
+            {
+                // 从其他页面返回，恢复上次的对话
+                _conv = AppState.ActiveConversation;
+                // 如果这个对话还未写入列表（pending），保持挂起状态
+                _isPendingConv = !DataManager.Data.Conversations.Contains(_conv);
+            }
+            else
+            {
+                _conv = DataManager.GetOrCreateDefaultConversation();
+            }
+            AppState.ActiveConversation = _conv;
+            if (!_isPendingConv)
+                DataManager.Data.LastActiveConversationId = _conv.Id;
+
+            RebuildBrushCache();
+            UpdateTitleLabel();
+            ApplyConvAppearance();
+
+            // 恢复 WebSearch 图标状态
+            if (WebSearchIcon != null)
+            {
+                WebSearchIcon.Foreground = _webSearchEnabled
+                    ? new SolidColorBrush(Color.FromArgb(255, 0, 120, 215))
+                    : new SolidColorBrush(AppSettings.IsDark ? Colors.White : Colors.Black);
+                WebSearchIcon.Opacity = _webSearchEnabled ? 1.0 : 0.6;
+            }
+
+            // 强制设置工具栏图标前景色（防止深色模式下图标不可见）
+            var toolbarFg = new SolidColorBrush(AppSettings.IsDark ? Colors.White : Colors.Black);
+            if (FullscreenInputIcon != null) FullscreenInputIcon.Foreground = toolbarFg;
+            if (AttachImageIcon    != null) AttachImageIcon.Foreground    = toolbarFg;
+
+            var messages = _conv.Messages.ToList();
+            bool sameConv = _loadedConvId == _conv.Id;
+            _loadedConvId = _conv.Id;
+
+            // ── 增量刷新：同一对话且气泡数量匹配，跳过重建 ──────────────────
+            if (sameConv && _bubbles.Count == messages.Count && messages.Count > 0)
+            {
+                ScrollToBottom();
+                // 检查后台任务（streaming 已结束但 UI 未更新的情况）
+                if (!AppState.IsRunning(_conv.Id) && _isSending)
+                {
+                    _isSending = false;
+                    SubmitButton.IsEnabled = true;
+                    if (SubmitIcon != null) SubmitIcon.Glyph = "\uE74A";
+                }
+                goto checkBackgroundTask;
+            }
+
+            // ── 增量追加：同一对话但末尾有新消息 ────────────────────────────
+            if (sameConv && _bubbles.Count < messages.Count && _bubbles.Count > 0)
+            {
+                int startIdx = _bubbles.Count;
+                for (int i = startIdx; i < messages.Count; i++)
+                    _bubbles.Add(BuildBubble(messages[i], i));
+
+                if (WelcomePanel != null)
+                    WelcomePanel.Visibility = Windows.UI.Xaml.Visibility.Collapsed;
+                ScrollToBottom();
+                goto checkBackgroundTask;
+            }
+
+            // ── 完整重建：对话切换或首次加载 ─────────────────────────────────
+            _bubbles.Clear();
+
+            if (messages.Count == 0)
+            {
+                MaybeShowFirstMessage();
+                if (_bubbles.Count == 0 && WelcomePanel != null)
+                    WelcomePanel.Visibility = Windows.UI.Xaml.Visibility.Visible;
+                return;
+            }
+
+            if (WelcomePanel != null)
+                WelcomePanel.Visibility = Windows.UI.Xaml.Visibility.Collapsed;
+
+            // 显示加载遮罩
+            const int chunkSize = 30;
+            if (messages.Count > chunkSize && LoadingOverlay != null)
+            {
+                LoadingOverlay.Visibility = Visibility.Visible;
+                LoadingProgress.Value = 0;
+            }
+
+            // 分批正向加载，每批后 yield 避免 UI 无响应
+            for (int i = 0; i < messages.Count; i += chunkSize)
+            {
+                int end = Math.Min(i + chunkSize, messages.Count);
+                for (int j = i; j < end; j++)
+                    _bubbles.Add(BuildBubble(messages[j], j));
+
+                if (LoadingOverlay != null && LoadingOverlay.Visibility == Visibility.Visible)
+                {
+                    LoadingProgress.Value = end * 100 / messages.Count;
+                    LoadingText.Text = string.Format("加载中… {0}/{1}", end, messages.Count);
+                }
+
+                await Task.Delay(1);
+            }
+
+            // 全部加载完：滚到底部，隐藏遮罩
+            ScrollToBottom();
+            await Task.Delay(50); // 等 ScrollViewer 完成布局
+            ScrollToBottom();
+            if (LoadingOverlay != null)
+                LoadingOverlay.Visibility = Visibility.Collapsed;
+
+            checkBackgroundTask:
+            var convId = _conv?.Id;
+            if (convId != null && AppState.IsRunning(convId))
+            {
+                var bt = AppState.GetTask(convId);
+                // 用后台已累积的内容创建一个占位气泡，显示实时进度
+                var recoverBubble = new ChatBubble
+                {
+                    Role             = "assistant",
+                    Content          = bt?.Content   ?? "",
+                    ReasoningContent = bt?.Reasoning ?? "",
+                    IsStreaming      = true,
+                    BackgroundColor  = AiBubbleBg(), ForegroundColor = AiBubbleFg(),
+                    ReasoningBgColor = _reasoningBrush,
+                };
+                _bubbles.Add(recoverBubble);
+                _isSending = true;
+                SubmitButton.IsEnabled = true;
+                if (SubmitIcon != null) SubmitIcon.Glyph = "\uE711";
+                ScrollToBottom();
+
+                // 让恢复气泡持续跟踪 AppState 内容，直到任务完成
+                _ = Task.Run(async () =>
+                {
+                    while (AppState.IsRunning(convId))
+                    {
+                        await Task.Delay(200);
+                        var cur = AppState.GetTask(convId);
+                        await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                        {
+                            if (cur != null)
+                            {
+                                recoverBubble.Content          = cur.Content;
+                                recoverBubble.ReasoningContent = cur.Reasoning;
+                            }
+                        });
+                    }
+                    // 任务完成，同步最终状态并恢复 UI
+                    await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                    {
+                        recoverBubble.IsStreaming = false;
+                        _isSending = false;
+                        SubmitButton.IsEnabled = true;
+                        if (SubmitIcon != null) SubmitIcon.Glyph = "\uE74A";
+                        // 对话内容已由后台任务写入数据库，重新加载最后一条 AI 消息的内容
+                        var lastAi = _conv.Messages.LastOrDefault(m => m.Role == "assistant");
+                        if (lastAi != null)
+                        {
+                            recoverBubble.Content          = lastAi.Content;
+                            recoverBubble.ReasoningContent = lastAi.ReasoningContent ?? "";
+                            recoverBubble.MessageId        = lastAi.Id;
+                        }
+                        ScrollToBottom();
+                    });
+                });
+            }
+        }
+
+        protected override async void OnNavigatedFrom(NavigationEventArgs e)
+        {
+            base.OnNavigatedFrom(e);
+            // 不取消 _streamCts：后台任务继续运行，结果会写入数据库
+            // 只保存当前状态
+            await DataManager.SaveAsync();
+        }
+
+        // ── Hamburger ─────────────────────────────────────────────────────────
+
+        private void HamburgerBtn_Click(object sender, RoutedEventArgs e)
+            => NavPane.IsPaneOpen = !NavPane.IsPaneOpen;
+
+        private void ClosePane() => NavPane.IsPaneOpen = false;
+
+        private void Nav_Conversations_Click(object sender, RoutedEventArgs e)
+        { ClosePane(); NavigateWithSave(typeof(ConversationsListPage)); }
+        private void Nav_Characters_Click(object sender, RoutedEventArgs e)
+        { ClosePane(); Frame.Navigate(typeof(CharacterCardsPage)); }
+        private void Nav_WorldBook_Click(object sender, RoutedEventArgs e)
+        { ClosePane(); Frame.Navigate(typeof(WorldBookPage)); }
+        private void Nav_Api_Click(object sender, RoutedEventArgs e)
+        { ClosePane(); Frame.Navigate(typeof(ApiProfilesPage)); }
+        private void Nav_Profile_Click(object sender, RoutedEventArgs e)
+        { ClosePane(); Frame.Navigate(typeof(UserProfilesPage)); }
+
+        private void Nav_Settings_Click(object sender, RoutedEventArgs e)
+        { ClosePane(); Frame.Navigate(typeof(SettingsPage)); }
+
+        private async void NavigateWithSave(Type page)
+        {
+            await DataManager.SaveAsync();
+            Frame.Navigate(page);
+        }
+
+        // ── Conversation settings / appearance ────────────────────────────────
+
+        private void ConvSettingsBtn_Click(object sender, RoutedEventArgs e)
+            => Frame.Navigate(typeof(ConvSettingsPage));
+
+        private void ConvAppearanceBtn_Click(object sender, RoutedEventArgs e)
+            => Frame.Navigate(typeof(ConvAppearancePage));
+
+        // ── 图片附加 ──────────────────────────────────────────────────────────
+
+        private async void AttachImageBtn_Click(object sender, RoutedEventArgs e)
+        {
+            var picker = new Windows.Storage.Pickers.FileOpenPicker();
+            picker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.PicturesLibrary;
+            picker.FileTypeFilter.Add(".jpg");
+            picker.FileTypeFilter.Add(".jpeg");
+            picker.FileTypeFilter.Add(".png");
+            picker.FileTypeFilter.Add(".gif");
+            picker.FileTypeFilter.Add(".webp");
+
+            var file = await picker.PickSingleFileAsync();
+            if (file == null) return;
+
+            // 压缩图片：最大边 1024px，JPEG 质量 0.85，减少上传体积
+            byte[] bytes;
+            string mime;
+            using (var stream = await file.OpenReadAsync())
+            {
+                var decoder = await BitmapDecoder.CreateAsync(stream);
+                uint w = decoder.PixelWidth, h = decoder.PixelHeight;
+                const uint MaxDim = 1024;
+                uint newW = w, newH = h;
+                if (w > MaxDim || h > MaxDim)
+                {
+                    if (w > h) { newW = MaxDim; newH = (uint)(h * MaxDim / w); }
+                    else        { newH = MaxDim; newW = (uint)(w * MaxDim / h); }
+                }
+                var transform = new BitmapTransform { ScaledWidth = newW, ScaledHeight = newH };
+                var pixels = await decoder.GetPixelDataAsync(
+                    BitmapPixelFormat.Rgba8, BitmapAlphaMode.Premultiplied, transform,
+                    ExifOrientationMode.RespectExifOrientation, ColorManagementMode.DoNotColorManage);
+
+                using (var ms = new Windows.Storage.Streams.InMemoryRandomAccessStream())
+                {
+                    var encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, ms);
+                    encoder.SetPixelData(BitmapPixelFormat.Rgba8, BitmapAlphaMode.Premultiplied,
+                        newW, newH, 96, 96, pixels.DetachPixelData());
+                    await encoder.FlushAsync();
+                    ms.Seek(0);
+                    bytes = new byte[ms.Size];
+                    await ms.ReadAsync(bytes.AsBuffer(), (uint)ms.Size, Windows.Storage.Streams.InputStreamOptions.None);
+                }
+                mime = "image/jpeg";
+            }
+            _pendingImageBase64  = Convert.ToBase64String(bytes);
+            _pendingImageMimeType = mime;
+
+            // 显示缩略图（直接用压缩后的bytes，无需重新打开文件）
+            var bmp = new Windows.UI.Xaml.Media.Imaging.BitmapImage();
+            using (var previewMs = new Windows.Storage.Streams.InMemoryRandomAccessStream())
+            {
+                await previewMs.WriteAsync(bytes.AsBuffer());
+                previewMs.Seek(0);
+                await bmp.SetSourceAsync(previewMs);
+            }
+            PendingImageThumb.Source = bmp;
+            ImagePreviewBar.Visibility = Visibility.Visible;
+        }
+
+        private void ClearImageBtn_Click(object sender, RoutedEventArgs e)
+        {
+            _pendingImageBase64  = null;
+            _pendingImageMimeType = null;
+            PendingImageThumb.Source = null;
+            ImagePreviewBar.Visibility = Visibility.Collapsed;
+        }
+
+        // ── Input toolbar ─────────────────────────────────────────────────────
+
+        private async void FullscreenInputBtn_Click(object sender, RoutedEventArgs e)
+        {
+            var editBox = new TextBox
+            {
+                Text = InputTextBox.Text,
+                AcceptsReturn = true,
+                TextWrapping = TextWrapping.Wrap,
+                BorderThickness = new Thickness(0),
+                Background = new SolidColorBrush(Colors.Transparent),
+                MinHeight = 300,
+                MaxHeight = 500,
+                FontSize = 16,
+                PlaceholderText = "在此输入消息…",
+            };
+            var dialog = new ContentDialog
+            {
+                Title = "全屏输入",
+                Content = editBox,
+                PrimaryButtonText = "发送",
+                SecondaryButtonText = "取消",
+                RequestedTheme = AppSettings.IsDark ? ElementTheme.Dark : ElementTheme.Light,
+            };
+            var result = await dialog.ShowAsync();
+            if (result == ContentDialogResult.Primary)
+            {
+                InputTextBox.Text = editBox.Text;
+                SubmitButton_Click(sender, e);
+            }
+            else if (result == ContentDialogResult.Secondary)
+            {
+                InputTextBox.Text = editBox.Text;
+            }
+        }
+
+        private bool _webSearchEnabled = false;
+
+        private void WebSearchBtn_Click(object sender, RoutedEventArgs e)
+        {
+            _webSearchEnabled = !_webSearchEnabled;
+            if (WebSearchIcon != null)
+            {
+                WebSearchIcon.Foreground = _webSearchEnabled
+                    ? new SolidColorBrush(Color.FromArgb(255, 0, 120, 215))
+                    : (SolidColorBrush)Application.Current.Resources["ApplicationForegroundThemeBrush"];
+                WebSearchIcon.Opacity = _webSearchEnabled ? 1.0 : 0.6;
+            }
+        }
+
+        private void InsertBracketBtn_Click(object sender, RoutedEventArgs e)
+        {
+            int pos = InputTextBox.SelectionStart;
+            string selected = InputTextBox.SelectedText;
+            string insert = "（" + selected + "）";
+            InputTextBox.Text = InputTextBox.Text.Remove(pos, InputTextBox.SelectionLength).Insert(pos, insert);
+            // 有选中文字则光标移到右括号后，否则停在两括号之间
+            InputTextBox.SelectionStart = selected.Length > 0 ? pos + insert.Length : pos + 1;
+            InputTextBox.Focus(FocusState.Programmatic);
+        }
+
+        private void InsertQuoteBtn_Click(object sender, RoutedEventArgs e)
+        {
+            int pos = InputTextBox.SelectionStart;
+            string selected = InputTextBox.SelectedText;
+            string insert = "「" + selected + "」";
+            InputTextBox.Text = InputTextBox.Text.Remove(pos, InputTextBox.SelectionLength).Insert(pos, insert);
+            InputTextBox.SelectionStart = selected.Length > 0 ? pos + insert.Length : pos + 1;
+            InputTextBox.Focus(FocusState.Programmatic);
+        }
+
+        // ── Input: Enter sends, Shift+Enter inserts newline ───────────────────
+
+        private void InputTextBox_KeyDown(object sender, Windows.UI.Xaml.Input.KeyRoutedEventArgs e)
+        {
+            if (e.Key != Windows.System.VirtualKey.Enter) return;
+
+            var shift = Windows.UI.Core.CoreWindow.GetForCurrentThread()
+                               .GetKeyState(Windows.System.VirtualKey.Shift);
+            bool shiftDown = (shift & Windows.UI.Core.CoreVirtualKeyStates.Down)
+                             == Windows.UI.Core.CoreVirtualKeyStates.Down;
+            var ctrl = Windows.UI.Core.CoreWindow.GetForCurrentThread()
+                              .GetKeyState(Windows.System.VirtualKey.Control);
+            bool ctrlDown = (ctrl & Windows.UI.Core.CoreVirtualKeyStates.Down)
+                            == Windows.UI.Core.CoreVirtualKeyStates.Down;
+
+            e.Handled = true;
+
+            int enterMode = AppSettings.EnterBehavior;
+            if (enterMode == 0)
+            {
+                // 模式0：Enter发送，Shift+Enter换行
+                if (shiftDown)
+                {
+                    var tb = InputTextBox;
+                    int pos = tb.SelectionStart;
+                    tb.Text = tb.Text.Insert(pos, "\r\n");
+                    tb.SelectionStart = pos + 2;
+                }
+                else
+                {
+                    SubmitButton_Click(sender, e);
+                }
+            }
+            else
+            {
+                // 模式1：Enter换行，Ctrl+Enter发送
+                if (ctrlDown)
+                {
+                    SubmitButton_Click(sender, e);
+                }
+                else
+                {
+                    var tb = InputTextBox;
+                    int pos = tb.SelectionStart;
+                    tb.Text = tb.Text.Insert(pos, "\r\n");
+                    tb.SelectionStart = pos + 2;
+                }
+            }
+        }
+
+        // ── Send ──────────────────────────────────────────────────────────────
+
+        private async void SubmitButton_Click(object sender, RoutedEventArgs e)
+        {
+            // 生成中点击 → 停止
+            if (_isSending)
+            {
+                _streamCts?.Cancel();
+                return;
+            }
+            string userInput = InputTextBox.Text.Trim();
+            if (string.IsNullOrWhiteSpace(userInput)) return;
+
+            var profile = DataManager.GetProfileForConversation(_conv);
+            if (profile == null)
+            {
+                AddSystemBubble("⚠ 没有选择 API 配置，请从菜单进入 API 配置页面。");
+                return;
+            }
+
+            _isSending = true;
+            SubmitButton.IsEnabled = false;
+
+            // 第一次发送消息时才把对话写入持久化列表
+            if (_isPendingConv)
+            {
+                _isPendingConv = false;
+                DataManager.Data.Conversations.Add(_conv);
+                DataManager.Data.LastActiveConversationId = _conv.Id;
+            }
+
+            // Create message first so its Id is available for the bubble
+            var userMsg = new ConversationMessage
+            {
+                Role = "user", Content = userInput, Timestamp = DateTime.Now,
+                ImageBase64   = _pendingImageBase64,
+                ImageMimeType = _pendingImageMimeType,
+            };
+            _conv.Messages.Add(userMsg);
+            _conv.UpdatedAt = DateTime.Now;
+
+            if (_conv.Messages.Count(m => m.Role == "user") == 1)
+            {
+                _conv.Title = userInput.Length > 20 ? userInput.Substring(0, 20) + "…" : userInput;
+                UpdateTitleLabel();
+            }
+
+            // User bubble
+            var userBubble = new ChatBubble
+            {
+                Role = "user", Content = userInput,
+                MessageId = userMsg.Id,
+                BackgroundColor = UserBubbleBg(), ForegroundColor = UserBubbleFg(),
+                ReasoningBgColor = _reasoningBrush,
+                ImageSource = PendingImageThumb.Source,  // 复用已加载的缩略图
+            };
+            if (WelcomePanel != null)
+                WelcomePanel.Visibility = Windows.UI.Xaml.Visibility.Collapsed;
+            _bubbles.Add(userBubble);
+            InputTextBox.Text = "";
+            // 清理pending图片
+            _pendingImageBase64   = null;
+            _pendingImageMimeType = null;
+            PendingImageThumb.Source = null;
+            ImagePreviewBar.Visibility = Visibility.Collapsed;
+            ScrollToBottom();
+
+            await SendWithExistingUserMessage(userMsg, userBubble);
+        }
+
+        // ── Long memory ───────────────────────────────────────────────────────
+
+        private string BuildMemoryBlock()
+        {
+            if (!_conv.MemoryEnabled) return null;
+            if (_conv.MemoryItems == null || _conv.MemoryItems.Count == 0) return null;
+            if (_conv.ExchangesSinceLastInject < _conv.MemoryInjectInterval) return null;
+            _conv.ExchangesSinceLastInject = 0;
+            var sb = new StringBuilder();
+            sb.AppendLine("[长期记忆]");
+            foreach (var item in _conv.MemoryItems)
+                sb.AppendLine("- " + item);
+            return sb.ToString().Trim();
+        }
+
+        private async Task RunMemorySummaryAsync()
+        {
+            var memApiId = _conv.MemoryApiProfileId;
+            var memProfile = string.IsNullOrEmpty(memApiId)
+                ? DataManager.GetProfileForConversation(_conv)
+                : DataManager.Data.ApiProfiles.Find(p => p.Id == memApiId);
+            if (memProfile == null) return;
+
+            // Collect the messages to summarise
+            int count = _conv.MemorySummaryInterval * 2; // exchanges × 2 messages
+            var recent = _conv.Messages
+                .Skip(Math.Max(0, _conv.Messages.Count - count))
+                .Where(m => m.Role == "user" || m.Role == "assistant")
+                .ToList();
+            if (recent.Count == 0) return;
+
+            var sb = new StringBuilder();
+            sb.AppendLine("以下是一段对话，请提取其中重要的记忆要点，以简洁的条目（每行一条，以「-」开头）输出，不要任何其他内容：");
+            sb.AppendLine();
+            foreach (var m in recent)
+                sb.AppendLine($"{(m.Role == "user" ? "用户" : "AI")}：{m.Content}");
+
+            var payload = new ApiRequest
+            {
+                Model = memProfile.Model,
+                Stream = false,
+                Messages = new List<ApiRequestMessage>
+                {
+                    new ApiRequestMessage { Role = "user", Content = sb.ToString() }
+                }
+            };
+
+            string requestJson;
+            using (var ms = new MemoryStream())
+            {
+                new DataContractJsonSerializer(typeof(ApiRequest)).WriteObject(ms, payload);
+                requestJson = Encoding.UTF8.GetString(ms.ToArray());
+            }
+
+            try
+            {
+                var req = new HttpRequestMessage(HttpMethod.Post, memProfile.Url);
+                req.Headers.TryAddWithoutValidation("Authorization", $"Bearer {memProfile.ApiKey}");
+                req.Content = new StringContent(requestJson, Encoding.UTF8, "application/json");
+
+                using (var resp = await _http.SendAsync(req))
+                {
+                    if (!resp.IsSuccessStatusCode) return;
+                    var body = await resp.Content.ReadAsStringAsync();
+                    ApiResponse parsed;
+                    using (var ms = new MemoryStream(Encoding.UTF8.GetBytes(body)))
+                        parsed = (ApiResponse)new DataContractJsonSerializer(typeof(ApiResponse)).ReadObject(ms);
+
+                    var text = (parsed?.Choices?.Count > 0 ? parsed.Choices[0]?.Message?.Content : null) ?? "";
+                    var newItems = text.Split('\n')
+                        .Select(l => l.TrimStart('-', ' ').Trim())
+                        .Where(l => l.Length > 0)
+                        .ToList();
+
+                    if (_conv.MemoryItems == null) _conv.MemoryItems = new List<string>();
+                    _conv.MemoryItems.AddRange(newItems);
+                    await DataManager.SaveAsync();
+
+                    // Show a subtle system notification in chat
+                    await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                    {
+                        _bubbles.Add(new ChatBubble
+                        {
+                            Role = "assistant",
+                            Content = $"📝 已生成 {newItems.Count} 条新记忆",
+                            BackgroundColor = new SolidColorBrush(Color.FromArgb(60, 80, 160, 80)),
+                            ForegroundColor = _whiteBrush,
+                            ReasoningBgColor = _reasoningBrush,
+                        });
+                        ScrollToBottom();
+                    });
+                }
+            }
+            catch { /* summarisation errors are silent */ }
+        }
+
+        // ── System prompt ─────────────────────────────────────────────────────
+
+        private string BuildSystemPrompt(string userInput)
+        {
+            var sb = new StringBuilder();
+            // 优先用当前对话绑定的API的独立破墙，fallback全局设置
+            var profile = DataManager.GetProfileForConversation(_conv);
+            bool jbEnabled = (profile != null && profile.JailbreakEnabled)
+                             ? true
+                             : AppSettings.JailbreakEnabled;
+            string jbPrompt = (profile != null && profile.JailbreakEnabled && !string.IsNullOrEmpty(profile.JailbreakPrompt))
+                              ? profile.JailbreakPrompt
+                              : AppSettings.JailbreakPrompt;
+            if (jbEnabled && !string.IsNullOrEmpty(jbPrompt))
+            { sb.AppendLine(jbPrompt); sb.AppendLine(); }
+
+            var character = DataManager.GetCharacterForConversation(_conv);
+            if (character != null)
+            {
+                sb.AppendLine($"You are {character.Name}.");
+                if (!string.IsNullOrEmpty(character.Description))  sb.AppendLine("Description: " + character.Description);
+                if (!string.IsNullOrEmpty(character.Personality))  sb.AppendLine("Personality: " + character.Personality);
+                if (!string.IsNullOrEmpty(character.Scenario))     sb.AppendLine("Scenario: "    + character.Scenario);
+                if (!string.IsNullOrEmpty(character.SystemPrompt)) { sb.AppendLine(); sb.AppendLine(character.SystemPrompt); }
+            }
+
+            // 格式规范：括号为动作/心理，引号为对话
+            sb.AppendLine();
+            sb.AppendLine("【格式规范】");
+            sb.AppendLine("使用括号（）或*号*表示动作、神态或内心独白，例如：（她微微低下头）或 *她微微低下头*");
+            sb.AppendLine("使用「」、\"\"、''等引号表示角色说出口的话，例如：「我不知道该说什么……」");
+            sb.AppendLine("叙述、环境描写等直接写出，不加任何标记。");
+
+            // 注入用户人设（活跃资料）
+            var up = DataManager.GetActiveUserProfile();
+            if (up != null && (!string.IsNullOrEmpty(up.Name) || !string.IsNullOrEmpty(up.Description)))
+            {
+                sb.AppendLine();
+                sb.Append("[User] ");
+                if (!string.IsNullOrEmpty(up.Name)) sb.Append(up.Name);
+                if (!string.IsNullOrEmpty(up.Description)) { sb.Append(": "); sb.Append(up.Description); }
+                sb.AppendLine();
+            }
+
+            string recentText = userInput.ToLower();
+            int start = Math.Max(0, _conv.Messages.Count - 6);
+            for (int i = start; i < _conv.Messages.Count; i++)
+                recentText += " " + _conv.Messages[i].Content.ToLower();
+
+            foreach (var entry in DataManager.Data.WorldBookEntries)
+            {
+                // 作用域过滤：全局条目（CharacterIds 为空）始终参与匹配；
+                // 有角色绑定的条目仅当当前对话角色在列表中时参与匹配
+                string activeCharId = _conv?.CharacterCardId ?? "";
+                bool scopeMatch = entry.CharacterIds == null || entry.CharacterIds.Count == 0
+                    || (!string.IsNullOrEmpty(activeCharId) && entry.CharacterIds.Contains(activeCharId));
+                if (!scopeMatch) continue;
+
+                if (!string.IsNullOrEmpty(entry.Content) &&
+                    (entry.AlwaysActive || HasKeywordMatch(recentText, entry.Keywords)))
+                {
+                    if (sb.Length > 0) sb.AppendLine();
+                    sb.AppendLine($"[{entry.Name}]");
+                    sb.AppendLine(entry.Content);
+                }
+            }
+            if (_webSearchEnabled)
+            {
+                sb.AppendLine();
+                sb.AppendLine($"[当前日期] {DateTime.Now:yyyy年M月d日}");
+                sb.AppendLine("[搜索规则] 需要查询实时信息时，必须调用web_search工具，禁止直接用fetch_page抓Google/Bing/百度等搜索引擎页面。fetch_page只能用于读取web_search结果中返回的具体页面URL。");
+            }
+            return sb.ToString().Trim();
+        }
+
+        private bool HasKeywordMatch(string text, string keywords)
+        {
+            if (string.IsNullOrEmpty(keywords)) return false;
+            return keywords.Split(',').Select(k => k.Trim().ToLower())
+                .Where(k => k.Length > 0).Any(k => text.Contains(k));
+        }
+
+        private void MaybeShowFirstMessage()
+        {
+            var character = DataManager.GetCharacterForConversation(_conv);
+            if (character != null && !string.IsNullOrEmpty(character.FirstMessage))
+            {
+                _bubbles.Add(new ChatBubble
+                {
+                    Role = "assistant", Content = character.FirstMessage,
+                    BackgroundColor = AiBubbleBg(), ForegroundColor = AiBubbleFg(),
+                    ReasoningBgColor = _reasoningBrush,
+                });
+            }
+        }
+
+        // ── Streaming ─────────────────────────────────────────────────────────
+
+        private async Task HandleStreamingResponse(HttpResponseMessage resp, ChatBubble bubble, System.Threading.CancellationToken ct)
+        {
+            bool reasoningPhase = false;
+            int tokensSinceScroll = 0;
+
+            await Task.Run(async () =>
+            {
+                using (var stream = await resp.Content.ReadAsStreamAsync())
+                using (var reader = new StreamReader(stream, Encoding.UTF8))
+                {
+                    while (!reader.EndOfStream && !ct.IsCancellationRequested)
+                    {
+                        var line = await reader.ReadLineAsync();
+                        if (line == null) break;
+                        if (!line.StartsWith("data: ")) continue;
+                        var data = line.Substring(6).Trim();
+                        if (data == "[DONE]") break;
+
+                        StreamChunk chunk = null;
+                        try
+                        {
+                            using (var ms = new MemoryStream(Encoding.UTF8.GetBytes(data)))
+                                chunk = (StreamChunk)new DataContractJsonSerializer(typeof(StreamChunk)).ReadObject(ms);
+                        }
+                        catch { continue; }
+
+                        var delta = chunk?.Choices?.Count > 0 ? chunk.Choices[0]?.Delta : null;
+                        if (delta == null) continue;
+
+                        string rt = delta.ReasoningContent;
+                        string ct2 = delta.Content;
+
+                        await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                        {
+                            if (!string.IsNullOrEmpty(rt))
+                            {
+                                if (!reasoningPhase)
+                                {
+                                    reasoningPhase = true;
+                                    bubble.IsStreamingReasoning = true;
+                                    bubble.ReasoningExpanded = true;
+                                }
+                                bubble.ReasoningContent += rt;
+                                tokensSinceScroll++;
+                            }
+                            if (!string.IsNullOrEmpty(ct2))
+                            {
+                                if (reasoningPhase)
+                                {
+                                    reasoningPhase = false;
+                                    bubble.IsStreamingReasoning = false;
+                                    bubble.ReasoningExpanded = false;
+                                }
+                                bubble.Content += ct2;
+                                tokensSinceScroll++;
+                            }
+                            if (tokensSinceScroll >= 8) { tokensSinceScroll = 0; ScrollToBottom(); }
+                        });
+                    }
+                }
+            });
+            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                ScrollToBottom());
+        }
+
+        private async Task HandleRegularResponse(HttpResponseMessage resp, ChatBubble bubble)
+        {
+            var body = await resp.Content.ReadAsStringAsync();
+            string newContent;
+            if (resp.IsSuccessStatusCode)
+            {
+                try
+                {
+                    ApiResponse parsed;
+                    using (var ms = new MemoryStream(Encoding.UTF8.GetBytes(body)))
+                        parsed = (ApiResponse)new DataContractJsonSerializer(typeof(ApiResponse)).ReadObject(ms);
+                    newContent = (parsed?.Choices?.Count > 0 ? parsed.Choices[0]?.Message?.Content : null) ?? "（无响应）";
+                }
+                catch { newContent = body; }
+            }
+            else
+            {
+                ApiResponse err = null;
+                try
+                {
+                    using (var ms = new MemoryStream(Encoding.UTF8.GetBytes(body)))
+                        err = (ApiResponse)new DataContractJsonSerializer(typeof(ApiResponse)).ReadObject(ms);
+                }
+                catch { }
+                newContent = $"错误 {(int)resp.StatusCode}：{err?.Error?.Message ?? body}";
+            }
+            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                bubble.Content = newContent);
+        }
+
+        // ── Reasoning toggle ──────────────────────────────────────────────────
+
+        private void ToggleReasoning_Click(object sender, RoutedEventArgs e)
+        {
+            if ((sender as Button)?.Tag is ChatBubble b)
+                b.ReasoningExpanded = !b.ReasoningExpanded;
+        }
+
+        // ── Message actions ───────────────────────────────────────────────────
+
+        // 点击气泡图片缩略图 → 大图预览
+        private async void BubbleImage_Click(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
+        {
+            if (!((sender as Border)?.Tag is ChatBubble b) || b.ImageSource == null) return;
+            var img = new Image
+            {
+                Source = b.ImageSource,
+                Stretch = Windows.UI.Xaml.Media.Stretch.Uniform,
+                MaxHeight = 600,
+                MaxWidth = 800,
+            };
+            var dialog = new ContentDialog
+            {
+                Content = new Border
+                {
+                    Background = new SolidColorBrush(Colors.Black),
+                    Child = img,
+                },
+                CloseButtonText = "关闭",
+            };
+            await dialog.ShowAsync();
+        }
+
+        // Copy message content to clipboard
+        private void CopyMsg_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (!((sender as Button)?.Tag is ChatBubble b)) return;
+                var dp = new Windows.ApplicationModel.DataTransfer.DataPackage();
+                dp.SetText(b.Content ?? "");
+                Windows.ApplicationModel.DataTransfer.Clipboard.SetContent(dp);
+            }
+            catch { }
+        }
+
+        // Delete this message and everything after it
+        private void DeleteMsg_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (!((sender as Button)?.Tag is ChatBubble b)) return;
+                if (string.IsNullOrEmpty(b.MessageId)) return;
+                var msg = _conv.Messages.FirstOrDefault(m => m.Id == b.MessageId);
+                if (msg == null) return;
+                int idx = _conv.Messages.IndexOf(msg);
+                if (idx < 0) return;
+
+                _conv.Messages.RemoveRange(idx, _conv.Messages.Count - idx);
+                while (_bubbles.Count > idx) _bubbles.RemoveAt(_bubbles.Count - 1);
+                _ = DataManager.SaveAsync();
+            }
+            catch { }
+        }
+
+        // Edit user message → creates a new branch
+        private async void EditMsg_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (_isSending) return;
+                if (!((sender as Button)?.Tag is ChatBubble b)) return;
+                if (string.IsNullOrEmpty(b.MessageId)) return;
+                var msg = _conv.Messages.FirstOrDefault(m => m.Id == b.MessageId);
+                if (msg == null || msg.Role != "user") return;
+                int anchorIdx = _conv.Messages.IndexOf(msg);
+
+                var editBox = new TextBox
+                {
+                    Text = msg.Content, AcceptsReturn = true,
+                    TextWrapping = TextWrapping.Wrap, MinHeight = 100,
+                    Width = 320, Header = "编辑消息"
+                };
+                var dialog = new ContentDialog
+                {
+                    Title = "编辑并创建分支",
+                    Content = editBox,
+                    PrimaryButtonText = "发送",
+                    SecondaryButtonText = "取消",
+                    RequestedTheme = AppSettings.IsDark ? ElementTheme.Dark : ElementTheme.Light
+                };
+                if (await dialog.ShowAsync() != ContentDialogResult.Primary) return;
+
+                string newText = editBox.Text.Trim();
+                if (string.IsNullOrEmpty(newText)) return;
+
+                // ── Find or create BranchPoint at this index ──────────────────
+                if (_conv.BranchPoints == null) _conv.BranchPoints = new List<BranchPoint>();
+                var bp = _conv.BranchPoints.FirstOrDefault(x => x.AnchorIndex == anchorIdx);
+                if (bp == null)
+                {
+                    bp = new BranchPoint { AnchorIndex = anchorIdx, AnchorMessageId = msg.Id };
+                    _conv.BranchPoints.Add(bp);
+                }
+
+                var snapshot = new ConversationBranch
+                {
+                    Messages = _conv.Messages.Skip(anchorIdx).Select(m2 => new ConversationMessage
+                    {
+                        Id = m2.Id, Role = m2.Role, Content = m2.Content,
+                        ReasoningContent = m2.ReasoningContent, Timestamp = m2.Timestamp
+                    }).ToList()
+                };
+                if (bp.ActiveIndex < bp.Branches.Count)
+                    bp.Branches[bp.ActiveIndex] = snapshot;
+                else
+                    bp.Branches.Add(snapshot);
+
+                // New branch with the edited message
+                var newMsg = new ConversationMessage { Role = "user", Content = newText, Timestamp = DateTime.Now };
+                bp.Branches.Add(new ConversationBranch { Messages = new List<ConversationMessage> { newMsg } });
+                bp.ActiveIndex = bp.Branches.Count - 1;
+
+                // Truncate conversation and add new message
+                _conv.Messages.RemoveRange(anchorIdx, _conv.Messages.Count - anchorIdx);
+                _conv.Messages.Add(newMsg);
+
+                // Rebuild all bubbles
+                _bubbles.Clear();
+                RebuildBrushCache();
+                var bMsgs = _conv.Messages.ToList();
+                // 角色卡初始消息不持久化，重建时始终补回
+                MaybeShowFirstMessage();
+                for (int bi = 0; bi < bMsgs.Count; bi++)
+                {
+                    _bubbles.Add(BuildBubble(bMsgs[bi], bi));
+                    if (bi > 0 && bi % 30 == 0) await Task.Yield();
+                }
+                await DataManager.SaveAsync();
+
+                // Attach branch data to the anchor bubble
+                var anchorBubble = _bubbles.FirstOrDefault(bu => bu.MessageId == newMsg.Id);
+                if (anchorBubble != null) anchorBubble.BranchData = bp;
+
+                InputTextBox.Text = "";
+                await SendWithExistingUserMessage(newMsg, anchorBubble);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("EditMsg_Click error: " + ex.Message);
+            }
+        }
+
+        // Continue: send a hidden "continue" prompt, AI generates another reply
+        private async void ContinueMsg_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (_isSending) return;
+
+                var profile = DataManager.GetProfileForConversation(_conv);
+                if (profile == null) { AddSystemBubble("⚠ 没有选择 API 配置"); return; }
+
+                _isSending = true;
+                _streamCts = new System.Threading.CancellationTokenSource();
+                SubmitButton.IsEnabled = true;
+                if (SubmitIcon != null) SubmitIcon.Glyph = "\uE711";
+
+                var apiMessages = new List<ApiRequestMessage>();
+                string sysPrompt = BuildSystemPrompt("");
+                if (!string.IsNullOrEmpty(sysPrompt))
+                    apiMessages.Add(new ApiRequestMessage { Role = "system", Content = sysPrompt });
+
+                int windowSize = _conv.ContextWindow > 0 ? _conv.ContextWindow : int.MaxValue;
+                var windowMsgs = _conv.Messages
+                    .Skip(Math.Max(0, _conv.Messages.Count - windowSize))
+                    .ToList();
+                foreach (var m in windowMsgs)
+                    apiMessages.Add(new ApiRequestMessage
+                    {
+                        Role    = m.Role.Equals("user", StringComparison.OrdinalIgnoreCase) ? "user" : "assistant",
+                        Content = m.Content,
+                        // 继续功能不重发图片：历史图片已处理过，重发浪费token且部分API会报错
+                    });
+
+                var character2 = DataManager.GetCharacterForConversation(_conv);
+                if (character2 != null && !string.IsNullOrEmpty(character2.PostHistoryInstructions))
+                    apiMessages.Add(new ApiRequestMessage { Role = "system", Content = character2.PostHistoryInstructions });
+
+                // 隐藏的继续指令，不写入对话记录
+                apiMessages.Add(new ApiRequestMessage { Role = "user", Content = "继续" });
+
+                var aiBubble = new ChatBubble
+                {
+                    Role = "assistant", Content = "",
+                    IsStreaming = true,
+                    BackgroundColor = AiBubbleBg(), ForegroundColor = AiBubbleFg(),
+                    ReasoningBgColor = _reasoningBrush,
+                };
+                _bubbles.Add(aiBubble);
+                ScrollToBottom();
+
+                string requestJson = BuildRequestJson(profile.Model, apiMessages, true, profile.VisionEnabled);
+                try
+                {
+                    var req = new HttpRequestMessage(HttpMethod.Post, profile.Url);
+                    req.Headers.TryAddWithoutValidation("Authorization", $"Bearer {profile.ApiKey}");
+                    req.Content = new StringContent(requestJson, Encoding.UTF8, "application/json");
+                    using (var resp = await _http.SendAsync(req, HttpCompletionOption.ResponseHeadersRead))
+                    {
+                        string ct = resp.Content.Headers.ContentType?.MediaType ?? "";
+                        if (ct.Contains("event-stream") || ct.Contains("stream"))
+                            await HandleStreamingResponse(resp, aiBubble, _streamCts.Token);
+                        else
+                            await HandleRegularResponse(resp, aiBubble);
+                    }
+                }
+                catch (Exception ex) { aiBubble.Content = $"连接错误：{ex.Message}"; }
+
+                aiBubble.IsStreamingReasoning = false;
+                aiBubble.IsStreaming = false;
+                aiBubble.ReasoningExpanded = AppSettings.ReasoningExpandedByDefault;
+                _streamCts?.Dispose();
+                _streamCts = null;
+                if (SubmitIcon != null) SubmitIcon.Glyph = "\uE74A";
+
+                var aiMsg = new ConversationMessage
+                {
+                    Role = "assistant", Content = aiBubble.Content,
+                    ReasoningContent = aiBubble.ReasoningContent, Timestamp = DateTime.Now
+                };
+                aiBubble.MessageId = aiMsg.Id;
+                _conv.Messages.Add(aiMsg);
+                _conv.UpdatedAt = DateTime.Now;
+
+                await DataManager.SaveAsync();
+                ScrollToBottom();
+                PlaySound();
+                _isSending = false;
+                SubmitButton.IsEnabled = true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("ContinueMsg error: " + ex.Message);
+                _isSending = false;
+                if (SubmitIcon != null) SubmitIcon.Glyph = "\uE74A";
+                SubmitButton.IsEnabled = true;
+            }
+        }
+
+        // Regenerate last AI response (or any AI message)
+        private async void RegenerateMsg_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (_isSending) return;
+                if (!((sender as Button)?.Tag is ChatBubble b)) return;
+                if (string.IsNullOrEmpty(b.MessageId)) return;
+                var msg = _conv.Messages.FirstOrDefault(m => m.Id == b.MessageId);
+                if (msg == null) return;
+                int idx = _conv.Messages.IndexOf(msg);
+                if (idx < 0) return;
+
+                // Remove this AI message and all after
+                _conv.Messages.RemoveRange(idx, _conv.Messages.Count - idx);
+                while (_bubbles.Count > idx) _bubbles.RemoveAt(_bubbles.Count - 1);
+
+                var userMsg = _conv.Messages.LastOrDefault(m => m.Role == "user");
+                if (userMsg == null) return;
+                var userBubble = _bubbles.LastOrDefault(bub => bub.Role == "user");
+                await SendWithExistingUserMessage(userMsg, userBubble);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("RegenerateMsg error: " + ex.Message);
+                _isSending = false;
+                SubmitButton.IsEnabled = true;
+                if (SubmitIcon != null) SubmitIcon.Glyph = "\uE74A";
+            }
+        }
+
+        // ── Branch navigation ─────────────────────────────────────────────────
+
+        private void PrevBranch_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (!((sender as Button)?.Tag is ChatBubble b) || b.BranchData == null) return;
+                SwitchBranch(b, b.BranchData.ActiveIndex - 1);
+            }
+            catch (Exception ex) { System.Diagnostics.Debug.WriteLine("PrevBranch error: " + ex); }
+        }
+        private void NextBranch_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (!((sender as Button)?.Tag is ChatBubble b) || b.BranchData == null) return;
+                SwitchBranch(b, b.BranchData.ActiveIndex + 1);
+            }
+            catch (Exception ex) { System.Diagnostics.Debug.WriteLine("NextBranch error: " + ex); }
+        }
+
+        private void SwitchBranch(ChatBubble anchorBubble, int targetIndex)
+        {
+            var bp = anchorBubble?.BranchData;
+            if (bp == null || targetIndex < 0 || targetIndex >= bp.Count) return;
+
+            // Use the stored index — no message-ID search, so it works after edits
+            int anchorIdx = bp.AnchorIndex;
+            if (anchorIdx < 0 || anchorIdx > _conv.Messages.Count) return;
+
+            // Save current tail into current branch slot
+            if (bp.ActiveIndex >= 0 && bp.ActiveIndex < bp.Branches.Count)
+            {
+                bp.Branches[bp.ActiveIndex] = new ConversationBranch
+                {
+                    Messages = _conv.Messages.Skip(anchorIdx).Select(m => new ConversationMessage
+                    {
+                        Id = m.Id, Role = m.Role, Content = m.Content,
+                        ReasoningContent = m.ReasoningContent, Timestamp = m.Timestamp
+                    }).ToList()
+                };
+            }
+
+            // Restore target branch
+            var target = bp.Branches[targetIndex];
+            _conv.Messages.RemoveRange(anchorIdx, _conv.Messages.Count - anchorIdx);
+            foreach (var m in target.Messages) _conv.Messages.Add(m);
+            bp.ActiveIndex = targetIndex;
+
+            // Rebuild bubbles from anchorIdx onwards
+            // BuildBubble will auto-attach BranchData by AnchorIndex
+            while (_bubbles.Count > anchorIdx) _bubbles.RemoveAt(_bubbles.Count - 1);
+            int rebuildIdx = anchorIdx;
+            foreach (var m in _conv.Messages.Skip(anchorIdx))
+                _bubbles.Add(BuildBubble(m, rebuildIdx++));
+
+            _ = DataManager.SaveAsync();
+            ScrollToBottom();
+        }
+
+        // ── Shared send helper (used by Edit + Regenerate) ────────────────────
+
+        private async Task SendWithExistingUserMessage(ConversationMessage userMsg, ChatBubble userBubble)
+        {
+            var profile = DataManager.GetProfileForConversation(_conv);
+            if (profile == null) { AddSystemBubble("⚠ 没有选择 API 配置"); return; }
+
+            _isSending = true;
+            _streamCts = new System.Threading.CancellationTokenSource();
+            SubmitButton.IsEnabled = true; // 生成中仍可点击（点击=停止）
+            if (SubmitIcon != null) SubmitIcon.Glyph = ""; // X 图标
+
+            var apiMessages = new List<ApiRequestMessage>();
+            string sysPrompt = BuildSystemPrompt(userMsg.Content);
+            if (!string.IsNullOrEmpty(sysPrompt))
+                apiMessages.Add(new ApiRequestMessage { Role = "system", Content = sysPrompt });
+
+            int windowSize = _conv.ContextWindow > 0 ? _conv.ContextWindow : int.MaxValue;
+            var windowMsgs = _conv.Messages
+                .Skip(Math.Max(0, _conv.Messages.Count - windowSize))
+                .ToList();
+            foreach (var m in windowMsgs)
+                apiMessages.Add(new ApiRequestMessage
+                {
+                    Role          = m.Role.Equals("user", StringComparison.OrdinalIgnoreCase) ? "user" : "assistant",
+                    Content       = m.Content,
+                    ImageBase64   = m.ImageBase64,
+                    ImageMimeType = m.ImageMimeType,
+                });
+            string memoryBlock = BuildMemoryBlock();
+            if (!string.IsNullOrEmpty(memoryBlock))
+                apiMessages.Add(new ApiRequestMessage { Role = "system", Content = memoryBlock });
+
+            var character2 = DataManager.GetCharacterForConversation(_conv);
+            if (character2 != null && !string.IsNullOrEmpty(character2.PostHistoryInstructions))
+                apiMessages.Add(new ApiRequestMessage { Role = "system", Content = character2.PostHistoryInstructions });
+
+            var aiBubble = new ChatBubble
+            {
+                Role = "assistant", Content = "",
+                IsStreaming = true,
+                BackgroundColor = AiBubbleBg(), ForegroundColor = AiBubbleFg(),
+                ReasoningBgColor = _reasoningBrush,
+            };
+            _bubbles.Add(aiBubble);
+            ScrollToBottom();
+
+            // ── 注册后台任务（页面离开后继续运行）──────────────────────────
+            var conv       = _conv;
+            var cts        = _streamCts;
+            var webEnabled = _webSearchEnabled;
+            string requestJson = BuildRequestJson(profile.Model, apiMessages, true, profile.VisionEnabled);
+
+            AppState.BackgroundConvId = conv.Id;
+            AppState.RegisterTask(conv.Id, null); // 占位，真正的 task 稍后赋值
+
+            // 实时同步内容到 AppState，页面不在时也能累积
+            aiBubble.PropertyChanged += (s, ev) =>
+            {
+                if (ev.PropertyName == nameof(ChatBubble.Content) ||
+                    ev.PropertyName == nameof(ChatBubble.ReasoningContent))
+                    AppState.UpdateContent(conv.Id, aiBubble.Content, aiBubble.ReasoningContent);
+            };
+
+            var sendTask = Task.Run(async () =>
+            {
+                try
+                {
+                    if (webEnabled)
+                    {
+                        string finalContent = await RunToolUseLoopAsync(profile, apiMessages, aiBubble, cts.Token);
+                        await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                            aiBubble.Content = finalContent);
+                    }
+                    else
+                    {
+                        var req = new HttpRequestMessage(HttpMethod.Post, profile.Url);
+                        req.Headers.TryAddWithoutValidation("Authorization", $"Bearer {profile.ApiKey}");
+                        req.Content = new StringContent(requestJson, Encoding.UTF8, "application/json");
+                        using (var resp = await _http.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, cts.Token))
+                        {
+                            string ct = resp.Content.Headers.ContentType?.MediaType ?? "";
+                            if (ct.Contains("event-stream") || ct.Contains("stream"))
+                                await HandleStreamingResponse(resp, aiBubble, cts.Token);
+                            else
+                                await HandleRegularResponse(resp, aiBubble);
+                        }
+                    }
+                }
+                catch (System.OperationCanceledException) { /* 用户主动取消 */ }
+                catch (Exception ex)
+                {
+                    await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                        aiBubble.Content = $"连接错误：{ex.Message}");
+                }
+
+                // ── 写入数据库（无论页面是否存在都执行）─────────────────────
+                string finalAiContent = "";
+                string finalReasoning = "";
+                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
+                    aiBubble.IsStreamingReasoning = false;
+                    aiBubble.IsStreaming = false;
+                    aiBubble.ReasoningExpanded = AppSettings.ReasoningExpandedByDefault;
+                    finalAiContent = aiBubble.Content;
+                    finalReasoning = aiBubble.ReasoningContent;
+                });
+
+                var aiMsg = new ConversationMessage
+                {
+                    Role             = "assistant",
+                    Content          = finalAiContent,
+                    ReasoningContent = finalReasoning,
+                    Timestamp        = DateTime.Now,
+                };
+                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                    aiBubble.MessageId = aiMsg.Id);
+                conv.Messages.Add(aiMsg);
+                conv.UpdatedAt = DateTime.Now;
+                conv.ExchangesSinceLastSummary++;
+                conv.ExchangesSinceLastInject++;
+
+                await DataManager.SaveAsync();
+                AppState.CompleteTask(conv.Id);
+
+                // ── 通知 UI（页面在时刷新，不在时忽略）───────────────────────
+                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
+                    cts.Dispose();
+                    if (conv.MemoryEnabled && conv.ExchangesSinceLastSummary >= conv.MemorySummaryInterval)
+                    {
+                        conv.ExchangesSinceLastSummary = 0;
+                        _ = RunMemorySummaryAsync();
+                    }
+                    if (SubmitIcon != null) SubmitIcon.Glyph = "";
+                    ScrollToBottom();
+                    PlaySound();
+                    _isSending = false;
+                    SubmitButton.IsEnabled = true;
+                });
+            });
+
+            AppState.RegisterTask(conv.Id, sendTask);
+            await sendTask;
+        }
+
+
+        // ── Web Search / Tool Use ─────────────────────────────────────────────
+
+        // 内置 SearXNG 公共实例列表（uptime ≥ 96%，TLS A+，来自 searx.space）
+        private static readonly string[] _searxngInstances = new[]
+        {
+            "https://searx.rhscz.eu",
+            "https://search.bladerunn.in",
+            "https://search.inetol.net",
+            "https://priv.au",
+            "https://searx.tiekoetter.com",
+            "https://searxng.site",
+            "https://opnxng.com",
+            "https://searx.oloke.xyz",
+            "https://search.charliewhiskey.net",
+            "https://searx.party",
+            "https://baresearch.org",
+            "https://search.femboy.ad",
+            "https://search.pi.vps.pw",
+            "https://search.minus27315.dev",
+            "https://search.einfachzocken.eu",
+            "https://searx.ro",
+            "https://searxng.shreven.org",
+            "https://grep.vim.wtf",
+            "https://search.rhscz.eu",
+            "https://search.hbubli.cc",
+            "https://ooglester.com",
+            "https://searx.namejeff.xyz",
+            "https://search.ononoki.org",
+            "https://search.catboy.house",
+            "https://search.wdpserver.com",
+            "https://search.mdosch.de",
+            "https://search.ethibox.fr",
+            "https://etsi.me",
+            "https://searx.perennialte.ch",
+            "https://search.serpensin.com",
+            "https://www.gruble.de",
+            "https://search.rowie.at",
+            "https://search.unredacted.org",
+            "https://searx.tuxcloud.net",
+            "https://paulgo.io",
+            "https://search.im-in.space",
+            "https://search.url4irl.com",
+            "https://sx.catgirl.cloud",
+        };
+
+        // 缓存上次 ping 选出的最快实例，避免每次都重新测速
+        private string _cachedSearxngUrl = null;
+        private DateTime _searxngCacheTime = DateTime.MinValue;
+
+        private async Task<string> GetFastestSearxngAsync()
+        {
+            // 缓存 5 分钟
+            if (_cachedSearxngUrl != null && (DateTime.Now - _searxngCacheTime).TotalMinutes < 5)
+                return _cachedSearxngUrl;
+
+            string best = null;
+            long bestMs = long.MaxValue;
+            var tasks = new System.Collections.Generic.List<Task>();
+            var results = new string[_searxngInstances.Length];
+            var times   = new long[_searxngInstances.Length];
+
+            for (int i = 0; i < _searxngInstances.Length; i++)
+            {
+                int idx = i;
+                string inst = _searxngInstances[idx];
+                tasks.Add(Task.Run(async () =>
+                {
+                    try
+                    {
+                        var sw = System.Diagnostics.Stopwatch.StartNew();
+                        var req = new HttpRequestMessage(HttpMethod.Head, inst + "/search?q=test&format=json");
+                        req.Headers.TryAddWithoutValidation("Accept", "application/json");
+                        using (var cts2 = new System.Threading.CancellationTokenSource(3000))
+                        using (var resp = await _http.SendAsync(req, cts2.Token))
+                        {
+                            sw.Stop();
+                            if ((int)resp.StatusCode < 500)
+                            {
+                                results[idx] = inst;
+                                times[idx]   = sw.ElapsedMilliseconds;
+                            }
+                        }
+                    }
+                    catch { }
+                }));
+            }
+
+            await Task.WhenAll(tasks);
+
+            for (int i = 0; i < results.Length; i++)
+            {
+                if (results[i] != null && times[i] < bestMs)
+                {
+                    bestMs = times[i];
+                    best   = results[i];
+                }
+            }
+
+            if (best != null)
+            {
+                _cachedSearxngUrl  = best;
+                _searxngCacheTime  = DateTime.Now;
+            }
+            return best;
+        }
+
+        // 执行搜索，返回结果摘要文本（失败返回null）
+        private async Task<string> RunSearchAsync(string query)
+        {
+            try
+            {
+                int provider = AppSettings.SearchProvider;
+
+                if (provider == 0) // SearXNG — 自动选最快公共实例
+                {
+                    string baseUrl = await GetFastestSearxngAsync();
+                    if (baseUrl == null) return null;
+                    var url = baseUrl.TrimEnd('/') + "/search?q=" + Uri.EscapeDataString(query) + "&format=json&pageno=1";
+                    var req = new HttpRequestMessage(HttpMethod.Get, url);
+                    req.Headers.TryAddWithoutValidation("Accept", "application/json");
+                    using (var resp = await _http.SendAsync(req))
+                    {
+                        var body = await resp.Content.ReadAsStringAsync();
+                        if (!resp.IsSuccessStatusCode) return null;
+                        return ParseSearxngResults(body);
+                    }
+                }
+                else // DuckDuckGo HTML scrape (provider == 1)
+                {
+                    var url3 = "https://html.duckduckgo.com/html/";
+                    var req = new HttpRequestMessage(HttpMethod.Post, url3);
+                    req.Headers.TryAddWithoutValidation("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
+                    req.Content = new StringContent("q=" + Uri.EscapeDataString(query), Encoding.UTF8, "application/x-www-form-urlencoded");
+                    using (var resp = await _http.SendAsync(req))
+                    {
+                        var body = await resp.Content.ReadAsStringAsync();
+                        if (!resp.IsSuccessStatusCode) return null;
+                        return ParseDdgHtmlResults(body);
+                    }
+                }
+            }
+            catch { return null; }
+        }
+
+        private static string ParseSerperResults(string json) => null; // 已移除
+        private static string ParseBraveResults(string json)  => null;
+        private static string ParseBingResults(string json)   => null;
+        private static string ParseBaiduResults(string json)  => null;
+        private static string ParseDdgResults(string json)    => null;
+
+        private static string ParseSearxngResults(string json)
+        {
+            var sb = new StringBuilder();
+            int idx = 0;
+            while (true)
+            {
+                int titleIdx = json.IndexOf("\"title\":", idx);
+                if (titleIdx < 0) break;
+                string title   = ExtractJsonString(json, titleIdx + 8);
+                int contIdx    = json.IndexOf("\"content\":", titleIdx);
+                int urlIdx     = json.IndexOf("\"url\":", titleIdx);
+                if (urlIdx < 0) break;
+                string content = contIdx >= 0 ? ExtractJsonString(json, contIdx + 10) : "";
+                string url     = ExtractJsonString(json, urlIdx + 6);
+                sb.AppendLine($"- {title}\n  {content}\n  {url}");
+                idx = urlIdx + 6;
+                if (sb.Length > 2000) break;
+            }
+            return sb.Length > 0 ? sb.ToString().Trim() : null;
+        }
+
+        private static string ParseDdgHtmlResults(string html)
+        {
+            // Parse DuckDuckGo /html/ results: each result is in a <div class="result">
+            // Title in <a class="result__a">, snippet in <a class="result__snippet">
+            var sb = new StringBuilder();
+            int idx = 0;
+            int count = 0;
+            while (count < 5)
+            {
+                // Find result block
+                int blockIdx = html.IndexOf("class=\"result__a\"", idx);
+                if (blockIdx < 0) break;
+                // Extract href
+                int hrefStart = html.LastIndexOf("href=\"", blockIdx);
+                string url = "";
+                if (hrefStart >= 0 && hrefStart > blockIdx - 300)
+                {
+                    hrefStart += 6;
+                    int hrefEnd = html.IndexOf('"', hrefStart);
+                    if (hrefEnd > hrefStart) url = html.Substring(hrefStart, hrefEnd - hrefStart);
+                    // DDG wraps URLs in /l/?uddg= redirect, decode
+                    if (url.StartsWith("/l/?"))
+                    {
+                        int uddgIdx = url.IndexOf("uddg=");
+                        if (uddgIdx >= 0) url = Uri.UnescapeDataString(url.Substring(uddgIdx + 5));
+                    }
+                }
+                // Extract title text (between > and </a>)
+                int titleStart = html.IndexOf('>', blockIdx) + 1;
+                int titleEnd   = html.IndexOf("</a>", titleStart);
+                string title = titleStart > 0 && titleEnd > titleStart
+                    ? StripHtmlTags(html.Substring(titleStart, titleEnd - titleStart)).Trim()
+                    : "";
+                // Snippet: next result__snippet after this block
+                int snipIdx = html.IndexOf("result__snippet", blockIdx);
+                string snippet = "";
+                if (snipIdx >= 0)
+                {
+                    int snipStart = html.IndexOf('>', snipIdx) + 1;
+                    int snipEnd   = html.IndexOf("</a>", snipStart);
+                    if (snipStart > 0 && snipEnd > snipStart)
+                        snippet = StripHtmlTags(html.Substring(snipStart, snipEnd - snipStart)).Trim();
+                }
+                if (!string.IsNullOrEmpty(title) || !string.IsNullOrEmpty(snippet))
+                {
+                    sb.AppendLine($"- {title}\n  {snippet}\n  {url}");
+                    count++;
+                }
+                idx = blockIdx + 17;
+                if (sb.Length > 2000) break;
+            }
+            return sb.Length > 0 ? sb.ToString().Trim() : null;
+        }
+
+        private static string StripHtmlTags(string html)
+        {
+            var sb = new StringBuilder();
+            bool inTag = false;
+            foreach (char c in html)
+            {
+                if (c == '<') inTag = true;
+                else if (c == '>') inTag = false;
+                else if (!inTag) sb.Append(c);
+            }
+            return sb.ToString();
+        }
+
+        // 从 JSON 字符串提取引号包裹的值（简单实现，不依赖完整 JSON 解析）
+        private static string ExtractJsonString(string json, int start)
+        {
+            while (start < json.Length && json[start] != '"') start++;
+            if (start >= json.Length) return "";
+            start++; // skip opening quote
+            var sb = new StringBuilder();
+            while (start < json.Length)
+            {
+                char c = json[start++];
+                if (c == '"') break;
+                if (c == '\\' && start < json.Length)
+                {
+                    char esc = json[start++];
+                    switch (esc)
+                    {
+                        case 'n': sb.Append('\n'); break;
+                        case 'r': sb.Append('\r'); break;
+                        case 't': sb.Append('\t'); break;
+                        default:  sb.Append(esc);  break;
+                    }
+                }
+                else sb.Append(c);
+            }
+            return sb.ToString();
+        }
+
+        // Fetch 页面正文（简单提取文本，去掉HTML标签）
+        private async Task<string> FetchPageAsync(string url)
+        {
+            try
+            {
+                var req = new HttpRequestMessage(HttpMethod.Get, url);
+                req.Headers.TryAddWithoutValidation("User-Agent", "Mozilla/5.0");
+                using (var resp = await _http.SendAsync(req))
+                {
+                    if (!resp.IsSuccessStatusCode) return $"无法访问页面（{(int)resp.StatusCode}）";
+                    var html = await resp.Content.ReadAsStringAsync();
+                    // 去掉 script/style 块
+                    html = System.Text.RegularExpressions.Regex.Replace(html, @"<script[\s\S]*?</script>", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                    html = System.Text.RegularExpressions.Regex.Replace(html, @"<style[\s\S]*?</style>",   "", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                    // 去掉所有 HTML 标签
+                    var text = System.Text.RegularExpressions.Regex.Replace(html, @"<[^>]+>", " ");
+                    // 折叠空白
+                    text = System.Text.RegularExpressions.Regex.Replace(text, @"\s{2,}", "\n").Trim();
+                    // 按设置截断
+                    int depth = AppSettings.SearchResultDepth;
+                    int limit = depth == 0 ? 2000 : depth == 1 ? 8000 : int.MaxValue;
+                    return text.Length > limit ? text.Substring(0, limit) + "\n…（已截断）" : text;
+                }
+            }
+            catch (Exception ex) { return $"Fetch 失败：{ex.Message}"; }
+        }
+
+        // ── Tool use：构建带 tools 定义的请求 JSON ────────────────────────────
+
+        private static string BuildRequestJsonWithTools(string model, List<ApiRequestMessage> messages, bool stream, bool isClaudeProvider, bool supportsVision = false)
+        {
+            string toolsDef = isClaudeProvider
+                ? BuildClaudeToolsDef()
+                : BuildOpenAiToolsDef();
+
+            var sb = new StringBuilder();
+            sb.Append("{");
+            sb.Append($"\"model\":\"{EscapeJson(model)}\",");
+            sb.Append($"\"stream\":{(stream ? "true" : "false")},");
+            if (isClaudeProvider)
+            {
+                // Claude API要求system作为顶层字段，messages只含user/assistant
+                var sysMsgs = messages.Where(m => m.Role == "system").ToList();
+                var chatMsgs = messages.Where(m => m.Role != "system").ToList();
+                if (sysMsgs.Count > 0)
+                {
+                    string sysContent = string.Join("\n\n", sysMsgs.Select(m => m.Content));
+                    sb.Append($"\"system\":\"{EscapeJson(sysContent)}\",");
+                }
+                sb.Append($"\"tools\":{toolsDef},");
+                sb.Append("\"messages\":[");
+                for (int i = 0; i < chatMsgs.Count; i++)
+                {
+                    var m = chatMsgs[i];
+                    sb.Append("{");
+                    sb.Append($"\"role\":\"{EscapeJson(m.Role)}\",");
+                    if (!string.IsNullOrEmpty(m.RawContentJson))
+                        sb.Append($"\"content\":{m.RawContentJson}");
+                    else
+                        sb.Append($"\"content\":\"{EscapeJson(m.Content)}\"");
+                    sb.Append("}");
+                    if (i < chatMsgs.Count - 1) sb.Append(",");
+                }
+                sb.Append("]");
+            }
+            else
+            {
+                sb.Append($"\"tools\":{toolsDef},");
+                sb.Append("\"tool_choice\":\"auto\",");
+                sb.Append("\"messages\":[");
+                for (int i = 0; i < messages.Count; i++)
+                {
+                    var m = messages[i];
+                    sb.Append("{");
+                    sb.Append($"\"role\":\"{EscapeJson(m.Role)}\",");
+
+                    if (m.Role == "tool" && !string.IsNullOrEmpty(m.ToolCallId))
+                    {
+                        // tool消息必须带tool_call_id
+                        sb.Append($"\"tool_call_id\":\"{EscapeJson(m.ToolCallId)}\",");
+                        sb.Append($"\"content\":\"{EscapeJson(m.Content)}\"");
+                    }
+                    else if (m.Role == "assistant" && m.Content != null && m.Content.StartsWith("\x01TOOLCALLS\x01"))
+                    {
+                        // assistant消息带tool_calls数组
+                        string toolCallsJson = m.Content.Substring(11); // skip marker
+                        sb.Append("\"content\":null,");
+                        sb.Append($"\"tool_calls\":{toolCallsJson}");
+                    }
+                    else if (supportsVision && !string.IsNullOrEmpty(m.ImageBase64) && m.Role == "user")
+                    {
+                        sb.Append("\"content\":[");
+                        sb.Append("{\"type\":\"image_url\",\"image_url\":{");
+                        sb.Append($"\"url\":\"data:{EscapeJson(m.ImageMimeType)};base64,{m.ImageBase64}\"");
+                        sb.Append("}},{");
+                        sb.Append($"\"type\":\"text\",\"text\":\"{EscapeJson(m.Content)}\"");
+                        sb.Append("}]");
+                    }
+                    else
+                    {
+                        sb.Append($"\"content\":\"{EscapeJson(m.Content)}\"");
+                    }
+                    sb.Append("}");
+                    if (i < messages.Count - 1) sb.Append(",");
+                }
+                sb.Append("]");
+            }
+            sb.Append("}");
+            return sb.ToString();
+        }
+
+        private static string BuildOpenAiToolsDef() =>
+            "[{\"type\":\"function\",\"function\":{\"name\":\"web_search\",\"description\":\"搜索互联网以获取最新信息。当你需要查询实时数据、新闻或不确定的事实时调用此工具。\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"搜索关键词\"}},\"required\":[\"query\"]}}}," +
+             "{\"type\":\"function\",\"function\":{\"name\":\"fetch_page\",\"description\":\"获取指定URL页面的正文内容，用于深入阅读搜索结果中的某个页面。\",\"parameters\":{\"type\":\"object\",\"properties\":{\"url\":{\"type\":\"string\",\"description\":\"要获取的页面URL\"}},\"required\":[\"url\"]}}}]";
+
+        private static string BuildClaudeToolsDef() =>
+            "[{\"name\":\"web_search\",\"description\":\"搜索互联网以获取最新信息。\",\"input_schema\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"搜索关键词\"}},\"required\":[\"query\"]}}," +
+             "{\"name\":\"fetch_page\",\"description\":\"获取指定URL页面的正文内容。\",\"input_schema\":{\"type\":\"object\",\"properties\":{\"url\":{\"type\":\"string\",\"description\":\"要获取的页面URL\"}},\"required\":[\"url\"]}}]";
+
+        private class OpenAiToolCall  { public string Name; public string Id; public string ArgsJson; }
+        private class ClaudeToolCall  { public string Name; public string Id; public string ArgsJson; }
+
+        // 从响应 JSON 中提取 tool_call（OpenAI 格式），返回结果或 null
+        private static OpenAiToolCall ExtractOpenAiToolCall(string json)
+        {
+            int tcIdx = json.IndexOf("\"tool_calls\":");
+            if (tcIdx < 0) return null;
+            int nameIdx = json.IndexOf("\"name\":", tcIdx);
+            if (nameIdx < 0) return null;
+            string name = ExtractJsonString(json, nameIdx + 7);
+            int argIdx = json.IndexOf("\"arguments\":", tcIdx);
+            if (argIdx < 0) return null;
+            // arguments 可能是字符串或对象
+            int afterColon = argIdx + 12;
+            while (afterColon < json.Length && json[afterColon] == ' ') afterColon++;
+            string args;
+            if (afterColon < json.Length && json[afterColon] == '"')
+                args = ExtractJsonString(json, afterColon);
+            else
+            {
+                // 找到匹配的 {} 块
+                int brace = json.IndexOf('{', afterColon);
+                if (brace < 0) return null;
+                int depth = 0; int end = brace;
+                for (; end < json.Length; end++)
+                {
+                    if (json[end] == '{') depth++;
+                    else if (json[end] == '}') { depth--; if (depth == 0) break; }
+                }
+                args = json.Substring(brace, end - brace + 1);
+            }
+            int idIdx = json.IndexOf("\"id\":", tcIdx);
+            string id = idIdx >= 0 ? ExtractJsonString(json, idIdx + 5) : "";
+            return new OpenAiToolCall { Name = name, Id = id, ArgsJson = args };
+        }
+
+        // 从响应 JSON 中提取 Claude tool_use block，返回结果或 null
+        private static ClaudeToolCall ExtractClaudeToolCall(string json)
+        {
+            int tuIdx = json.IndexOf("\"type\":\"tool_use\"");
+            if (tuIdx < 0) return null;
+            int nameIdx = json.IndexOf("\"name\":", tuIdx);
+            int idIdx   = json.IndexOf("\"id\":", tuIdx);
+            int inputIdx= json.IndexOf("\"input\":", tuIdx);
+            if (nameIdx < 0 || inputIdx < 0) return null;
+            string name = ExtractJsonString(json, nameIdx + 7);
+            string id   = idIdx >= 0 ? ExtractJsonString(json, idIdx + 5) : "";
+            int brace = json.IndexOf('{', inputIdx + 8);
+            string args = "{}";
+            if (brace >= 0)
+            {
+                int depth = 0; int end = brace;
+                for (; end < json.Length; end++)
+                {
+                    if (json[end] == '{') depth++;
+                    else if (json[end] == '}') { depth--; if (depth == 0) break; }
+                }
+                args = json.Substring(brace, end - brace + 1);
+            }
+            return new ClaudeToolCall { Name = name, Id = id, ArgsJson = args };
+        }
+
+        // 从 tool call 的 args JSON 中取出指定字段的字符串值
+        private static string ExtractArgField(string argsJson, string field)
+        {
+            int idx = argsJson.IndexOf($"\"{field}\":");
+            if (idx < 0) return "";
+            return ExtractJsonString(argsJson, idx + field.Length + 3);
+        }
+
+        // ── Tool use 完整多轮循环 ─────────────────────────────────────────────
+
+        private async Task<string> RunToolUseLoopAsync(
+            ApiProfile profile,
+            List<ApiRequestMessage> apiMessages,
+            ChatBubble aiBubble,
+            System.Threading.CancellationToken ct)
+        {
+            bool isClaudeProvider = profile.ProviderType == "claude";
+            int maxRounds = 6; // 防止无限循环
+
+            for (int round = 0; round < maxRounds; round++)
+            {
+                string requestJson = BuildRequestJsonWithTools(profile.Model, apiMessages, false, isClaudeProvider, profile.VisionEnabled);
+                string responseBody;
+                try
+                {
+                    var req = new HttpRequestMessage(HttpMethod.Post, profile.Url);
+                    req.Headers.TryAddWithoutValidation("Authorization", $"Bearer {profile.ApiKey}");
+                    if (isClaudeProvider)
+                    {
+                        req.Headers.TryAddWithoutValidation("anthropic-version", "2023-06-01");
+                        req.Headers.TryAddWithoutValidation("x-api-key", profile.ApiKey);
+                        req.Headers.Remove("Authorization");
+                    }
+                    req.Content = new StringContent(requestJson, Encoding.UTF8, "application/json");
+                    using (var resp = await _http.SendAsync(req))
+                        responseBody = await resp.Content.ReadAsStringAsync();
+                }
+                catch (Exception ex) { return $"连接错误：{ex.Message}"; }
+
+                if (ct.IsCancellationRequested) return aiBubble.Content;
+
+                // 检查是否有 tool call
+                OpenAiToolCall openAiCall = null;
+                ClaudeToolCall claudeCall = null;
+
+                if (isClaudeProvider)
+                    claudeCall = ExtractClaudeToolCall(responseBody);
+                else
+                    openAiCall = ExtractOpenAiToolCall(responseBody);
+
+                bool hasToolCall = isClaudeProvider ? claudeCall != null : openAiCall != null;
+
+                if (!hasToolCall)
+                {
+                    // 没有 tool call，提取最终回复内容，清除搜索状态
+                    await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                        aiBubble.SearchStatusText = "");
+                    return ExtractContentFromResponse(responseBody, isClaudeProvider);
+                }
+
+                // 有 tool call，执行工具
+                string toolName = isClaudeProvider ? claudeCall.Name : openAiCall.Name;
+                string toolArgs = isClaudeProvider ? claudeCall.ArgsJson : openAiCall.ArgsJson;
+                string toolId   = isClaudeProvider ? claudeCall.Id : "";
+
+                string toolResult;
+                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
+                    aiBubble.SearchStatusText = toolName == "web_search"
+                        ? $"🔍 正在搜索：{ExtractArgField(toolArgs, "query")}…"
+                        : $"📄 正在读取：{ExtractArgField(toolArgs, "url")}…";
+                });
+
+                if (toolName == "web_search")
+                {
+                    string query = ExtractArgField(toolArgs, "query");
+                    toolResult = await RunSearchAsync(query) ?? "未找到搜索结果";
+                }
+                else if (toolName == "fetch_page")
+                {
+                    string url = ExtractArgField(toolArgs, "url");
+                    toolResult = await FetchPageAsync(url);
+                }
+                else
+                {
+                    toolResult = "未知工具";
+                }
+
+                // 把 tool 结果追加到消息列表，继续下一轮
+                if (isClaudeProvider)
+                {
+                    // Claude要求content block数组格式
+                    // assistant消息：tool_use block
+                    string toolUseBlock =
+                        $"[{{\"type\":\"tool_use\",\"id\":\"{EscapeJson(toolId)}\"," +
+                        $"\"name\":\"{EscapeJson(toolName)}\"," +
+                        $"\"input\":{toolArgs}}}]";
+                    apiMessages.Add(new ApiRequestMessage
+                    {
+                        Role           = "assistant",
+                        Content        = "",
+                        RawContentJson = toolUseBlock,
+                    });
+                    // user消息：tool_result block
+                    string toolResultBlock =
+                        $"[{{\"type\":\"tool_result\",\"tool_use_id\":\"{EscapeJson(toolId)}\"," +
+                        $"\"content\":\"{EscapeJson(toolResult)}\"}}]";
+                    apiMessages.Add(new ApiRequestMessage
+                    {
+                        Role           = "user",
+                        Content        = "",
+                        RawContentJson = toolResultBlock,
+                    });
+                }
+                else
+                {
+                    // OpenAI: assistant消息必须带原始tool_calls JSON，然后tool role消息带tool_call_id
+                    string toolCallsJson =
+                        $"[{{\"id\":\"{EscapeJson(openAiCall.Id)}\",\"type\":\"function\"," +
+                        $"\"function\":{{\"name\":\"{EscapeJson(toolName)}\",\"arguments\":{toolArgs}}}}}]";
+                    apiMessages.Add(new ApiRequestMessage
+                    {
+                        Role    = "assistant",
+                        Content = "\x01TOOLCALLS\x01" + toolCallsJson,
+                    });
+                    apiMessages.Add(new ApiRequestMessage
+                    {
+                        Role       = "tool",
+                        Content    = string.IsNullOrEmpty(toolResult) ? "（无结果）" : toolResult,
+                        ToolCallId = openAiCall.Id,
+                    });
+                }
+            }
+
+            return aiBubble.Content.StartsWith("🔍") || aiBubble.Content.StartsWith("📄")
+                ? "（工具调用轮数已达上限）" : aiBubble.Content;
+        }
+
+        private static string ExtractContentFromResponse(string responseBody, bool isClaudeProvider)
+        {
+            if (isClaudeProvider)
+            {
+                int textIdx = responseBody.IndexOf("\"type\":\"text\"");
+                if (textIdx >= 0)
+                {
+                    int textValIdx = responseBody.IndexOf("\"text\":", textIdx);
+                    if (textValIdx >= 0)
+                        return ExtractJsonString(responseBody, textValIdx + 7);
+                }
+            }
+            else
+            {
+                // OpenAI format
+                int contentIdx = responseBody.IndexOf("\"content\":");
+                if (contentIdx >= 0)
+                    return ExtractJsonString(responseBody, contentIdx + 10);
+            }
+            return responseBody;
+        }
+
+        // ── Helpers ───────────────────────────────────────────────────────────
+
+        private ChatBubble BuildBubble(ConversationMessage msg, int idx)
+        {
+            bool isUser = msg.Role?.Equals("user", StringComparison.OrdinalIgnoreCase) == true;
+            var bubble = new ChatBubble
+            {
+                Role = msg.Role, Content = msg.Content,
+                ReasoningContent = msg.ReasoningContent ?? "",
+                ReasoningExpanded = AppSettings.ReasoningExpandedByDefault,
+                MessageId    = msg.Id,
+                MessageIndex = idx,
+                BackgroundColor  = isUser ? UserBubbleBg() : AiBubbleBg(),
+                ForegroundColor  = isUser ? UserBubbleFg() : AiBubbleFg(),
+                ReasoningBgColor = _reasoningBrush,
+                QuoteColor   = _conv?.Appearance?.QuoteColor   ?? "",
+                BracketColor = _conv?.Appearance?.BracketColor ?? "",
+            };
+            if (isUser && idx >= 0 && _conv.BranchPoints != null)
+                bubble.BranchData = _conv.BranchPoints.FirstOrDefault(bp => bp.AnchorIndex == idx);
+            // 异步加载附带图片（如果有）
+            if (isUser && !string.IsNullOrEmpty(msg.ImageBase64))
+                _ = LoadBubbleImageAsync(bubble, msg.ImageBase64);
+            return bubble;
+        }
+
+        private static async Task LoadBubbleImageAsync(ChatBubble bubble, string base64)
+        {
+            try
+            {
+                byte[] bytes = Convert.FromBase64String(base64);
+                var bmp = new Windows.UI.Xaml.Media.Imaging.BitmapImage();
+                using (var ms = new Windows.Storage.Streams.InMemoryRandomAccessStream())
+                {
+                    await ms.WriteAsync(bytes.AsBuffer());
+                    ms.Seek(0);
+                    await bmp.SetSourceAsync(ms);
+                }
+                bubble.ImageSource = bmp;
+            }
+            catch { }
+        }
+
+        private void AddSystemBubble(string text)
+        {
+            _bubbles.Add(new ChatBubble
+            {
+                Role = "assistant", Content = text,
+                BackgroundColor = new SolidColorBrush(Color.FromArgb(255, 80, 40, 40)),
+                ForegroundColor = _whiteBrush,
+                ReasoningBgColor = _reasoningBrush,
+            });
+            ScrollToBottom();
+        }
+
+        private void UpdateTitleLabel()
+        {
+            ConvTitleLabel.Text = _conv?.Title ?? "新对话";
+        }
+
+        private void ScrollToBottom()
+        {
+            if (ChatScrollViewer != null)
+                ChatScrollViewer.ChangeView(null, double.MaxValue, null);
+        }
+
+        // ── 手动构建请求JSON（支持多模态content array）────────────────────────
+
+        private static string EscapeJson(string s)
+        {
+            if (s == null) return string.Empty;
+            var r = new System.Text.StringBuilder(s.Length + 16);
+            foreach (char c in s)
+            {
+                if      (c == '\\') r.Append("\\\\");
+                else if (c == '"')  r.Append("\\\"");
+                else if (c == '\n') r.Append("\\n");
+                else if (c == '\r') r.Append("\\r");
+                else if (c == '\t') r.Append("\\t");
+                else if (c < 0x20) r.Append($"\\u{(int)c:x4}"); // 其他控制字符
+                else                r.Append(c);
+            }
+            return r.ToString();
+        }
+
+        private static string BuildRequestJson(string model, List<ApiRequestMessage> messages, bool stream, bool supportsVision = false)
+        {
+            var sb = new StringBuilder();
+            sb.Append("{");
+            sb.Append($"\"model\":\"{EscapeJson(model)}\",");
+            sb.Append($"\"stream\":{(stream ? "true" : "false")},");
+            sb.Append("\"messages\":[");
+            for (int i = 0; i < messages.Count; i++)
+            {
+                var m = messages[i];
+                sb.Append("{");
+                sb.Append($"\"role\":\"{EscapeJson(m.Role)}\",");
+                if (supportsVision && !string.IsNullOrEmpty(m.ImageBase64) && m.Role == "user")
+                {
+                    // multimodal: content is array
+                    sb.Append("\"content\":[");
+                    sb.Append("{");
+                    sb.Append("\"type\":\"image_url\",");
+                    sb.Append("\"image_url\":{");
+                    sb.Append($"\"url\":\"data:{EscapeJson(m.ImageMimeType)};base64,{m.ImageBase64}\"");
+                    sb.Append("}");
+                    sb.Append("},");
+                    sb.Append("{");
+                    sb.Append("\"type\":\"text\",");
+                    sb.Append($"\"text\":\"{EscapeJson(m.Content)}\"");
+                    sb.Append("}");
+                    sb.Append("]");
+                }
+                else
+                {
+                    sb.Append($"\"content\":\"{EscapeJson(m.Content)}\"");
+                }
+                sb.Append("}");
+                if (i < messages.Count - 1) sb.Append(",");
+            }
+            sb.Append("]");
+            sb.Append("}");
+            return sb.ToString();
+        }
+
+        private void PlaySound()
+        {
+            try { if (AppSettings.ReplySoundEnabled && ReplySound != null) { ReplySound.Source = new Uri("ms-appx:///Assets/replySound.mp3"); ReplySound.AutoPlay = true; ReplySound.Play(); } }
+            catch { }
+        }
+
+        // ── Colour helpers ────────────────────────────────────────────────────
+
+        private static Color GetAccentColor()
+        {
+            if (!_accentCached)
+            {
+                _accentColor  = new UISettings().GetColorValue(UIColorType.Accent);
+                _accentCached = true;
+            }
+            return _accentColor;
+        }
+
+        // Call once when loading a new conversation to pre-build all bubble brushes.
+        private void RebuildBrushCache()
+        {
+            var app = _conv?.Appearance;
+            var ac  = GetAccentColor();
+
+            // User background
+            if (app != null && !string.IsNullOrEmpty(app.UserBubbleColor)
+                && ConvAppearancePage.TryParseHex(app.UserBubbleColor, out Color uc))
+                _cachedUserBg = new SolidColorBrush(uc);
+            else
+                _cachedUserBg = new SolidColorBrush(ac);
+
+            // User foreground (auto contrast)
+            {
+                var c = (app != null && !string.IsNullOrEmpty(app.UserBubbleColor)
+                         && ConvAppearancePage.TryParseHex(app.UserBubbleColor, out Color cc)) ? cc : ac;
+                _cachedUserFg = new SolidColorBrush(
+                    c.R * 0.299 + c.G * 0.587 + c.B * 0.114 > 186 ? Colors.Black : Colors.White);
+            }
+
+            // AI background
+            if (app != null && !string.IsNullOrEmpty(app.AiBubbleColor)
+                && ConvAppearancePage.TryParseHex(app.AiBubbleColor, out Color aiBc))
+                _cachedAiBg = new SolidColorBrush(aiBc);
+            else
+            {
+                double f = 0.65;
+                _cachedAiBg = new SolidColorBrush(Color.FromArgb(ac.A,
+                    (byte)(ac.R * f), (byte)(ac.G * f), (byte)(ac.B * f)));
+            }
+
+            // AI foreground (auto contrast based on AI bubble background)
+            {
+                var c = (app != null && !string.IsNullOrEmpty(app.AiBubbleColor)
+                         && ConvAppearancePage.TryParseHex(app.AiBubbleColor, out Color cc)) ? cc
+                         : Color.FromArgb(ac.A, (byte)(ac.R * 0.65), (byte)(ac.G * 0.65), (byte)(ac.B * 0.65));
+                _cachedAiFg = new SolidColorBrush(
+                    c.R * 0.299 + c.G * 0.587 + c.B * 0.114 > 186 ? Colors.Black : Colors.White);
+            }
+        }
+
+        private SolidColorBrush UserBubbleBg() => _cachedUserBg  ?? (_cachedUserBg  = new SolidColorBrush(GetAccentColor()));
+        private SolidColorBrush UserBubbleFg() => _cachedUserFg  ?? (_cachedUserFg  = _whiteBrush);
+        private SolidColorBrush AiBubbleBg()   => _cachedAiBg   ?? (_cachedAiBg    = new SolidColorBrush(GetAccentColor()));
+        private SolidColorBrush AiBubbleFg()   => _cachedAiFg   ?? (_cachedAiFg    = _whiteBrush);
+
+        private void SetSendButtonColor()
+            => SubmitButton.Background = _cachedUserBg ?? new SolidColorBrush(GetAccentColor());
+
+        private void ApplyTheme() => AppSettings.ApplyTheme(RootGrid, this);
+
+        /// <summary>Apply per-conversation background and refresh all bubble colors.</summary>
+        private async void ApplyConvAppearance()
+        {
+            if (_conv == null) return;
+            var app = _conv.Appearance ?? new ConvAppearance();
+
+            // 如果开启了角色卡立绘背景，且对话背景未手动设置，自动用角色卡立绘
+            if (AppSettings.UseCharaIllustrationAsBg && app.BackgroundType == "none")
+            {
+                var chara = DataManager.GetCharacterForConversation(_conv);
+                if (chara != null && chara.HasIllustration)
+                {
+                    app = new ConvAppearance { BackgroundType = "image", BackgroundValue = chara.IllustrationBase64 };
+                }
+            }
+
+            // Background
+            switch (app.BackgroundType)
+            {
+                case "solid":
+                    ChatBgImage.Visibility  = Visibility.Collapsed;
+                    if (ConvAppearancePage.TryParseHex(app.BackgroundValue, out Color bgc))
+                    {
+                        ChatBgSolid.Background = new SolidColorBrush(bgc);
+                        ChatBgSolid.Visibility = Visibility.Visible;
+                    }
+                    else ChatBgSolid.Visibility = Visibility.Collapsed;
+                    break;
+
+                case "image":
+                    ChatBgSolid.Visibility = Visibility.Collapsed;
+                    if (!string.IsNullOrEmpty(app.BackgroundValue))
+                    {
+                        try
+                        {
+                            byte[] bytes = Convert.FromBase64String(app.BackgroundValue);
+                            var bmp = new Windows.UI.Xaml.Media.Imaging.BitmapImage();
+                            using (var ms = new Windows.Storage.Streams.InMemoryRandomAccessStream())
+                            {
+                                await ms.WriteAsync(bytes.AsBuffer());
+                                ms.Seek(0);
+                                await bmp.SetSourceAsync(ms);
+                            }
+                            ChatBgImage.Source     = bmp;
+                            ChatBgImage.Visibility = Visibility.Visible;
+                            // 暗度遮罩：DimOpacity 0=透明 100=全黑
+                            byte alpha = (byte)(app.DimOpacity * 255 / 100);
+                            ChatBgDimOverlay.Background = new SolidColorBrush(Color.FromArgb(alpha, 0, 0, 0));
+                            ChatBgDimOverlay.Visibility = alpha > 0 ? Visibility.Visible : Visibility.Collapsed;
+                        }
+                        catch { ChatBgImage.Visibility = Visibility.Collapsed; ChatBgDimOverlay.Visibility = Visibility.Collapsed; }
+                    }
+                    else { ChatBgImage.Visibility = Visibility.Collapsed; ChatBgDimOverlay.Visibility = Visibility.Collapsed; }
+                    break;
+
+                default:
+                    ChatBgSolid.Visibility = Visibility.Collapsed;
+                    ChatBgImage.Visibility = Visibility.Collapsed;
+                    ChatBgDimOverlay.Visibility = Visibility.Collapsed;
+                    break;
+            }
+
+            // Refresh bubble colors on existing bubbles
+            foreach (var b in _bubbles)
+            {
+                bool isUser = b.Role.Equals("user", StringComparison.OrdinalIgnoreCase);
+                if (isUser)
+                {
+                    b.BackgroundColor = UserBubbleBg();
+                    b.ForegroundColor = UserBubbleFg();
+                }
+                else
+                {
+                    b.BackgroundColor = AiBubbleBg();
+                    b.ForegroundColor = AiBubbleFg();
+                }
+            }
+        }
+
+        private async void SetStatusBarColor()
+        {
+            if (Windows.Foundation.Metadata.ApiInformation.IsTypePresent("Windows.UI.ViewManagement.StatusBar"))
+            {
+                var sb = StatusBar.GetForCurrentView();
+                sb.BackgroundColor = Colors.Black;
+                sb.BackgroundOpacity = 1;
+                sb.ForegroundColor = Colors.White;
+                await sb.ShowAsync();
+            }
+        }
+    }
+}

@@ -14,9 +14,9 @@
 
         <StackPanel Grid.Row="0" Margin="14,16,14,8">
             <TextBlock x:Name="PageTitle" Text="API 配置" FontSize="32" FontWeight="Light"/>
-            <TextBlock x:Name="PageStepHint" Text="步骤 1 / 4  ·  必须完成"
+            <TextBlock x:Name="PageStepHint" Text="步骤 3 / 3"
                        FontSize="12" Opacity="0.5" Margin="0,4,0,0"/>
-            <ProgressBar Value="25" Maximum="100" Margin="0,10,0,0" Height="4"/>
+            <ProgressBar Value="100" Maximum="100" Margin="0,10,0,0" Height="4"/>
         </StackPanel>
 
         <ScrollViewer Grid.Row="1">

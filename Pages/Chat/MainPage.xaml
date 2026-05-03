@@ -246,6 +246,77 @@
                                             </StackPanel>
                                         </Border>
 
+                                        <!-- 工具调用步骤（思维链） -->
+                                        <Border Visibility="{Binding ToolStepsVisibility}"
+                                                Margin="12,4,12,2" MaxWidth="580"
+                                                HorizontalAlignment="{Binding Align}"
+                                                CornerRadius="8"
+                                                BorderThickness="1"
+                                                BorderBrush="{ThemeResource SystemControlForegroundBaseLowBrush}">
+                                            <Border.Background>
+                                                <SolidColorBrush Color="{ThemeResource SystemAltHighColor}" Opacity="0.6"/>
+                                            </Border.Background>
+                                            <StackPanel>
+                                                <!-- 标题行 -->
+                                                <Button Tag="{Binding}" Click="ToggleToolSteps_Click"
+                                                        Background="Transparent" BorderThickness="0"
+                                                        HorizontalAlignment="Stretch" Padding="10,8,10,8">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <FontIcon Grid.Column="0" Glyph="&#xE9F5;" FontSize="13"
+                                                                  Foreground="{ThemeResource SystemAccentColor}"
+                                                                  Margin="0,0,8,0"/>
+                                                        <TextBlock Grid.Column="1" Text="{Binding ToolStepsLabel}"
+                                                                   FontSize="12" FontWeight="SemiBold"
+                                                                   Foreground="{ThemeResource SystemAccentColor}"
+                                                                   VerticalAlignment="Center"/>
+                                                        <FontIcon Grid.Column="2"
+                                                                  Glyph="{Binding ToolStepsChevron}"
+                                                                  FontFamily="Segoe MDL2 Assets"
+                                                                  FontSize="10" Opacity="0.6"
+                                                                  Foreground="{ThemeResource ApplicationForegroundThemeBrush}"/>
+                                                    </Grid>
+                                                </Button>
+                                                <!-- 分隔线 -->
+                                                <Rectangle Visibility="{Binding ToolStepsBodyVisibility}"
+                                                           Height="1" HorizontalAlignment="Stretch"
+                                                           Fill="{ThemeResource SystemControlForegroundBaseLowBrush}"
+                                                           Margin="0"/>
+                                                <!-- 步骤内容 -->
+                                                <ItemsControl Visibility="{Binding ToolStepsBodyVisibility}"
+                                                              ItemsSource="{Binding ToolStepsList}"
+                                                              Padding="8,6,8,8">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Grid Margin="2,3">
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="20"/>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                    <ColumnDefinition Width="*"/>
+                                                                </Grid.ColumnDefinitions>
+                                                                <TextBlock Grid.Column="0" Text="{Binding Icon}"
+                                                                           FontSize="12" VerticalAlignment="Top"
+                                                                           Margin="0,1,0,0"/>
+                                                                <TextBlock Grid.Column="1" Text="{Binding ToolName}"
+                                                                           FontSize="12" FontWeight="SemiBold"
+                                                                           Foreground="{ThemeResource SystemAccentColor}"
+                                                                           VerticalAlignment="Top"
+                                                                           Margin="0,0,6,0"/>
+                                                                <TextBlock Grid.Column="2" Text="{Binding Detail}"
+                                                                           FontSize="11" Opacity="0.7"
+                                                                           TextWrapping="Wrap"
+                                                                           VerticalAlignment="Top"/>
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+                                        </Border>
+
                                                         <!-- User bubble: always plain text -->
                                         <!-- 图片缩略图（气泡上方，可点击放大） -->
                                         <Border Visibility="{Binding HasImageVisibility}"
@@ -286,13 +357,19 @@
                                                        Padding="10,8"/>
                                         </Border>
 
-                                        <!-- 搜索状态提示（tool use 进行中） -->
-                                        <TextBlock Text="{Binding SearchStatusText}"
-                                                   Visibility="{Binding SearchStatusVisibility}"
-                                                   FontSize="12" Opacity="0.55"
-                                                   Margin="14,2,12,0"
-                                                   HorizontalAlignment="{Binding Align}"
-                                                   TextWrapping="Wrap"/>
+                                        <!-- 搜索状态提示（tool use 进行中，有动画感） -->
+                                        <Border Visibility="{Binding SearchStatusVisibility}"
+                                                Margin="12,2,12,2"
+                                                HorizontalAlignment="{Binding Align}"
+                                                Padding="8,4" CornerRadius="4">
+                                            <Border.Background>
+                                                <SolidColorBrush Color="{ThemeResource SystemAccentColor}" Opacity="0.12"/>
+                                            </Border.Background>
+                                            <TextBlock Text="{Binding SearchStatusText}"
+                                                       FontSize="12"
+                                                       Foreground="{ThemeResource SystemAccentColor}"
+                                                       TextWrapping="Wrap"/>
+                                        </Border>
 
                                         <!-- AI bubble after stream: markdown-rendered RichTextBlock -->
                                         <Border Background="{Binding BackgroundColor}"
@@ -473,6 +550,14 @@
                                         <FontIcon x:Name="WebSearchIcon" Glyph="&#xE721;" FontSize="15" Opacity="0.6"
                                                   Foreground="{ThemeResource ApplicationForegroundThemeBrush}"/>
                                     </Button>
+                                    <!-- Full Trust：跳过敏感操作权限确认 -->
+                                    <Button x:Name="FullTrustBtn" Click="FullTrustBtn_Click"
+                                            Background="Transparent" BorderThickness="0"
+                                            Width="40" Height="36" Padding="0"
+                                            ToolTipService.ToolTip="完全信任模式（跳过权限确认）">
+                                        <FontIcon x:Name="FullTrustIcon" Glyph="&#xE72E;" FontSize="15" Opacity="0.6"
+                                                  Foreground="{ThemeResource ApplicationForegroundThemeBrush}"/>
+                                    </Button>
                                     <!-- 允许 AI 直接 Fetch 搜索页 -->
                                     <Button x:Name="FetchSearchBtn" Click="FetchSearchBtn_Click"
                                             Background="Transparent" BorderThickness="0"
@@ -481,22 +566,6 @@
                                             ToolTipService.ToolTip="允许 AI 直接读取搜索页面">
                                         <FontIcon x:Name="FetchSearchIcon" Glyph="&#xE909;" FontSize="15" Opacity="0.6"
                                                   Foreground="{ThemeResource ApplicationForegroundThemeBrush}"/>
-                                    </Button>
-                                </StackPanel>
-                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                    <!-- 插入括号 -->
-                                    <Button Click="InsertBracketBtn_Click"
-                                            Background="Transparent" BorderThickness="0"
-                                            Width="40" Height="36" Padding="0"
-                                            ToolTipService.ToolTip="插入括号（动作/心理）">
-                                        <TextBlock Text="（）" FontSize="13" Opacity="0.6" VerticalAlignment="Center"/>
-                                    </Button>
-                                    <!-- 插入引号 -->
-                                    <Button Click="InsertQuoteBtn_Click"
-                                            Background="Transparent" BorderThickness="0"
-                                            Width="40" Height="36" Padding="0"
-                                            ToolTipService.ToolTip="插入引号（对话）">
-                                        <TextBlock Text="「」" FontSize="13" Opacity="0.6" VerticalAlignment="Center"/>
                                     </Button>
                                 </StackPanel>
                             </Grid>

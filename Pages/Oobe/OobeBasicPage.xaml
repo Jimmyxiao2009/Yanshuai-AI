@@ -18,6 +18,9 @@
             <TextBlock x:Name="PageSubtitle"
                        Text="你可以随时在设置页面更改这些选项。"
                        FontSize="13" Opacity="0.5" Margin="0,4,0,0"/>
+            <TextBlock x:Name="PageStepHint" Text="步骤 1 / 3"
+                       FontSize="12" Opacity="0.5" Margin="0,8,0,0"/>
+            <ProgressBar Value="33" Maximum="100" Margin="0,6,0,0" Height="4"/>
         </StackPanel>
 
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">

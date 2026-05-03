@@ -185,6 +185,9 @@
     <Compile Include="Pages\Oobe\OobeBasicPage.xaml.cs">
       <DependentUpon>OobeBasicPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Pages\Oobe\OobePermissionPage.xaml.cs">
+      <DependentUpon>OobePermissionPage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Pages\Oobe\OobePage1.xaml.cs">
       <DependentUpon>OobePage1.xaml</DependentUpon>
     </Compile>
@@ -262,6 +265,10 @@
     </Page>
     <!-- Oobe -->
     <Page Include="Pages\Oobe\OobeBasicPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\Oobe\OobePermissionPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

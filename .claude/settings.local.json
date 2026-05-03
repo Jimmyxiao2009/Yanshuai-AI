@@ -6,7 +6,10 @@
       "Bash(mv AppSettings.cs AppState.cs DataManager.cs ApiLogger.cs Tools.cs Core/)",
       "Bash(mv Models.cs Models/)",
       "Bash(mv MainPage.xaml MainPage.xaml.cs Pages/Chat/)",
-      "Bash(grep -v 'obj\\\\\\\\')"
+      "Bash(grep -v 'obj\\\\\\\\')",
+      "Bash([ -f \"E:/User Files/Desktop/项目/言枢AI/Lumina.Agent/$f\" ])",
+      "WebSearch",
+      "Bash(python3 *)"
     ]
   }
 }

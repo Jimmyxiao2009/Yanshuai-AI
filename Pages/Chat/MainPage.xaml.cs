@@ -17,6 +17,9 @@ using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
+using Windows.Storage;
+using Windows.Storage.AccessCache;
+using Windows.Storage.Pickers;
 using Windows.UI.Xaml.Navigation;
 
 namespace yanshuai
@@ -24,6 +27,13 @@ namespace yanshuai
     // ══════════════════════════════════════════════════════════════════════════
     // Chat bubble view-model
     // ══════════════════════════════════════════════════════════════════════════
+
+    public class ToolStepEntry
+    {
+        public string Icon { get; set; }
+        public string ToolName { get; set; }
+        public string Detail { get; set; }
+    }
 
     public class ChatBubble : INotifyPropertyChanged
     {
@@ -203,6 +213,71 @@ namespace yanshuai
             !string.IsNullOrEmpty(_searchStatusText) && Role != "user"
                 ? Visibility.Visible : Visibility.Collapsed;
 
+        // ── 工具调用步骤展示（思维链） ──────────────────────────────────────
+        private string _toolStepsText = "";
+        public string ToolStepsText
+        {
+            get => _toolStepsText;
+            set
+            {
+                _toolStepsText = value;
+                // 解析成结构化列表
+                var list = new System.Collections.ObjectModel.ObservableCollection<ToolStepEntry>();
+                foreach (var line in value.Split('\n'))
+                {
+                    if (string.IsNullOrWhiteSpace(line)) continue;
+                    string icon = "⏳"; string rest = line;
+                    if (line.StartsWith("✅ ")) { icon = "✅"; rest = line.Substring(2); }
+                    else if (line.StartsWith("❌ ")) { icon = "❌"; rest = line.Substring(2); }
+                    else if (line.StartsWith("⏳ ")) { rest = line.Substring(2); }
+                    // rest = "toolName  detail"
+                    int sep = rest.IndexOf("  ");
+                    string toolName = sep > 0 ? rest.Substring(0, sep) : rest;
+                    string detail = sep > 0 ? rest.Substring(sep + 2) : "";
+                    list.Add(new ToolStepEntry { Icon = icon, ToolName = toolName, Detail = detail });
+                }
+                _toolStepsList = list;
+                OnProp();
+                OnProp(nameof(ToolStepsList));
+                OnProp(nameof(HasToolSteps));
+                OnProp(nameof(ToolStepsVisibility));
+            }
+        }
+
+        private System.Collections.ObjectModel.ObservableCollection<ToolStepEntry> _toolStepsList
+            = new System.Collections.ObjectModel.ObservableCollection<ToolStepEntry>();
+        public System.Collections.ObjectModel.ObservableCollection<ToolStepEntry> ToolStepsList => _toolStepsList;
+
+        private bool _toolStepsExpanded = true;
+        public bool ToolStepsExpanded
+        {
+            get => _toolStepsExpanded;
+            set
+            {
+                _toolStepsExpanded = value;
+                OnProp();
+                OnProp(nameof(ToolStepsLabel));
+                OnProp(nameof(ToolStepsChevron));
+                OnProp(nameof(ToolStepsBodyVisibility));
+            }
+        }
+
+        public bool HasToolSteps => _toolStepsList.Count > 0;
+        public Visibility ToolStepsVisibility =>
+            HasToolSteps && Role != "user" ? Visibility.Visible : Visibility.Collapsed;
+        public Visibility ToolStepsBodyVisibility =>
+            ToolStepsExpanded ? Visibility.Visible : Visibility.Collapsed;
+        public string ToolStepsLabel
+        {
+            get
+            {
+                int done = _toolStepsList.Count(s => s.Icon == "✅" || s.Icon == "❌");
+                int total = _toolStepsList.Count;
+                return total > 0 ? string.Format("工具调用  {0}/{1}", done, total) : "工具调用";
+            }
+        }
+        public string ToolStepsChevron => ToolStepsExpanded ? "▴" : "▾"; // small triangles
+
         public event PropertyChangedEventHandler PropertyChanged;
         private void OnProp([CallerMemberName] string n = null)
             => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(n));
@@ -337,7 +412,23 @@ namespace yanshuai
             }
             else
             {
-                _conv = DataManager.GetOrCreateDefaultConversation();
+                // ActiveConversation == null：新建对话（从对话列表点「新建」进来）
+                _conv = new Conversation
+                {
+                    Title        = "新对话",
+                    ApiProfileId = DataManager.Data.SelectedApiProfileId ?? "",
+                };
+                _isPendingConv = true;
+                ResetToolPermissions();
+                if (FunctionCallEngine.FullTrust)
+                {
+                    FunctionCallEngine.FullTrust = false;
+                    if (FullTrustIcon != null)
+                    {
+                        FullTrustIcon.Foreground = (SolidColorBrush)Application.Current.Resources["ApplicationForegroundThemeBrush"];
+                        FullTrustIcon.Opacity = 0.6;
+                    }
+                }
             }
             AppState.ActiveConversation = _conv;
             if (!_isPendingConv)
@@ -350,10 +441,10 @@ namespace yanshuai
             // 恢复 WebSearch 图标状态
             if (WebSearchIcon != null)
             {
-                WebSearchIcon.Foreground = _webSearchEnabled
+                WebSearchIcon.Foreground = _toolsEnabled
                     ? new SolidColorBrush(Color.FromArgb(255, 0, 120, 215))
                     : new SolidColorBrush(AppSettings.IsDark ? Colors.White : Colors.Black);
-                WebSearchIcon.Opacity = _webSearchEnabled ? 1.0 : 0.6;
+                WebSearchIcon.Opacity = _toolsEnabled ? 1.0 : 0.6;
             }
 
             // 强制设置工具栏图标前景色（防止深色模式下图标不可见）
@@ -638,21 +729,24 @@ namespace yanshuai
             }
         }
 
-        private bool _webSearchEnabled = false;
+        private bool _toolsEnabled = true;
         private bool _fetchSearchEnabled = false;
+        // 本次对话已授权的敏感操作 key（由 FunctionCallEngine._grantedPermissions 管理）
+        // 新建对话时重置
+        private void ResetToolPermissions() => FunctionCallEngine.ResetGrantedPermissions();
 
         private void WebSearchBtn_Click(object sender, RoutedEventArgs e)
         {
-            _webSearchEnabled = !_webSearchEnabled;
+            _toolsEnabled = !_toolsEnabled;
             if (WebSearchIcon != null)
             {
-                WebSearchIcon.Foreground = _webSearchEnabled
+                WebSearchIcon.Foreground = _toolsEnabled
                     ? new SolidColorBrush(Color.FromArgb(255, 0, 120, 215))
                     : (SolidColorBrush)Application.Current.Resources["ApplicationForegroundThemeBrush"];
-                WebSearchIcon.Opacity = _webSearchEnabled ? 1.0 : 0.6;
+                WebSearchIcon.Opacity = _toolsEnabled ? 1.0 : 0.6;
             }
-            // 搜索关闭时同步关闭 fetch 搜索页
-            if (!_webSearchEnabled)
+            // 工具关闭时同步关闭 fetch 选项
+            if (!_toolsEnabled)
             {
                 _fetchSearchEnabled = false;
                 if (FetchSearchIcon != null)
@@ -662,7 +756,7 @@ namespace yanshuai
                 }
             }
             if (FetchSearchBtn != null)
-                FetchSearchBtn.Visibility = _webSearchEnabled ? Visibility.Visible : Visibility.Collapsed;
+                FetchSearchBtn.Visibility = _toolsEnabled ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private void FetchSearchBtn_Click(object sender, RoutedEventArgs e)
@@ -677,25 +771,16 @@ namespace yanshuai
             }
         }
 
-        private void InsertBracketBtn_Click(object sender, RoutedEventArgs e)
+        private void FullTrustBtn_Click(object sender, RoutedEventArgs e)
         {
-            int pos = InputTextBox.SelectionStart;
-            string selected = InputTextBox.SelectedText;
-            string insert = "（" + selected + "）";
-            InputTextBox.Text = InputTextBox.Text.Remove(pos, InputTextBox.SelectionLength).Insert(pos, insert);
-            // 有选中文字则光标移到右括号后，否则停在两括号之间
-            InputTextBox.SelectionStart = selected.Length > 0 ? pos + insert.Length : pos + 1;
-            InputTextBox.Focus(FocusState.Programmatic);
-        }
-
-        private void InsertQuoteBtn_Click(object sender, RoutedEventArgs e)
-        {
-            int pos = InputTextBox.SelectionStart;
-            string selected = InputTextBox.SelectedText;
-            string insert = "「" + selected + "」";
-            InputTextBox.Text = InputTextBox.Text.Remove(pos, InputTextBox.SelectionLength).Insert(pos, insert);
-            InputTextBox.SelectionStart = selected.Length > 0 ? pos + insert.Length : pos + 1;
-            InputTextBox.Focus(FocusState.Programmatic);
+            FunctionCallEngine.FullTrust = !FunctionCallEngine.FullTrust;
+            if (FullTrustIcon != null)
+            {
+                FullTrustIcon.Foreground = FunctionCallEngine.FullTrust
+                    ? new SolidColorBrush(Color.FromArgb(255, 255, 80, 40))
+                    : (SolidColorBrush)Application.Current.Resources["ApplicationForegroundThemeBrush"];
+                FullTrustIcon.Opacity = FunctionCallEngine.FullTrust ? 1.0 : 0.6;
+            }
         }
 
         // ── Input: Enter sends, Shift+Enter inserts newline ───────────────────
@@ -940,17 +1025,47 @@ namespace yanshuai
                 if (!string.IsNullOrEmpty(up.Description)) sb.AppendLine("用户描述：" + up.Description);
             }
 
-            if (_webSearchEnabled)
+            if (_toolsEnabled)
             {
                 sb.AppendLine();
                 sb.AppendLine($"【当前日期】{DateTime.Now:yyyy年M月d日}");
+                sb.AppendLine("【重要：工具调用规则】你现在配备了以下工具，遇到对应场景时必须主动调用，不得依靠训练知识直接回答：");
+                sb.AppendLine("- web_search：查询实时信息、新闻、天气、当前价格、最新事件等一切需要联网的内容");
+                sb.AppendLine("- fetch_page：精读某个具体 URL 的完整正文（不能用于任何搜索引擎页面）");
+                sb.AppendLine("- list_files / read_file / write_file：操作本地或 SD 卡文件");
+                sb.AppendLine("- request_folder_access：当 list_files / read_file / write_file 返回权限不足时，调用此工具请求用户授权文件夹，无需重复询问已授权的路径");
+                sb.AppendLine("- calendar_list / calendar_create：查看或创建日历事件");
+                sb.AppendLine("- contacts_search：搜索联系人");
+                sb.AppendLine("- make_call / send_sms：拨打电话或发送短信（仅手机端）");
+                sb.AppendLine("- open_app：打开系统应用或设置页面");
+
+                // 注入已授权的文件夹列表，让 AI 知道哪些路径不需要再请求授权
+                try
+                {
+                    // 读已授权文件夹（只读 metadata，不 await，不死锁）
+                    var accessList = Windows.Storage.AccessCache.StorageApplicationPermissions.FutureAccessList;
+                    var grantedFolders = new List<string>();
+                    foreach (var entry in accessList.Entries)
+                    {
+                        if (!string.IsNullOrEmpty(entry.Metadata))
+                            grantedFolders.Add(entry.Metadata);
+                    }
+                    if (grantedFolders.Count > 0)
+                    {
+                        sb.AppendLine("【已授权的文件夹】以下路径已被用户永久授权，直接操作无需再次调用 request_folder_access：");
+                        foreach (var p in grantedFolders)
+                            sb.AppendLine("  - " + p);
+                    }
+                }
+                catch { }
+
                 if (_fetchSearchEnabled)
                 {
-                    sb.AppendLine("【搜索规则】你可以先调用 web_search，也可以直接用 fetch_page 读取搜索引擎的结果页面（如 DuckDuckGo、Bing、SearXNG 等）。但严禁 fetch google.com、google.com.hk 或任何 google 子域名（包括 www.google.com），这类请求会被系统拦截。");
+                    sb.AppendLine("【搜索策略】可先调用 web_search 获取摘要，再用 fetch_page 精读具体页面。严禁 fetch google.com、google.com.hk 或任何 Google 子域名，此类请求会被系统拦截。");
                 }
                 else
                 {
-                    sb.AppendLine("【搜索规则】需要查询实时信息时，必须调用 web_search 工具获取结果；禁止直接用 fetch_page 抓取任何搜索引擎页面（包括 Google、DuckDuckGo、Bing、百度等）。fetch_page 仅用于读取 web_search 返回的具体页面 URL。");
+                    sb.AppendLine("【搜索策略】需要实时信息时必须调用 web_search；fetch_page 仅用于读取 web_search 返回结果中的具体页面 URL，禁止用于抓取任何搜索引擎页面。");
                 }
             }
             return sb.ToString().Trim();
@@ -1076,6 +1191,12 @@ namespace yanshuai
         {
             if ((sender as Button)?.Tag is ChatBubble b)
                 b.ReasoningExpanded = !b.ReasoningExpanded;
+        }
+
+        private void ToggleToolSteps_Click(object sender, RoutedEventArgs e)
+        {
+            if ((sender as Button)?.Tag is ChatBubble b)
+                b.ToolStepsExpanded = !b.ToolStepsExpanded;
         }
 
         // ── Message actions ───────────────────────────────────────────────────
@@ -1460,7 +1581,7 @@ namespace yanshuai
             // ── 注册后台任务（页面离开后继续运行）──────────────────────────
             var conv       = _conv;
             var cts        = _streamCts;
-            var webEnabled = _webSearchEnabled;
+            var webEnabled = _toolsEnabled;
             string requestJson = BuildRequestJson(profile.Model, apiMessages, true, profile.VisionEnabled, profile.ProviderType == "claude");
 
             AppState.BackgroundConvId = conv.Id;
@@ -1480,9 +1601,15 @@ namespace yanshuai
                 {
                     if (webEnabled)
                     {
+                        // 差距二修复：工具循环开始前先显示"思考中..."，循环内容实时推送到气泡
+                        await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                            aiBubble.SearchStatusText = "⏳ 思考中…");
                         string finalContent = await RunToolUseLoopAsync(profile, apiMessages, aiBubble, cts.Token);
                         await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-                            aiBubble.Content = finalContent);
+                        {
+                            aiBubble.Content = finalContent;
+                            aiBubble.SearchStatusText = "";
+                        });
                     }
                     else
                     {
@@ -1565,561 +1692,6 @@ namespace yanshuai
             await sendTask;
         }
 
-
-        // ── Web Search / Tool Use ─────────────────────────────────────────────
-
-        // 搜索 API 池（懒加载，首次搜索时从文件读取）
-        private List<SearchApiEntry> _searchApiPool = null;
-        private readonly Random _rng = new Random();
-
-        private async Task<List<SearchApiEntry>> GetSearchPoolAsync()
-        {
-            if (_searchApiPool != null) return _searchApiPool;
-            var saved = await AppSettings.LoadSearchApisAsync();
-            if (saved != null && saved.Count > 0)
-                _searchApiPool = saved;
-            else
-                _searchApiPool = SearchSettingsPage.BuildDefaultEntriesPublic();
-            return _searchApiPool;
-        }
-
-        // 缓存可用 SearXNG 实例列表（按响应速度排序）
-        private List<string> _cachedSearxngUrls = null;
-        private DateTime _searxngCacheTime = DateTime.MinValue;
-
-        private async Task<List<string>> GetUsableSearxngAsync(IList<SearchApiEntry> pool)
-        {
-            if (_cachedSearxngUrls != null && (DateTime.Now - _searxngCacheTime).TotalMinutes < 15)
-                return _cachedSearxngUrls;
-
-            var instances = pool.Where(e => e.Type == "searxng" && e.Enabled && !string.IsNullOrEmpty(e.Value))
-                                .Select(e => e.Value).ToArray();
-            if (instances.Length == 0) return null;
-
-            var results   = new List<(string url, long ms)>();
-            var tasks     = new System.Collections.Generic.List<Task>();
-
-            for (int i = 0; i < instances.Length; i++)
-            {
-                int idx = i;
-                string inst = instances[idx];
-                tasks.Add(Task.Run(async () =>
-                {
-                    try
-                    {
-                        var sw = System.Diagnostics.Stopwatch.StartNew();
-                        var req = new HttpRequestMessage(HttpMethod.Head, inst + "/search?q=test&format=json");
-                        req.Headers.TryAddWithoutValidation("Accept", "application/json");
-                        using (var cts2 = new System.Threading.CancellationTokenSource(8000))
-                        using (var resp = await _http.SendAsync(req, cts2.Token))
-                        {
-                            sw.Stop();
-                            if ((int)resp.StatusCode < 500)
-                            {
-                                lock (results)
-                                    results.Add((inst, sw.ElapsedMilliseconds));
-                            }
-                        }
-                    }
-                    catch { }
-                }));
-            }
-
-            await Task.WhenAll(tasks);
-
-            if (results.Count > 0)
-            {
-                _cachedSearxngUrls = results.OrderBy(r => r.ms).Select(r => r.url).ToList();
-                _searxngCacheTime = DateTime.Now;
-            }
-            return _cachedSearxngUrls;
-        }
-
-        // 执行搜索，带重试和降级
-        private async Task<string> RunSearchAsync(string query)
-        {
-            try
-            {
-                var pool    = await GetSearchPoolAsync();
-                var enabled = pool.Where(e => e.Enabled).ToList();
-                if (enabled.Count == 0)
-                    return "[搜索失败：未启用任何搜索源，请前往设置开启]";
-
-                // 1. Bing（最稳定，但需要 API Key）
-                var bingEntry = enabled.FirstOrDefault(e => e.Type == "bing" && !string.IsNullOrEmpty(e.Value));
-                if (bingEntry != null)
-                {
-                    string result = await RunBingSearchAsync(query, bingEntry.Value);
-                    if (!string.IsNullOrEmpty(result)) return result;
-                }
-
-                // 2. SearXNG — 逐个尝试可用实例，直到搜到或全部失败
-                bool hasSearxng = enabled.Any(e => e.Type == "searxng" && !string.IsNullOrEmpty(e.Value));
-                if (hasSearxng)
-                {
-                    var usable = await GetUsableSearxngAsync(pool);
-                    if (usable != null && usable.Count > 0)
-                    {
-                        foreach (string baseUrl in usable)
-                        {
-                            try
-                            {
-                                var url = baseUrl.TrimEnd('/') + "/search?q=" + Uri.EscapeDataString(query) + "&format=json&pageno=1";
-                                var req = new HttpRequestMessage(HttpMethod.Get, url);
-                                req.Headers.TryAddWithoutValidation("Accept", "application/json");
-                                using (var cts = new System.Threading.CancellationTokenSource(10000))
-                                using (var resp = await _http.SendAsync(req, cts.Token))
-                                {
-                                    if (resp.IsSuccessStatusCode)
-                                    {
-                                        string r = ParseSearxngResults(await resp.Content.ReadAsStringAsync());
-                                        if (!string.IsNullOrEmpty(r)) return r;
-                                    }
-                                }
-                            }
-                            catch { /* 换下一个实例 */ }
-                        }
-                    }
-                }
-
-                // 3. DuckDuckGo — 用 lite 接口（比 /html/ 稳定）
-                if (enabled.Any(e => e.Type == "ddg"))
-                {
-                    try
-                    {
-                        var req = new HttpRequestMessage(HttpMethod.Get, "https://lite.duckduckgo.com/lite/?q=" + Uri.EscapeDataString(query));
-                        req.Headers.TryAddWithoutValidation("User-Agent", AppSettings.FetchUserAgent);
-                        using (var cts = new System.Threading.CancellationTokenSource(10000))
-                        using (var resp = await _http.SendAsync(req, cts.Token))
-                        {
-                            if (resp.IsSuccessStatusCode)
-                            {
-                                string r = ParseDdgLiteResults(await resp.Content.ReadAsStringAsync());
-                                if (!string.IsNullOrEmpty(r)) return r;
-                            }
-                        }
-                    }
-                    catch { }
-                }
-
-                return "[搜索无结果：所有搜索源均已尝试但未返回有效数据，请检查网络或稍后重试]";
-            }
-            catch (Exception ex)
-            {
-                return $"[搜索异常：{ex.Message}]";
-            }
-        }
-
-        private async Task<string> RunBingSearchAsync(string query, string subscriptionKey)
-        {
-            try
-            {
-                var url = "https://api.bing.microsoft.com/v7.0/search?q=" + Uri.EscapeDataString(query) + "&mkt=zh-CN&count=5";
-                var req = new HttpRequestMessage(HttpMethod.Get, url);
-                req.Headers.TryAddWithoutValidation("Ocp-Apim-Subscription-Key", subscriptionKey);
-                using (var resp = await _http.SendAsync(req))
-                {
-                    if (!resp.IsSuccessStatusCode) return null;
-                    return ParseBingResults(await resp.Content.ReadAsStringAsync());
-                }
-            }
-            catch { return null; }
-        }
-
-        private static string ParseSerperResults(string json) => null; // 已移除
-        private static string ParseBraveResults(string json)  => null;
-        private static string ParseBaiduResults(string json)  => null;
-        private static string ParseDdgResults(string json)    => null;
-
-        private static string ParseBingResults(string json)
-        {
-            // Bing v7: {"webPages":{"value":[{"name":"...","url":"...","snippet":"..."}]}}
-            if (string.IsNullOrEmpty(json)) return null;
-            var sb = new StringBuilder();
-            int idx = json.IndexOf("\"value\":");
-            if (idx < 0) return null;
-            int searchFrom = idx;
-            int count = 0;
-            while (count < 5)
-            {
-                int nameIdx = json.IndexOf("\"name\":", searchFrom);
-                if (nameIdx < 0) break;
-                string title = ExtractJsonString(json, nameIdx + 7);
-                int urlIdx = json.IndexOf("\"url\":", nameIdx);
-                if (urlIdx < 0) break;
-                string url = ExtractJsonString(json, urlIdx + 6);
-                int snipIdx = json.IndexOf("\"snippet\":", nameIdx);
-                string snippet = snipIdx >= 0 ? ExtractJsonString(json, snipIdx + 10) : "";
-                sb.AppendLine($"- {title}\n  {snippet}\n  {url}");
-                searchFrom = urlIdx + 6;
-                count++;
-                if (sb.Length > 2000) break;
-            }
-            return sb.Length > 0 ? sb.ToString().Trim() : null;
-        }
-
-        private static string ParseSearxngResults(string json)
-        {
-            // 找 "results": [ 数组，逐个提取 title/content/url
-            var sb = new StringBuilder();
-            int arrStart = json.IndexOf("\"results\":");
-            if (arrStart < 0) return null;
-            int idx = json.IndexOf('[', arrStart);
-            if (idx < 0) return null;
-
-            int count = 0;
-            while (count < 8)
-            {
-                int braceStart = json.IndexOf('{', idx);
-                if (braceStart < 0) break;
-                int braceEnd   = json.IndexOf('}', braceStart);
-                if (braceEnd < 0) break;
-
-                string block = json.Substring(braceStart, braceEnd - braceStart + 1);
-
-                string title   = ExtractJsonValue(block, "title");
-                string content = ExtractJsonValue(block, "content");
-                string url     = ExtractJsonValue(block, "url");
-
-                if (!string.IsNullOrEmpty(title) || !string.IsNullOrEmpty(content))
-                {
-                    sb.AppendLine($"- {title}\n  {content}\n  {url}");
-                    count++;
-                }
-                idx = braceEnd + 1;
-                if (sb.Length > 3000) break;
-            }
-            return sb.Length > 0 ? sb.ToString().Trim() : null;
-        }
-
-        // 从 JSON 键值对中提取引号内的值（只搜 block 范围，更准确）
-        private static string ExtractJsonValue(string block, string key)
-        {
-            int keyIdx = block.IndexOf("\"" + key + "\":");
-            if (keyIdx < 0) return "";
-            int valStart = keyIdx + key.Length + 3;
-            while (valStart < block.Length && block[valStart] == ' ') valStart++;
-            if (valStart >= block.Length || block[valStart] != '"') return ExtractJsonRawValue(block, valStart);
-            valStart++;
-            var sb = new StringBuilder();
-            while (valStart < block.Length)
-            {
-                char c = block[valStart++];
-                if (c == '"') break;
-                if (c == '\\' && valStart < block.Length)
-                {
-                    char esc = block[valStart++];
-                    switch (esc) { case 'n': sb.Append('\n'); break; case 'r': sb.Append('\r'); break; case 't': sb.Append('\t'); break; case '\\': sb.Append('\\'); break; case '"': sb.Append('"'); break; default: sb.Append(esc); break; }
-                }
-                else sb.Append(c);
-            }
-            return sb.ToString().Trim();
-        }
-
-        private static string ExtractJsonRawValue(string block, int start)
-        {
-            int end = start;
-            while (end < block.Length && block[end] != ',' && block[end] != '}' && block[end] != ']')
-                end++;
-            string val = block.Substring(start, end - start).Trim();
-            return val == "null" ? "" : val;
-        }
-
-        private static string ParseDdgLiteResults(string html)
-        {
-            // DDG Lite 返回简单的 HTML 表格，结构比 /html/ 稳定
-            var sb = new StringBuilder();
-            int idx = 0;
-            int count = 0;
-            while (count < 5)
-            {
-                int linkIdx = html.IndexOf("<a rel=\"nofollow\"", idx);
-                if (linkIdx < 0) break;
-                int hrefStart = html.IndexOf("href=\"", linkIdx) + 6;
-                if (hrefStart < 6) break;
-                int hrefEnd = html.IndexOf('"', hrefStart);
-                string url = hrefEnd > hrefStart ? html.Substring(hrefStart, hrefEnd - hrefStart) : "";
-
-                int titleStart = html.IndexOf('>', hrefEnd) + 1;
-                int titleEnd   = html.IndexOf("</a>", titleStart);
-                string title = titleStart > 0 && titleEnd > titleStart
-                    ? StripHtmlTags(html.Substring(titleStart, titleEnd - titleStart)).Trim()
-                    : "";
-
-                int snipIdx = html.IndexOf("result-snippet", titleEnd);
-                string snippet = "";
-                if (snipIdx >= 0 && snipIdx < titleEnd + 500)
-                {
-                    int snipStart = html.IndexOf('>', snipIdx) + 1;
-                    int snipEnd   = html.IndexOf("</td>", snipStart);
-                    if (snipStart > 0 && snipEnd > snipStart)
-                        snippet = StripHtmlTags(html.Substring(snipStart, snipEnd - snipStart)).Trim();
-                }
-
-                if (!string.IsNullOrEmpty(title))
-                {
-                    sb.AppendLine($"- {title}\n  {snippet}\n  {url}");
-                    count++;
-                }
-                idx = titleEnd;
-                if (sb.Length > 3000) break;
-            }
-            return sb.Length > 0 ? sb.ToString().Trim() : null;
-        }
-
-        private static string StripHtmlTags(string html)
-        {
-            var sb = new StringBuilder();
-            bool inTag = false;
-            foreach (char c in html)
-            {
-                if (c == '<') inTag = true;
-                else if (c == '>') inTag = false;
-                else if (!inTag) sb.Append(c);
-            }
-            return sb.ToString();
-        }
-
-        // 从 JSON 字符串提取引号包裹的值（简单实现，不依赖完整 JSON 解析）
-        private static string ExtractJsonString(string json, int start)
-        {
-            while (start < json.Length && json[start] != '"') start++;
-            if (start >= json.Length) return "";
-            start++; // skip opening quote
-            var sb = new StringBuilder();
-            while (start < json.Length)
-            {
-                char c = json[start++];
-                if (c == '"') break;
-                if (c == '\\' && start < json.Length)
-                {
-                    char esc = json[start++];
-                    switch (esc)
-                    {
-                        case 'n': sb.Append('\n'); break;
-                        case 'r': sb.Append('\r'); break;
-                        case 't': sb.Append('\t'); break;
-                        default:  sb.Append(esc);  break;
-                    }
-                }
-                else sb.Append(c);
-            }
-            return sb.ToString();
-        }
-
-        // Fetch 页面正文（简单提取文本，去掉HTML标签）
-        private async Task<string> FetchPageAsync(string url)
-        {
-            try
-            {
-                // 禁止 fetch Google 任何域名
-                Uri uri;
-                if (Uri.TryCreate(url, UriKind.Absolute, out uri))
-                {
-                    string host = uri.Host.ToLower();
-                    if (host == "google.com" || host.EndsWith(".google.com") ||
-                        host == "google.com.hk" || host.EndsWith(".google.com.hk"))
-                        return "错误：禁止访问 Google 域名，请使用其他搜索引擎。";
-                }
-                var req = new HttpRequestMessage(HttpMethod.Get, url);
-                req.Headers.TryAddWithoutValidation("User-Agent", AppSettings.FetchUserAgent);
-                using (var resp = await _http.SendAsync(req))
-                {
-                    if (!resp.IsSuccessStatusCode) return $"无法访问页面（{(int)resp.StatusCode}）";
-                    var html = await resp.Content.ReadAsStringAsync();
-                    // 去掉 script/style 块
-                    html = System.Text.RegularExpressions.Regex.Replace(html, @"<script[\s\S]*?</script>", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-                    html = System.Text.RegularExpressions.Regex.Replace(html, @"<style[\s\S]*?</style>",   "", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-                    // 去掉所有 HTML 标签
-                    var text = System.Text.RegularExpressions.Regex.Replace(html, @"<[^>]+>", " ");
-                    // 折叠空白
-                    text = System.Text.RegularExpressions.Regex.Replace(text, @"\s{2,}", "\n").Trim();
-                    // 按设置截断
-                    int depth = AppSettings.SearchResultDepth;
-                    int limit = depth == 0 ? 2000 : depth == 1 ? 8000 : int.MaxValue;
-                    return text.Length > limit ? text.Substring(0, limit) + "\n…（已截断）" : text;
-                }
-            }
-            catch (Exception ex) { return $"Fetch 失败：{ex.Message}"; }
-        }
-
-        // ── Tool use：构建带 tools 定义的请求 JSON ────────────────────────────
-
-        private static string BuildRequestJsonWithTools(string model, List<ApiRequestMessage> messages, bool stream, bool isClaudeProvider, bool supportsVision = false)
-        {
-            string toolsDef = isClaudeProvider
-                ? BuildClaudeToolsDef()
-                : BuildOpenAiToolsDef();
-
-            var sb = new StringBuilder();
-            sb.Append("{");
-            sb.Append($"\"model\":\"{EscapeJson(model)}\",");
-            sb.Append($"\"stream\":{(stream ? "true" : "false")},");
-            if (isClaudeProvider)
-            {
-                sb.Append("\"max_tokens\":8192,");
-                // Claude API要求system作为顶层字段，messages只含user/assistant
-                var sysMsgs = messages.Where(m => m.Role == "system").ToList();
-                var chatMsgs = messages.Where(m => m.Role != "system").ToList();
-                if (sysMsgs.Count > 0)
-                {
-                    string sysContent = string.Join("\n\n", sysMsgs.Select(m => m.Content));
-                    sb.Append($"\"system\":\"{EscapeJson(sysContent)}\",");
-                }
-                sb.Append($"\"tools\":{toolsDef},");
-                sb.Append("\"messages\":[");
-                for (int i = 0; i < chatMsgs.Count; i++)
-                {
-                    var m = chatMsgs[i];
-                    sb.Append("{");
-                    sb.Append($"\"role\":\"{EscapeJson(m.Role)}\",");
-                    if (!string.IsNullOrEmpty(m.RawContentJson))
-                        sb.Append($"\"content\":{m.RawContentJson}");
-                    else
-                        sb.Append($"\"content\":\"{EscapeJson(m.Content)}\"");
-                    sb.Append("}");
-                    if (i < chatMsgs.Count - 1) sb.Append(",");
-                }
-                sb.Append("]");
-            }
-            else
-            {
-                sb.Append($"\"tools\":{toolsDef},");
-                sb.Append("\"tool_choice\":\"auto\",");
-                sb.Append("\"messages\":[");
-                for (int i = 0; i < messages.Count; i++)
-                {
-                    var m = messages[i];
-                    sb.Append("{");
-                    sb.Append($"\"role\":\"{EscapeJson(m.Role)}\",");
-
-                    if (m.Role == "tool" && !string.IsNullOrEmpty(m.ToolCallId))
-                    {
-                        // tool消息必须带tool_call_id
-                        sb.Append($"\"tool_call_id\":\"{EscapeJson(m.ToolCallId)}\",");
-                        sb.Append($"\"content\":\"{EscapeJson(m.Content)}\"");
-                    }
-                    else if (m.Role == "assistant" && m.Content != null && m.Content.StartsWith("\x01TOOLCALLS\x01"))
-                    {
-                        // assistant消息带tool_calls数组
-                        string toolCallsJson = m.Content.Substring(11); // skip marker
-                        sb.Append("\"content\":null,");
-                        sb.Append($"\"tool_calls\":{toolCallsJson}");
-                    }
-                    else if (supportsVision && !string.IsNullOrEmpty(m.ImageBase64) && m.Role == "user")
-                    {
-                        sb.Append("\"content\":[");
-                        sb.Append("{\"type\":\"image_url\",\"image_url\":{");
-                        sb.Append($"\"url\":\"data:{EscapeJson(m.ImageMimeType)};base64,{m.ImageBase64}\"");
-                        sb.Append("}},{");
-                        sb.Append($"\"type\":\"text\",\"text\":\"{EscapeJson(m.Content)}\"");
-                        sb.Append("}]");
-                    }
-                    else
-                    {
-                        sb.Append($"\"content\":\"{EscapeJson(m.Content)}\"");
-                    }
-                    sb.Append("}");
-                    if (i < messages.Count - 1) sb.Append(",");
-                }
-                sb.Append("]");
-            }
-            sb.Append("}");
-            return sb.ToString();
-        }
-
-        private static string BuildOpenAiToolsDef() =>
-            "[{\"type\":\"function\",\"function\":{\"name\":\"web_search\",\"description\":\"搜索互联网以获取最新信息。当你需要查询实时数据、新闻或不确定的事实时调用此工具。\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"搜索关键词\"}},\"required\":[\"query\"]}}}," +
-             "{\"type\":\"function\",\"function\":{\"name\":\"fetch_page\",\"description\":\"获取指定URL页面的正文内容，用于深入阅读搜索结果中的某个页面。\",\"parameters\":{\"type\":\"object\",\"properties\":{\"url\":{\"type\":\"string\",\"description\":\"要获取的页面URL\"}},\"required\":[\"url\"]}}}]";
-
-        private static string BuildClaudeToolsDef() =>
-            "[{\"name\":\"web_search\",\"description\":\"搜索互联网以获取最新信息。\",\"input_schema\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"搜索关键词\"}},\"required\":[\"query\"]}}," +
-             "{\"name\":\"fetch_page\",\"description\":\"获取指定URL页面的正文内容。\",\"input_schema\":{\"type\":\"object\",\"properties\":{\"url\":{\"type\":\"string\",\"description\":\"要获取的页面URL\"}},\"required\":[\"url\"]}}]";
-
-        private class OpenAiToolCall  { public string Name; public string Id; public string ArgsJson; public string RawToolCallsJson; }
-        private class ClaudeToolCall  { public string Name; public string Id; public string ArgsJson; }
-
-        // 从响应 JSON 中提取 tool_call（OpenAI 格式），返回结果或 null
-        private static OpenAiToolCall ExtractOpenAiToolCall(string json)
-        {
-            int tcIdx = json.IndexOf("\"tool_calls\":");
-            if (tcIdx < 0) return null;
-            // 提取原始 tool_calls 数组，原样回传避免重建时格式变化
-            int arrStart = json.IndexOf('[', tcIdx + 13);
-            string rawToolCallsJson = null;
-            if (arrStart >= 0)
-            {
-                int depth2 = 0; int end2 = arrStart;
-                for (; end2 < json.Length; end2++)
-                {
-                    if (json[end2] == '[' || json[end2] == '{') depth2++;
-                    else if (json[end2] == ']' || json[end2] == '}') { depth2--; if (depth2 == 0) break; }
-                }
-                rawToolCallsJson = json.Substring(arrStart, end2 - arrStart + 1);
-            }
-            int nameIdx = json.IndexOf("\"name\":", tcIdx);
-            if (nameIdx < 0) return null;
-            string name = ExtractJsonString(json, nameIdx + 7);
-            int argIdx = json.IndexOf("\"arguments\":", tcIdx);
-            if (argIdx < 0) return null;
-            // arguments 可能是字符串或对象
-            int afterColon = argIdx + 12;
-            while (afterColon < json.Length && json[afterColon] == ' ') afterColon++;
-            string args;
-            if (afterColon < json.Length && json[afterColon] == '"')
-                args = ExtractJsonString(json, afterColon);
-            else
-            {
-                // 找到匹配的 {} 块
-                int brace = json.IndexOf('{', afterColon);
-                if (brace < 0) return null;
-                int depth = 0; int end = brace;
-                for (; end < json.Length; end++)
-                {
-                    if (json[end] == '{') depth++;
-                    else if (json[end] == '}') { depth--; if (depth == 0) break; }
-                }
-                args = json.Substring(brace, end - brace + 1);
-            }
-            int idIdx = json.IndexOf("\"id\":", tcIdx);
-            string id = idIdx >= 0 ? ExtractJsonString(json, idIdx + 5) : "";
-            return new OpenAiToolCall { Name = name, Id = id, ArgsJson = args, RawToolCallsJson = rawToolCallsJson };
-        }
-
-        // 从响应 JSON 中提取 Claude tool_use block，返回结果或 null
-        private static ClaudeToolCall ExtractClaudeToolCall(string json)
-        {
-            int tuIdx = json.IndexOf("\"type\":\"tool_use\"");
-            if (tuIdx < 0) return null;
-            int nameIdx = json.IndexOf("\"name\":", tuIdx);
-            int idIdx   = json.IndexOf("\"id\":", tuIdx);
-            int inputIdx= json.IndexOf("\"input\":", tuIdx);
-            if (nameIdx < 0 || inputIdx < 0) return null;
-            string name = ExtractJsonString(json, nameIdx + 7);
-            string id   = idIdx >= 0 ? ExtractJsonString(json, idIdx + 5) : "";
-            int brace = json.IndexOf('{', inputIdx + 8);
-            string args = "{}";
-            if (brace >= 0)
-            {
-                int depth = 0; int end = brace;
-                for (; end < json.Length; end++)
-                {
-                    if (json[end] == '{') depth++;
-                    else if (json[end] == '}') { depth--; if (depth == 0) break; }
-                }
-                args = json.Substring(brace, end - brace + 1);
-            }
-            return new ClaudeToolCall { Name = name, Id = id, ArgsJson = args };
-        }
-
-        // 从 tool call 的 args JSON 中取出指定字段的字符串值
-        private static string ExtractArgField(string argsJson, string field)
-        {
-            int idx = argsJson.IndexOf($"\"{field}\":");
-            if (idx < 0) return "";
-            return ExtractJsonString(argsJson, idx + field.Length + 3);
-        }
-
         // ── Tool use 完整多轮循环 ─────────────────────────────────────────────
 
         private async Task<string> RunToolUseLoopAsync(
@@ -2139,12 +1711,114 @@ namespace yanshuai
                 });
             }
 
+            // 权限确认回调：write_file / calendar_create 需要用户弹窗确认
+            ToolPermissionCallback permCb = (toolName, desc) =>
+            {
+                var tcs = new TaskCompletionSource<bool>();
+                var _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
+                {
+                    try
+                    {
+                        var dlg = new ContentDialog
+                        {
+                            Title = "AI 请求敏感操作",
+                            Content = desc,
+                            PrimaryButtonText = "允许",
+                            SecondaryButtonText = "拒绝",
+                            RequestedTheme = AppSettings.IsDark ? ElementTheme.Dark : ElementTheme.Light
+                        };
+                        var dlgResult = await dlg.ShowAsync().AsTask();
+                        tcs.TrySetResult(dlgResult == ContentDialogResult.Primary);
+                    }
+                    catch { tcs.TrySetResult(false); }
+                });
+                return tcs.Task;
+            };
+
+            // 文件夹访问回调：request_folder_access 需要用户通过系统选择器授权
+            FolderAccessCallback folderCb = (requestedPath) =>
+            {
+                var tcs = new TaskCompletionSource<string>();
+                var _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
+                {
+                    try
+                    {
+                        var dlg = new ContentDialog
+                        {
+                            Title = "AI 请求文件夹访问权限",
+                            Content = "AI 想要访问以下文件夹：\n\n" + requestedPath + "\n\n是否授权？点击「授权」后请在系统文件夹选择器中选中该文件夹。",
+                            PrimaryButtonText = "授权",
+                            SecondaryButtonText = "拒绝",
+                            RequestedTheme = AppSettings.IsDark ? ElementTheme.Dark : ElementTheme.Light
+                        };
+                        var dlgResult = await dlg.ShowAsync().AsTask();
+                        if (dlgResult != ContentDialogResult.Primary)
+                        {
+                            tcs.TrySetResult(null);
+                            return;
+                        }
+                        var picker = new FolderPicker
+                        {
+                            SuggestedStartLocation = PickerLocationId.Desktop,
+                            ViewMode = PickerViewMode.List,
+                        };
+                        picker.FileTypeFilter.Add("*");
+                        var folder = await picker.PickSingleFolderAsync();
+                        if (folder != null)
+                        {
+                            // token 用路径哈希，确保唯一且跨重启持久化
+                            string token = "fa_" + Math.Abs(folder.Path.ToLowerInvariant().GetHashCode()).ToString();
+                            StorageApplicationPermissions.FutureAccessList.AddOrReplace(token, folder, folder.Path);
+                            tcs.TrySetResult(folder.Path);
+                        }
+                        else
+                        {
+                            tcs.TrySetResult(null);
+                        }
+                    }
+                    catch { tcs.TrySetResult(null); }
+                });
+                return tcs.Task;
+            };
+
+            // 工具步骤进度回调：实时显示思维链
+            var stepsLog = new List<string>();
+            ToolProgressCallback progCb = (phase, toolName, detail) =>
+            {
+                var _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
+                    if (phase == "start")
+                    {
+                        stepsLog.Add("⏳ " + toolName + "  " + detail);
+                    }
+                    else
+                    {
+                        string prefix = phase == "error" ? "❌ " : "✅ ";
+                        string pending = "⏳ " + toolName;
+                        for (int i = stepsLog.Count - 1; i >= 0; i--)
+                        {
+                            if (stepsLog[i].StartsWith(pending))
+                            {
+                                stepsLog[i] = prefix + toolName + "  " + detail;
+                                break;
+                            }
+                        }
+                    }
+                    aiBubble.ToolStepsText = string.Join("\n", stepsLog);
+                    aiBubble.ToolStepsExpanded = true;
+                    // 同时更新状态栏
+                    int running = stepsLog.Count(s => s.StartsWith("⏳"));
+                    aiBubble.SearchStatusText = running > 0 ? "⏳ 执行中 (" + running + " 个工具)…" : "";
+                });
+            };
+
             // 用 FunctionCallEngine 跑完整工具循环
-            FunctionCallLoopResult result = await FunctionCallEngine.RunFunctionCallLoopAsync(profile, toolMessages, _conv);
+            FunctionCallLoopResult result = await FunctionCallEngine.RunFunctionCallLoopAsync(
+                profile, toolMessages, _conv, permCb, folderCb, progCb);
             string content = result.Content;
             List<ApiMessageWithTools> allMessages = result.AllMessages ?? new List<ApiMessageWithTools>();
 
-            // 显示搜索状态
+            // 显示工具调用状态
             int toolCount = allMessages.Count(m => m.Role == "tool");
             if (toolCount > 0)
             {
@@ -2288,6 +1962,33 @@ namespace yanshuai
             int textIdx = json.IndexOf("\"text\":", partsIdx);
             if (textIdx < 0) return null;
             return ExtractJsonString(json, textIdx + 7);
+        }
+
+        // 按偏移量从 JSON 字符串中读取引号包裹的值
+        private static string ExtractJsonString(string json, int start)
+        {
+            while (start < json.Length && json[start] != '"') start++;
+            if (start >= json.Length) return "";
+            start++;
+            var sb = new StringBuilder();
+            while (start < json.Length)
+            {
+                char c = json[start++];
+                if (c == '"') break;
+                if (c == '\\' && start < json.Length)
+                {
+                    char esc = json[start++];
+                    switch (esc)
+                    {
+                        case 'n': sb.Append('\n'); break;
+                        case 'r': sb.Append('\r'); break;
+                        case 't': sb.Append('\t'); break;
+                        default:  sb.Append(esc);  break;
+                    }
+                }
+                else sb.Append(c);
+            }
+            return sb.ToString();
         }
 
         private static string EscapeJson(string s)

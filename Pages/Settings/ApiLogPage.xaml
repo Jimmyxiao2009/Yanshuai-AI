@@ -9,6 +9,7 @@
     <Grid x:Name="RootGrid" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
@@ -16,12 +17,23 @@
         <!-- 标题 -->
         <StackPanel Grid.Row="0" Margin="14,16,14,8">
             <TextBlock Text="API 日志" FontSize="32" FontWeight="Light"/>
-            <TextBlock Text="最近 30 条请求，仅保存在内存中，重启后清除"
+            <TextBlock Text="最近 60 条请求与工具调用，仅保存在内存中"
                        FontSize="12" Opacity="0.5" Margin="0,4,0,0"/>
         </StackPanel>
 
+        <!-- 筛选标签 -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="12,0,12,6">
+            <Button x:Name="FilterAllBtn" Content="全部" Click="FilterAll_Click"
+                    Background="{ThemeResource SystemAccentColor}" Foreground="White"
+                    Padding="12,5" Margin="0,0,6,0"/>
+            <Button x:Name="FilterApiBtn" Content="API" Click="FilterApi_Click"
+                    Background="Transparent" Padding="12,5" Margin="0,0,6,0"/>
+            <Button x:Name="FilterToolBtn" Content="工具调用" Click="FilterTool_Click"
+                    Background="Transparent" Padding="12,5"/>
+        </StackPanel>
+
         <!-- 列表 / 空状态 -->
-        <Grid Grid.Row="1">
+        <Grid Grid.Row="2">
             <ListView x:Name="LogList"
                       SelectionMode="Single"
                       IsTabStop="False"
@@ -38,10 +50,19 @@
                     <DataTemplate>
                         <Border BorderBrush="{ThemeResource SystemControlForegroundBaseLowBrush}"
                                 BorderThickness="0,0,0,1" Padding="14,10">
-                            <StackPanel>
-                                <TextBlock Text="{Binding Title}" FontSize="14"/>
-                                <TextBlock Text="{Binding Provider}" FontSize="11" Opacity="0.5" Margin="0,2,0,0"/>
-                            </StackPanel>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <!-- 类型标记竖线 -->
+                                <Border Grid.Column="0" Width="3" Margin="0,0,10,0"
+                                        Background="{Binding TypeAccentColor}"/>
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="{Binding Title}" FontSize="13"/>
+                                    <TextBlock Text="{Binding SubTitle}" FontSize="11" Opacity="0.5" Margin="0,2,0,0"/>
+                                </StackPanel>
+                            </Grid>
                         </Border>
                     </DataTemplate>
                 </ListView.ItemTemplate>
@@ -61,10 +82,10 @@
 
         <!-- 详情面板 -->
         <Border x:Name="DetailPanel"
-                Grid.Row="2"
+                Grid.Row="3"
                 BorderBrush="{ThemeResource SystemControlForegroundBaseLowBrush}"
                 BorderThickness="0,1,0,0"
-                MaxHeight="280"
+                MaxHeight="320"
                 Visibility="Collapsed">
             <Grid>
                 <Grid.RowDefinitions>
@@ -73,19 +94,27 @@
                 </Grid.RowDefinitions>
 
                 <!-- tab 切换 -->
-                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="8,6,8,0">
-                    <Button x:Name="ShowRequestBtn" Content="请求"
-                            Click="ShowRequestBtn_Click"
-                            Background="{ThemeResource SystemAccentColor}"
-                            Foreground="White"
-                            Padding="12,6" Margin="0,0,6,0"/>
-                    <Button x:Name="ShowResponseBtn" Content="响应"
-                            Click="ShowResponseBtn_Click"
-                            Background="Transparent"
-                            Padding="12,6" Margin="0,0,6,0"/>
-                    <Button Content="复制" Click="CopyDetailBtn_Click"
-                            Padding="12,6"/>
-                </StackPanel>
+                <ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Auto"
+                              VerticalScrollBarVisibility="Disabled">
+                    <StackPanel Orientation="Horizontal" Margin="8,6,8,0">
+                        <Button x:Name="ShowRequestBtn" Content="请求 JSON"
+                                Click="ShowRequestBtn_Click"
+                                Background="{ThemeResource SystemAccentColor}"
+                                Foreground="White"
+                                Padding="12,6" Margin="0,0,6,0"/>
+                        <Button x:Name="ShowResponseBtn" Content="响应 JSON"
+                                Click="ShowResponseBtn_Click"
+                                Background="Transparent"
+                                Padding="12,6" Margin="0,0,6,0"/>
+                        <Button x:Name="ShowToolsBtn" Content="工具调用"
+                                Click="ShowToolsBtn_Click"
+                                Background="Transparent"
+                                Padding="12,6" Margin="0,0,6,0"
+                                Visibility="Collapsed"/>
+                        <Button Content="复制" Click="CopyDetailBtn_Click"
+                                Padding="12,6"/>
+                    </StackPanel>
+                </ScrollViewer>
 
                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="8,6,8,8">
                     <TextBlock x:Name="DetailText"

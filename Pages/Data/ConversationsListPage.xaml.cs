@@ -747,6 +747,8 @@ namespace yanshuai
 
         private void NewConvBtn_Click(object sender, RoutedEventArgs e)
         {
+            // 清空 ActiveConversation，MainPage.OnNavigatedTo 会新建一个 pending 对话
+            AppState.ActiveConversation = null;
             Frame.Navigate(typeof(MainPage));
         }
 

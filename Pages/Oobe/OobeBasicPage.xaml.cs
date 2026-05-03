@@ -47,7 +47,7 @@ namespace yanshuai
         }
 
         private void NextBtn_Click(object sender, RoutedEventArgs e)
-            => Frame.Navigate(typeof(OobePage2));
+            => Frame.Navigate(typeof(OobePermissionPage));
 
         private void BackBtn_Click(object sender, RoutedEventArgs e)
         {

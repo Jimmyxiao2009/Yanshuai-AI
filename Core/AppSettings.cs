@@ -106,6 +106,13 @@ namespace yanshuai
             set => Local.Values["SearchBaseUrl"] = value;
         }
 
+        // ── Agent 最大工具调用轮次 ────────────────────────────────────────────
+        public static int MaxToolTurns
+        {
+            get => Local.Values.ContainsKey("MaxToolTurns") ? (int)Local.Values["MaxToolTurns"] : 15;
+            set => Local.Values["MaxToolTurns"] = value;
+        }
+
         // ── 回复声音 ──────────────────────────────────────────────────────────
         public static bool ReplySoundEnabled
         {

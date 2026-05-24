@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10" xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest" xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10" IgnorableNamespaces="uap mp">
-  <Identity Name="com.yanshu.ai.agent" Publisher="CN=LuminaAgent" Version="1.6.0.0" />
+  <Identity Name="com.yanshuai.agent" Publisher="CN=LuminaAgent" Version="2.0.0.0" />
   <mp:PhoneIdentity PhoneProductId="f497554b-aafc-4bd0-bdb6-8d5230e1f556" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
   <Properties>
     <DisplayName>言枢·智能体</DisplayName>
@@ -28,6 +28,9 @@
     <uap:Capability Name="appointments" />
     <uap:Capability Name="contacts" />
     <uap:Capability Name="phoneCall" />
+    <uap:Capability Name="picturesLibrary" />
+    <uap:Capability Name="musicLibrary" />
+    <uap:Capability Name="videosLibrary" />
     <DeviceCapability Name="sms" />
   </Capabilities>
 </Package>

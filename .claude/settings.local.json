@@ -9,7 +9,14 @@
       "Bash(grep -v 'obj\\\\\\\\')",
       "Bash([ -f \"E:/User Files/Desktop/项目/言枢AI/Lumina.Agent/$f\" ])",
       "WebSearch",
-      "Bash(python3 *)"
+      "Bash(python3 *)",
+      "Read(//d//**)",
+      "Bash(zip -r \"Desktop/项目/言枢AI/Lumina.Agent/Lumina.Agent-src.zip\" \"Desktop/项目/言枢AI/Lumina.Agent\" -i \"*.cs\" \"*.xaml\" \"*.csproj\" \"*.sln\" \"*.json\" \"*.xml\" \"*.md\" \".gitignore\" \".gitattributes\" -x \"*bin/*\" \"*obj/*\" \"*packages/*\" \"*.vs/*\" \"*.git/*\" \"*.claude/*\" \"*.git/ms-persist.xml\")",
+      "Read(//e/Desktop/项目/言枢AI/**)",
+      "Bash(zip -r \"Lumina.Agent-src.zip\" \"Lumina.Agent\" -i \"*.cs\" \"*.xaml\" \"*.csproj\" \"*.sln\" \"*.json\" \"*.xml\" \"*.md\" \".gitignore\" \".gitattributes\" -x \"*bin/*\" \"*obj/*\" \"*packages/*\" \"*.vs/*\" \"*.git/*\" \"*.claude/*\")",
+      "Bash(7z a *)",
+      "Bash(tar -acf \"Lumina.Agent-src.zip\" --exclude=\"bin\" --exclude=\"obj\" --exclude=\"packages\" --exclude=\".vs\" --exclude=\".git\" --exclude=\".claude\" \"Lumina.Agent\")",
+      "Bash(tar *)"
     ]
   }
 }

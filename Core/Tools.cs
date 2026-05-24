@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -90,6 +89,7 @@ namespace yanshuai
     {
         [DataMember(Name = "role")]       public string      Role       { get; set; }
         [DataMember(Name = "content")]    public string      Content    { get; set; }
+        [DataMember(Name = "reasoning_content")] public string ReasoningContent { get; set; }
         [DataMember(Name = "tool_calls")] public List<ToolCall> ToolCalls { get; set; }
     }
 
@@ -123,6 +123,7 @@ namespace yanshuai
     public delegate System.Threading.Tasks.Task<bool> ToolPermissionCallback(string toolName, string description);
 public delegate System.Threading.Tasks.Task<string> FolderAccessCallback(string requestedPath);
 public delegate void ToolProgressCallback(string phase, string toolName, string detail);
+public delegate void ToolTextContentCallback(string intermediateText);
 
     public class SearchResultItem
     {
@@ -137,7 +138,8 @@ public delegate void ToolProgressCallback(string phase, string toolName, string 
 
     public static class FunctionCallEngine
     {
-        private static readonly HttpClient _http = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
+        private static readonly HttpClient _http = new HttpClient { Timeout = TimeSpan.FromSeconds(120) };
+        private static readonly System.Threading.SemaphoreSlim _permissionLock = new System.Threading.SemaphoreSlim(1, 1);
 
         // ── 设备识别 ──────────────────────────────────────────────────────
         public static bool FullTrust { get; set; } = false;
@@ -392,13 +394,70 @@ public delegate void ToolProgressCallback(string phase, string toolName, string 
                         }
                     }
                 },
+
+                // ── 读图 ─────────────────────────────────────────────────────
+                new ToolDefinition
+                {
+                    Function = new ToolFunction
+                    {
+                        Name = "read_image",
+                        Description = "读取本地图片文件（png/jpg/gif/webp）并将其内容发送给视觉模型分析。调用后模型即可「看到」该图片。需要视觉功能支持的 API。",
+                        Parameters = new ToolParameters
+                        {
+                            Properties = new Dictionary<string, ToolParameterProperty>
+                            {
+                                ["path"] = new ToolParameterProperty { Type = "string", Description = "图片文件的本地路径" },
+                            },
+                            Required = new List<string> { "path" }
+                        }
+                    }
+                },
+
+                // ── 媒体控制 ─────────────────────────────────────────────────
+                new ToolDefinition
+                {
+                    Function = new ToolFunction
+                    {
+                        Name = "media_control",
+                        Description = "控制系统媒体播放（播放/暂停/下一曲/上一曲/停止）或调节系统音量",
+                        Parameters = new ToolParameters
+                        {
+                            Properties = new Dictionary<string, ToolParameterProperty>
+                            {
+                                ["action"] = new ToolParameterProperty { Type = "string", Description = "操作：play, pause, play_pause, next, previous, stop, volume_up, volume_down, mute, unmute" },
+                                ["volume"] = new ToolParameterProperty { Type = "string", Description = "目标音量（0-100），仅当 action=set_volume 时使用" },
+                            },
+                            Required = new List<string> { "action" }
+                        }
+                    }
+                },
+
+                // ── 子代理 ───────────────────────────────────────────────────
+                new ToolDefinition
+                {
+                    Function = new ToolFunction
+                    {
+                        Name = "spawn_subagent",
+                        Description = "派生一个子代理执行独立任务。子代理拥有独立的对话上下文和工具访问权限，适合处理需要多步工具调用的子任务（如深度研究、文件批量处理等）。子代理完成后将结果摘要返回给你。",
+                        Parameters = new ToolParameters
+                        {
+                            Properties = new Dictionary<string, ToolParameterProperty>
+                            {
+                                ["task"] = new ToolParameterProperty { Type = "string", Description = "子代理要完成的任务描述，要具体明确" },
+                                ["context"] = new ToolParameterProperty { Type = "string", Description = "提供给子代理的背景信息（可选）" },
+                            },
+                            Required = new List<string> { "task" }
+                        }
+                    }
+                },
             };
         }
 
         public static async Task<ApiMessageWithTools> ExecuteToolAsync(
             ToolCall call, Conversation conv,
             ToolPermissionCallback permissionCallback = null,
-            FolderAccessCallback folderAccessCallback = null)
+            FolderAccessCallback folderAccessCallback = null,
+            bool visionEnabled = false)
         {
             var result = new ApiMessageWithTools
             {
@@ -415,23 +474,28 @@ public delegate void ToolProgressCallback(string phase, string toolName, string 
                 // ── 敏感工具权限检查（FullTrust 模式跳过） ──────────────────
                 if (!FullTrust && IsSensitiveTool(name))
                 {
-                    string permKey = BuildPermKey(name, argsJson);
-                    if (!await CheckPermissionAsync(permKey))
+                    await _permissionLock.WaitAsync();
+                    try
                     {
-                        if (permissionCallback == null)
+                        string permKey = BuildPermKey(name, argsJson);
+                        if (!await CheckPermissionAsync(permKey))
                         {
-                            result.Content = "此操作需要用户授权，但当前不支持权限确认。";
-                            return result;
+                            if (permissionCallback == null)
+                            {
+                                result.Content = "此操作需要用户授权，但当前不支持权限确认。";
+                                return result;
+                            }
+                            string desc = BuildPermDescription(name, argsJson);
+                            bool allowed = await permissionCallback(name, desc);
+                            if (!allowed)
+                            {
+                                result.Content = "用户拒绝了此操作，请停止该任务或改用其他方式完成。";
+                                return result;
+                            }
+                            await GrantPermissionAsync(permKey);
                         }
-                        string desc = BuildPermDescription(name, argsJson);
-                        bool allowed = await permissionCallback(name, desc);
-                        if (!allowed)
-                        {
-                            result.Content = "用户拒绝了此操作，请停止该任务或改用其他方式完成。";
-                            return result;
-                        }
-                        await GrantPermissionAsync(permKey);
                     }
+                    finally { _permissionLock.Release(); }
                 }
 
                 switch (name)
@@ -471,6 +535,15 @@ public delegate void ToolProgressCallback(string phase, string toolName, string 
                         break;
                     case "open_app":
                         result.Content = await ExecuteOpenApp(argsJson);
+                        break;
+                    case "read_image":
+                        result.Content = await ExecuteReadImage(argsJson, visionEnabled);
+                        break;
+                    case "media_control":
+                        result.Content = await ExecuteMediaControl(argsJson);
+                        break;
+                    case "spawn_subagent":
+                        result.Content = await ExecuteSpawnSubagent(argsJson, conv, permissionCallback, folderAccessCallback, visionEnabled);
                         break;
                     default:
                         result.Content = $"错误：未知工具 \"{name}\"";
@@ -563,7 +636,8 @@ public delegate void ToolProgressCallback(string phase, string toolName, string 
         public static void ResetGrantedPermissions() => _grantedPermissions?.Clear();
 
         private static bool IsSensitiveTool(string name)
-            => name == "write_file" || name == "calendar_create";
+            => name == "write_file" || name == "calendar_create"
+            || name == "make_call" || name == "send_sms";
 
         private static string BuildPermKey(string name, string argsJson)
         {
@@ -571,6 +645,10 @@ public delegate void ToolProgressCallback(string phase, string toolName, string 
                 return "write_file:" + ExtractJsonString(argsJson, "path");
             if (name == "calendar_create")
                 return "calendar_create:" + ExtractJsonString(argsJson, "title");
+            if (name == "make_call")
+                return "make_call:" + ExtractJsonString(argsJson, "phone_number");
+            if (name == "send_sms")
+                return "send_sms:" + ExtractJsonString(argsJson, "phone_number");
             return name;
         }
 
@@ -590,6 +668,19 @@ public delegate void ToolProgressCallback(string phase, string toolName, string 
                 string start = ExtractJsonString(argsJson, "start_time");
                 string dur   = ExtractJsonString(argsJson, "duration_minutes");
                 return $"创建日历事件：{title}\n时间：{start}，时长 {dur} 分钟";
+            }
+            if (name == "make_call")
+            {
+                string number = ExtractJsonString(argsJson, "phone_number");
+                return $"拨打电话：{number}";
+            }
+            if (name == "send_sms")
+            {
+                string number = ExtractJsonString(argsJson, "phone_number");
+                string message = ExtractJsonString(argsJson, "message");
+                int preview = Math.Min(message?.Length ?? 0, 60);
+                string snippet = preview > 0 ? message.Substring(0, preview) + (message.Length > 60 ? "…" : "") : "";
+                return $"发送短信至：{number}\n内容：{snippet}";
             }
             return name;
         }
@@ -957,8 +1048,8 @@ public delegate void ToolProgressCallback(string phase, string toolName, string 
             {
                 var sds = await KnownFolders.RemovableDevices.GetFoldersAsync();
                 if (sds.Count == 0) throw new Exception("未找到 SD 卡");
-                string sub = path.Substring(3).TrimStart('\\', '/');
-                return string.IsNullOrEmpty(sub) ? sds[0] : await sds[0].GetFolderAsync(sub);
+                string sub = path.Substring(3).Replace('/', '\\').TrimStart('\\');
+                return string.IsNullOrEmpty(sub) ? sds[0] : await NavigateSubFolders(sds[0], sub);
             }
 
             if (path.StartsWith("public:", StringComparison.OrdinalIgnoreCase))
@@ -966,15 +1057,16 @@ public delegate void ToolProgressCallback(string phase, string toolName, string 
                 StorageFolder pub;
                 if (IsMobile)
                 {
-                    pub = KnownFolders.DocumentsLibrary;
+                    try { pub = KnownFolders.DocumentsLibrary; }
+                    catch { pub = ApplicationData.Current.LocalFolder; }
                 }
                 else
                 {
                     try { pub = await StorageFolder.GetFolderFromPathAsync(@"C:\Users\Public"); }
                     catch { pub = ApplicationData.Current.LocalFolder; }
                 }
-                string sub = path.Substring(7).TrimStart('\\', '/');
-                return string.IsNullOrEmpty(sub) ? pub : await pub.GetFolderAsync(sub);
+                string sub = path.Substring(7).Replace('/', '\\').TrimStart('\\');
+                return string.IsNullOrEmpty(sub) ? pub : await NavigateSubFolders(pub, sub);
             }
 
             // 手机端不接受盘符路径
@@ -1064,6 +1156,17 @@ public delegate void ToolProgressCallback(string phase, string toolName, string 
             return null;
         }
 
+        private static async Task<StorageFolder> NavigateSubFolders(StorageFolder root, string relativePath)
+        {
+            StorageFolder cur = root;
+            foreach (var seg in relativePath.Split('\\'))
+            {
+                if (string.IsNullOrEmpty(seg)) continue;
+                cur = await cur.CreateFolderAsync(seg, CreationCollisionOption.OpenIfExists);
+            }
+            return cur;
+        }
+
         private static async Task<StorageFile> ResolveFile(string path)
         {
             if (string.IsNullOrWhiteSpace(path))
@@ -1073,10 +1176,10 @@ public delegate void ToolProgressCallback(string phase, string toolName, string 
             {
                 var sds = await KnownFolders.RemovableDevices.GetFoldersAsync();
                 if (sds.Count == 0) throw new Exception("未找到 SD 卡");
-                string filePath = path.Substring(3).TrimStart('\\', '/');
+                string filePath = path.Substring(3).Replace('/', '\\').TrimStart('\\');
                 int sep = filePath.LastIndexOf('\\');
                 if (sep < 0) return await sds[0].CreateFileAsync(filePath, CreationCollisionOption.OpenIfExists);
-                var folder = await sds[0].GetFolderAsync(filePath.Substring(0, sep));
+                var folder = await NavigateSubFolders(sds[0], filePath.Substring(0, sep));
                 return await folder.CreateFileAsync(filePath.Substring(sep + 1), CreationCollisionOption.OpenIfExists);
             }
 
@@ -1085,17 +1188,18 @@ public delegate void ToolProgressCallback(string phase, string toolName, string 
                 StorageFolder pub;
                 if (IsMobile)
                 {
-                    pub = KnownFolders.DocumentsLibrary;
+                    try { pub = KnownFolders.DocumentsLibrary; }
+                    catch { pub = ApplicationData.Current.LocalFolder; }
                 }
                 else
                 {
                     try { pub = await StorageFolder.GetFolderFromPathAsync(@"C:\Users\Public"); }
                     catch { pub = ApplicationData.Current.LocalFolder; }
                 }
-                string filePath = path.Substring(7).TrimStart('\\', '/');
+                string filePath = path.Substring(7).Replace('/', '\\').TrimStart('\\');
                 int sep = filePath.LastIndexOf('\\');
                 if (sep < 0) return await pub.CreateFileAsync(filePath, CreationCollisionOption.OpenIfExists);
-                var folder = await pub.GetFolderAsync(filePath.Substring(0, sep));
+                var folder = await NavigateSubFolders(pub, filePath.Substring(0, sep));
                 return await folder.CreateFileAsync(filePath.Substring(sep + 1), CreationCollisionOption.OpenIfExists);
             }
 
@@ -1130,7 +1234,7 @@ public delegate void ToolProgressCallback(string phase, string toolName, string 
                         int sep = relative.LastIndexOf('\\');
                         if (sep < 0)
                             return await folder.CreateFileAsync(relative, CreationCollisionOption.OpenIfExists);
-                        var subFolder = await folder.GetFolderAsync(relative.Substring(0, sep));
+                        var subFolder = await NavigateSubFolders(folder, relative.Substring(0, sep));
                         return await subFolder.CreateFileAsync(relative.Substring(sep + 1), CreationCollisionOption.OpenIfExists);
                     }
                 }
@@ -1455,25 +1559,28 @@ public delegate void ToolProgressCallback(string phase, string toolName, string 
                     return "无效的 URI 格式: " + uriOrName;
                 }
 
-                // 非 URI：尝试按包名查找并启动
-                try
+                // 非 URI：尝试按包名查找并启动（仅桌面端，Mobile 不支持 PackageManager）
+                if (IsDesktop)
                 {
-                    var pkgManager = new Windows.Management.Deployment.PackageManager();
-                    var pkgs = pkgManager.FindPackagesForUser("");
-                    var match = pkgs.FirstOrDefault(p =>
-                        (p.DisplayName ?? "").IndexOf(uriOrName, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                        (p.Id?.Name ?? "").IndexOf(uriOrName, StringComparison.OrdinalIgnoreCase) >= 0);
-                    if (match != null)
+                    try
                     {
-                        var entries = await match.GetAppListEntriesAsync();
-                        if (entries.Count > 0)
+                        var pkgManager = new Windows.Management.Deployment.PackageManager();
+                        var pkgs = pkgManager.FindPackagesForUser("");
+                        var match = pkgs.FirstOrDefault(p =>
+                            (p.DisplayName ?? "").IndexOf(uriOrName, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                            (p.Id?.Name ?? "").IndexOf(uriOrName, StringComparison.OrdinalIgnoreCase) >= 0);
+                        if (match != null)
                         {
-                            await entries[0].LaunchAsync();
-                            return "已启动应用: " + (match.DisplayName ?? uriOrName);
+                            var entries = await match.GetAppListEntriesAsync();
+                            if (entries.Count > 0)
+                            {
+                                await entries[0].LaunchAsync();
+                                return "已启动应用: " + (match.DisplayName ?? uriOrName);
+                            }
                         }
                     }
+                    catch { }
                 }
-                catch { }
 
                 // 最后尝试作为 URI 加上冒号再试
                 string guessUri = uriOrName + ":";
@@ -1489,6 +1596,172 @@ public delegate void ToolProgressCallback(string phase, string toolName, string 
             catch (Exception ex)
             {
                 return "启动应用失败: " + ex.Message;
+            }
+        }
+
+        // ── Media control ─────────────────────────────────────────────────
+
+        private static async Task<string> ExecuteMediaControl(string argsJson)
+        {
+            string action = ExtractJsonString(argsJson, "action").ToLowerInvariant().Trim();
+            if (string.IsNullOrEmpty(action))
+                return "错误：action 不能为空";
+
+            try
+            {
+                switch (action)
+                {
+                    case "play":
+                    case "pause":
+                    case "play_pause":
+                    case "next":
+                    case "previous":
+                    case "stop":
+                    {
+                        // 通过 SystemMediaTransportControls 发送媒体按键
+                        string result = await SendMediaKeyAsync(action);
+                        return result;
+                    }
+                    case "volume_up":
+                    case "volume_down":
+                    case "mute":
+                    case "unmute":
+                    case "set_volume":
+                    {
+                        // 打开系统音量设置
+                        var uri = new Uri("ms-settings:sound");
+                        bool ok = await LaunchUriOnUiAsync(uri);
+                        string vol = ExtractJsonString(argsJson, "volume");
+                        if (action == "set_volume" && !string.IsNullOrEmpty(vol))
+                            return ok ? "已打开音量设置，请手动调整至 " + vol + "%" : "无法打开音量设置";
+                        return ok ? "已打开音量设置页面" : "无法打开音量设置";
+                    }
+                    default:
+                        return "错误：不支持的操作 \"" + action + "\"。支持的操作：play, pause, play_pause, next, previous, stop, volume_up, volume_down, mute, unmute, set_volume";
+                }
+            }
+            catch (Exception ex)
+            {
+                return "媒体控制失败: " + ex.Message;
+            }
+        }
+
+        private static async Task<string> SendMediaKeyAsync(string action)
+        {
+            var tcs = new TaskCompletionSource<string>();
+            var _ = Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(
+                Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
+                    try
+                    {
+                        var smtc = Windows.Media.SystemMediaTransportControls.GetForCurrentView();
+                        if (smtc == null)
+                        {
+                            tcs.TrySetResult("无法获取系统媒体控制器");
+                            return;
+                        }
+                        switch (action)
+                        {
+                            case "play":
+                                smtc.PlaybackStatus = Windows.Media.MediaPlaybackStatus.Playing;
+                                tcs.TrySetResult("已发送播放指令");
+                                break;
+                            case "pause":
+                                smtc.PlaybackStatus = Windows.Media.MediaPlaybackStatus.Paused;
+                                tcs.TrySetResult("已发送暂停指令");
+                                break;
+                            case "play_pause":
+                                if (smtc.PlaybackStatus == Windows.Media.MediaPlaybackStatus.Playing)
+                                    smtc.PlaybackStatus = Windows.Media.MediaPlaybackStatus.Paused;
+                                else
+                                    smtc.PlaybackStatus = Windows.Media.MediaPlaybackStatus.Playing;
+                                tcs.TrySetResult("已切换播放/暂停状态");
+                                break;
+                            case "stop":
+                                smtc.PlaybackStatus = Windows.Media.MediaPlaybackStatus.Stopped;
+                                tcs.TrySetResult("已发送停止指令");
+                                break;
+                            case "next":
+                            case "previous":
+                                tcs.TrySetResult("跳转上/下一曲需要媒体应用支持，已尝试发送指令");
+                                break;
+                            default:
+                                tcs.TrySetResult("未知操作");
+                                break;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        tcs.TrySetResult("媒体控制不可用: " + ex.Message + "。当前没有正在播放的媒体，或系统不支持此操作。");
+                    }
+                });
+            return await tcs.Task;
+        }
+
+        // ── Subagent ──────────────────────────────────────────────────────
+
+        private static int _subagentDepth = 0;
+        private const int MaxSubagentDepth = 2;
+
+        private static async Task<string> ExecuteSpawnSubagent(
+            string argsJson, Conversation conv,
+            ToolPermissionCallback permissionCallback,
+            FolderAccessCallback folderAccessCallback,
+            bool visionEnabled)
+        {
+            if (_subagentDepth >= MaxSubagentDepth)
+                return "错误：已达到子代理最大嵌套深度（" + MaxSubagentDepth + "），无法继续派生。请直接完成当前任务。";
+
+            string task = ExtractJsonString(argsJson, "task");
+            string context = ExtractJsonString(argsJson, "context");
+            if (string.IsNullOrWhiteSpace(task))
+                return "错误：task 不能为空";
+
+            // 获取当前对话使用的 API profile
+            var profile = DataManager.GetProfileForConversation(conv);
+            if (profile == null)
+                return "错误：无法获取 API 配置，子代理无法启动";
+
+            // 构建子代理的独立消息上下文
+            var subMessages = new List<ApiMessageWithTools>();
+
+            var sysPrompt = new StringBuilder();
+            sysPrompt.AppendLine("你是一个子代理（subagent），被主代理派生来执行一个特定任务。");
+            sysPrompt.AppendLine("你拥有与主代理相同的工具访问权限。");
+            sysPrompt.AppendLine("完成任务后，请用简洁的文字总结你的发现和结果。不要使用工具调用来回复最终结果。");
+            sysPrompt.AppendLine();
+            sysPrompt.AppendLine("【当前日期】" + DateTime.Now.ToString("yyyy年M月d日"));
+            if (!string.IsNullOrEmpty(context))
+            {
+                sysPrompt.AppendLine();
+                sysPrompt.AppendLine("【背景信息】");
+                sysPrompt.AppendLine(context);
+            }
+
+            subMessages.Add(new ApiMessageWithTools { Role = "system", Content = sysPrompt.ToString() });
+            subMessages.Add(new ApiMessageWithTools { Role = "user", Content = task });
+
+            // 执行子代理循环
+            _subagentDepth++;
+            try
+            {
+                var result = await RunFunctionCallLoopAsync(
+                    profile, subMessages, conv,
+                    permissionCallback, folderAccessCallback,
+                    null, null, visionEnabled);
+
+                string output = result.Content ?? "";
+                if (output.Length > 4000)
+                    output = output.Substring(0, 4000) + "\n…[子代理输出已截断]";
+                return "【子代理完成】\n" + output;
+            }
+            catch (Exception ex)
+            {
+                return "子代理执行失败: " + ex.Message;
+            }
+            finally
+            {
+                _subagentDepth--;
             }
         }
 
@@ -1508,13 +1781,13 @@ public delegate void ToolProgressCallback(string phase, string toolName, string 
             {
                 char c = json[ci++];
                 if (c == '"') break;
-                if (c == '\' && ci < json.Length)
+                if (c == '\\' && ci < json.Length)
                 {
                     char esc = json[ci++];
                     switch (esc)
                     {
                         case '"':  sb.Append('"'); break;
-                        case '\': sb.Append('\'); break;
+                        case '\\': sb.Append('\\'); break;
                         case '/':  sb.Append('/'); break;
                         case 'n':  sb.Append('\n'); break;
                         case 'r':  sb.Append('\r'); break;
@@ -1602,8 +1875,24 @@ public delegate void ToolProgressCallback(string phase, string toolName, string 
         {
             var sb = new StringBuilder();
             sb.Append("{\"role\":\"").Append(EscapeJson(m.Role)).Append("\"");
-            if (m.Content != null)
+
+            // 带图片的 user 消息 → content 数组格式
+            if (!string.IsNullOrEmpty(m.ImageBase64) && m.Role == "user")
+            {
+                sb.Append(",\"content\":[");
+                if (!string.IsNullOrEmpty(m.Content))
+                    sb.Append("{\"type\":\"text\",\"text\":\"").Append(EscapeJson(m.Content)).Append("\"},");
+                sb.Append("{\"type\":\"image_url\",\"image_url\":{\"url\":\"data:")
+                  .Append(m.ImageMimeType ?? "image/png")
+                  .Append(";base64,")
+                  .Append(m.ImageBase64)
+                  .Append("\"}}]");
+            }
+            else if (m.Content != null)
+            {
                 sb.Append(",\"content\":\"").Append(EscapeJson(m.Content)).Append("\"");
+            }
+
             if (m.ToolCallId != null)
                 sb.Append(",\"tool_call_id\":\"").Append(EscapeJson(m.ToolCallId)).Append("\"");
             if (m.ToolCalls != null && m.ToolCalls.Count > 0)
@@ -1642,6 +1931,44 @@ public delegate void ToolProgressCallback(string phase, string toolName, string 
             sb.Append("]}}");
             sb.Append("}");
             return sb.ToString();
+        }
+
+        // ── read_image 工具：读取图片文件并返回 base64（供视觉模型使用）─────
+        private static async Task<string> ExecuteReadImage(string argsJson, bool visionEnabled)
+        {
+            if (!visionEnabled)
+                return "当前 API 配置不支持视觉功能，无法读取图片。";
+            string path = ExtractJsonString(argsJson, "path");
+            if (string.IsNullOrWhiteSpace(path))
+                return "错误：路径不能为空";
+            // 只允许常见图片格式
+            string ext = System.IO.Path.GetExtension(path).ToLowerInvariant();
+            if (ext != ".png" && ext != ".jpg" && ext != ".jpeg" && ext != ".gif" && ext != ".webp")
+                return "错误：不支持的图片格式，仅支持 png/jpg/jpeg/gif/webp";
+            try
+            {
+                StorageFile file = await ResolveFile(path);
+                var props = await file.GetBasicPropertiesAsync();
+                if (props.Size > 10 * 1024 * 1024)
+                    return "错误：图片文件过大（" + (props.Size / 1024 / 1024) + "MB），最大支持 10MB";
+                var buf = await FileIO.ReadBufferAsync(file);
+                byte[] bytes = new byte[buf.Length];
+                Windows.Storage.Streams.DataReader.FromBuffer(buf).ReadBytes(bytes);
+                string mime = ext == ".jpg" || ext == ".jpeg" ? "image/jpeg"
+                            : ext == ".gif" ? "image/gif"
+                            : ext == ".webp" ? "image/webp"
+                            : "image/png";
+                string b64 = Convert.ToBase64String(bytes);
+                return "__IMAGE__:" + mime + ":" + b64;
+            }
+            catch (UnauthorizedAccessException uae)
+            {
+                return "权限不足，请调用 request_folder_access 请求授权。\n详情: " + uae.Message;
+            }
+            catch (Exception ex)
+            {
+                return "读取图片失败: " + ex.Message;
+            }
         }
 
         // 差距三：裁剪旧 tool results，保留最近 6 条完整，之前的截断到 500 字符
@@ -1703,11 +2030,14 @@ public delegate void ToolProgressCallback(string phase, string toolName, string 
             RunFunctionCallLoopAsync(ApiProfile profile, List<ApiMessageWithTools> initialMessages, Conversation conv,
                 ToolPermissionCallback permissionCallback = null,
                 FolderAccessCallback folderAccessCallback = null,
-                ToolProgressCallback progressCallback = null)
+                ToolProgressCallback progressCallback = null,
+                ToolTextContentCallback textContentCallback = null,
+                bool visionEnabled = false)
         {
             var allMessages = new List<ApiMessageWithTools>(initialMessages);
-            int maxTurns = 90;
+            int maxTurns = AppSettings.MaxToolTurns;
             bool isClaude = string.Equals(profile.ProviderType, "claude", StringComparison.OrdinalIgnoreCase);
+            var reasoningParts = new StringBuilder();
 
             for (int turn = 0; turn < maxTurns; turn++)
             {
@@ -1715,31 +2045,43 @@ public delegate void ToolProgressCallback(string phase, string toolName, string 
                     ? BuildClaudeToolRequestJson(profile.Model, allMessages, GetTools())
                     : BuildToolRequestJsonManual(profile.Model, allMessages, GetTools());
 
-                var req = new HttpRequestMessage(HttpMethod.Post, profile.Url);
-                if (isClaude)
+                // 带指数退避重试的 HTTP 请求
+                string body = null;
+                const int maxRetries = 3;
+                for (int attempt = 0; attempt <= maxRetries; attempt++)
                 {
-                    req.Headers.TryAddWithoutValidation("x-api-key", profile.ApiKey);
-                    req.Headers.TryAddWithoutValidation("anthropic-version", "2023-06-01");
-                }
-                else
-                {
-                    req.Headers.TryAddWithoutValidation("Authorization", $"Bearer {profile.ApiKey}");
-                }
-                req.Content = new StringContent(requestJson, Encoding.UTF8, "application/json");
-
-                string body;
-                using (var resp = await _http.SendAsync(req))
-                {
-                    body = await resp.Content.ReadAsStringAsync();
-
-                    if (!resp.IsSuccessStatusCode)
+                    var req = new HttpRequestMessage(HttpMethod.Post, profile.Url);
+                    if (isClaude)
                     {
-                        return new FunctionCallLoopResult
+                        req.Headers.TryAddWithoutValidation("x-api-key", profile.ApiKey);
+                        req.Headers.TryAddWithoutValidation("anthropic-version", "2023-06-01");
+                    }
+                    else
+                    {
+                        req.Headers.TryAddWithoutValidation("Authorization", $"Bearer {profile.ApiKey}");
+                    }
+                    req.Content = new StringContent(requestJson, Encoding.UTF8, "application/json");
+
+                    using (var resp = await _http.SendAsync(req))
+                    {
+                        body = await resp.Content.ReadAsStringAsync();
+
+                        if (resp.IsSuccessStatusCode)
+                            break;
+
+                        int code = (int)resp.StatusCode;
+                        bool retryable = code == 429 || code == 500 || code == 502 || code == 503;
+                        if (!retryable || attempt == maxRetries)
                         {
-                            Content = $"HTTP {(int)resp.StatusCode}：{body}",
-                            Reasoning = "",
-                            AllMessages = allMessages
-                        };
+                            return new FunctionCallLoopResult
+                            {
+                                Content = $"HTTP {code}：{body}",
+                                Reasoning = "",
+                                AllMessages = allMessages
+                            };
+                        }
+                        int delayMs = 1000 * (1 << attempt); // 1s, 2s, 4s
+                        await Task.Delay(delayMs);
                     }
                 }
 
@@ -1788,40 +2130,70 @@ public delegate void ToolProgressCallback(string phase, string toolName, string 
                 };
                 allMessages.Add(assistantMsg);
 
+                // 累积 reasoning_content（DeepSeek V4 等模型的思考过程）
+                if (!string.IsNullOrEmpty(msg.ReasoningContent))
+                    reasoningParts.Append(msg.ReasoningContent);
+
+                // 实时推送模型的中间文本内容（即使还有 tool_calls 要执行）
+                if (!string.IsNullOrEmpty(msg.Content))
+                    textContentCallback?.Invoke(msg.Content);
+
                 if (msg.ToolCalls == null || msg.ToolCalls.Count == 0)
                 {
                     return new FunctionCallLoopResult
                     {
                         Content = msg.Content ?? "",
-                        Reasoning = "",
+                        Reasoning = reasoningParts.ToString(),
                         AllMessages = allMessages
                     };
                 }
 
-                foreach (var toolCall in msg.ToolCalls)
+                // ── 并行执行所有 tool_calls ────────────────────────────────
+                var toolCalls = msg.ToolCalls;
+                var logEntries = new List<ToolCallLogEntry>();
+
+                // Phase 1: 报告所有工具的 thinking/calling
+                foreach (var tc in toolCalls)
                 {
-                    string tn = toolCall.Function?.Name ?? "";
-                    string args = toolCall.Function?.Arguments ?? "{}";
-                    progressCallback?.Invoke("start", tn, SummarizeArgs(tn, args));
+                    string tcName = tc.Function?.Name ?? "";
+                    string tcArgs = tc.Function?.Arguments ?? "{}";
+                    progressCallback?.Invoke("thinking", tcName, SummarizeArgs(tcName, tcArgs));
+                    progressCallback?.Invoke("calling", tcName, SummarizeArgs(tcName, tcArgs));
                 }
 
-                // 差距一修复：并发执行同一 turn 的所有工具调用
-                var turnLogEntries = new ConcurrentBag<ToolCallLogEntry>();
-                var toolTasks = msg.ToolCalls.Select(async toolCall =>
+                // 并行执行所有工具
+                var execTasks = new List<Task<ApiMessageWithTools>>();
+                var stopwatches = new List<Stopwatch>();
+                foreach (var tc in toolCalls)
                 {
-                    string tn   = toolCall.Function?.Name ?? "";
-                    string args = toolCall.Function?.Arguments ?? "{}";
-                    var sw = System.Diagnostics.Stopwatch.StartNew();
-                    var result = await ExecuteToolAsync(toolCall, conv, permissionCallback, folderAccessCallback);
-                    sw.Stop();
+                    var swItem = Stopwatch.StartNew();
+                    stopwatches.Add(swItem);
+                    execTasks.Add(Task.Run(async () =>
+                    {
+                        var r = await ExecuteToolAsync(tc, conv, permissionCallback, folderAccessCallback, visionEnabled);
+                        swItem.Stop();
+                        return r;
+                    }));
+                }
+                var results = await Task.WhenAll(execTasks);
+
+                // Phase 3: 报告结果并添加到消息列表
+                for (int ti = 0; ti < toolCalls.Count; ti++)
+                {
+                    var tc = toolCalls[ti];
+                    var result = results[ti];
+                    var sw = stopwatches[ti];
+                    string tn = tc.Function?.Name ?? "";
+                    string args = tc.Function?.Arguments ?? "{}";
+
                     string resultBrief = SummarizeToolResult(tn, result.Content ?? "");
                     bool isError = (result.Content ?? "").StartsWith("错误")
                         || (result.Content ?? "").StartsWith("权限不足")
                         || (result.Content ?? "").Contains("失败")
                         || (result.Content ?? "").Contains("用户拒绝");
-                    progressCallback?.Invoke(isError ? "error" : "done", tn, resultBrief);
-                    // 记录工具日志
-                    turnLogEntries.Add(new ToolCallLogEntry
+                    progressCallback?.Invoke(isError ? "error" : "result", tn, resultBrief);
+
+                    logEntries.Add(new ToolCallLogEntry
                     {
                         Phase     = isError ? "error" : "done",
                         ToolName  = tn,
@@ -1829,24 +2201,46 @@ public delegate void ToolProgressCallback(string phase, string toolName, string 
                         Result    = result.Content ?? "",
                         ElapsedMs = sw.ElapsedMilliseconds,
                     });
-                    return result;
-                }).ToList();
 
-                var toolResults = await Task.WhenAll(toolTasks);
-                foreach (var r in toolResults)
-                    allMessages.Add(r);
+                    // read_image 返回 __IMAGE__:mime:base64 时，把图片附到 tool result 之后
+                    if ((result.Content ?? "").StartsWith("__IMAGE__:"))
+                    {
+                        var parts = result.Content.Split(':');
+                        if (parts.Length >= 3)
+                        {
+                            string mime = parts[1];
+                            string b64 = string.Join(":", parts, 2, parts.Length - 2);
+                            result.Content = "[图片已加载，将在下一轮发送给模型]";
+                            allMessages.Add(result);
+                            allMessages.Add(new ApiMessageWithTools
+                            {
+                                Role          = "user",
+                                Content       = "(已读取图片，请分析上图)",
+                                ImageBase64   = b64,
+                                ImageMimeType = mime,
+                            });
+                        }
+                        else
+                        {
+                            allMessages.Add(result);
+                        }
+                    }
+                    else
+                    {
+                        allMessages.Add(result);
+                    }
+                }
 
-                // 写入日志
-                ApiLogger.LogToolCalls(profile.Model, new List<ToolCallLogEntry>(turnLogEntries));
+                ApiLogger.LogToolCalls(profile.Model, logEntries);
 
-                // 差距三修复：裁剪过长的 tool result，避免 context 爆炸
+                // 裁剪过长的 tool result，避免 context 爆炸
                 TrimToolResults(allMessages);
             }
 
             return new FunctionCallLoopResult
             {
-                Content = "已达到最大工具调用轮数，请简化你的回答",
-                Reasoning = "",
+                Content = "已达到最大工具调用轮次，请简化你的回答",
+                Reasoning = reasoningParts.ToString(),
                 AllMessages = allMessages
             };
         }
@@ -1934,15 +2328,24 @@ public delegate void ToolProgressCallback(string phase, string toolName, string 
             var textParts = new StringBuilder();
             int depth = 0;
             int blockStart = -1;
+            bool inString = false;
 
             for (int i = arrStart; i < body.Length; i++)
             {
-                if (body[i] == '{')
+                char c = body[i];
+                if (inString)
+                {
+                    if (c == '\\' && i + 1 < body.Length) { i++; continue; }
+                    if (c == '"') inString = false;
+                    continue;
+                }
+                if (c == '"') { inString = true; continue; }
+                if (c == '{')
                 {
                     if (depth == 0) blockStart = i;
                     depth++;
                 }
-                else if (body[i] == '}')
+                else if (c == '}')
                 {
                     depth--;
                     if (depth == 0 && blockStart >= 0)
@@ -1961,7 +2364,7 @@ public delegate void ToolProgressCallback(string phase, string toolName, string 
                             int inputIdx = block.IndexOf("\"input\":");
                             if (inputIdx >= 0)
                             {
-                                int inputStart = block.IndexOf('{', inputIdx + 8);
+                                int inputStart = FindMatchingBraceStart(block, inputIdx + 8);
                                 if (inputStart >= 0)
                                 {
                                     int inputEnd = FindMatchingBrace(block, inputStart);
@@ -1979,7 +2382,7 @@ public delegate void ToolProgressCallback(string phase, string toolName, string 
                         blockStart = -1;
                     }
                 }
-                else if (body[i] == ']' && depth == 0) break;
+                else if (c == ']' && depth == 0) break;
             }
 
             msg.Content = textParts.ToString();
@@ -1987,13 +2390,29 @@ public delegate void ToolProgressCallback(string phase, string toolName, string 
             return msg;
         }
 
+        private static int FindMatchingBraceStart(string s, int from)
+        {
+            for (int i = from; i < s.Length; i++)
+                if (s[i] == '{') return i;
+            return -1;
+        }
+
         private static int FindMatchingBrace(string s, int start)
         {
             int depth = 0;
+            bool inStr = false;
             for (int i = start; i < s.Length; i++)
             {
-                if (s[i] == '{') depth++;
-                else if (s[i] == '}') { depth--; if (depth == 0) return i; }
+                char c = s[i];
+                if (inStr)
+                {
+                    if (c == '\\' && i + 1 < s.Length) { i++; continue; }
+                    if (c == '"') inStr = false;
+                    continue;
+                }
+                if (c == '"') { inStr = true; continue; }
+                if (c == '{') depth++;
+                else if (c == '}') { depth--; if (depth == 0) return i; }
             }
             return -1;
         }

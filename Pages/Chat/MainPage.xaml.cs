@@ -37,11 +37,16 @@ namespace yanshuai
 
     public class ChatBubble : INotifyPropertyChanged
     {
-        private static readonly string[] _thinkingVerbs =
+        private static readonly string[] _thinkingVerbsEn =
         {
             "Thinking", "Pondering", "Reflecting", "Reasoning", "Analyzing",
             "Considering", "Processing", "Deliberating", "Contemplating", "Mustering",
             "Wondering", "Exploring", "Examining", "Evaluating", "Synthesizing"
+        };
+        private static readonly string[] _thinkingVerbsZh =
+        {
+            "思考中", "推敲中", "分析中", "斟酌中", "推理中",
+            "探索中", "评估中", "综合中", "权衡中", "审视中"
         };
         private static readonly Random _rng = new Random();
 
@@ -111,7 +116,10 @@ namespace yanshuai
             set
             {
                 if (value && !_isStreamingReasoning)
-                    _streamingVerb = _thinkingVerbs[_rng.Next(_thinkingVerbs.Length)];
+                {
+                    var verbs = AppSettings.IsEnglish ? _thinkingVerbsEn : _thinkingVerbsZh;
+                    _streamingVerb = verbs[_rng.Next(verbs.Length)];
+                }
                 _isStreamingReasoning = value;
                 OnProp(nameof(ReasoningLabel));
             }
@@ -201,6 +209,16 @@ namespace yanshuai
             Role != "user" && !_isStreaming ? Visibility.Visible : Visibility.Collapsed;
         public Visibility ContinueBtnVisibility =>
             Role != "user" && !_isStreaming ? Visibility.Visible : Visibility.Collapsed;
+
+        // ── Action strip visibility (toggle on bubble tap) ────────────────────
+        private bool _isActionStripVisible = false;
+        public bool IsActionStripVisible
+        {
+            get => _isActionStripVisible;
+            set { _isActionStripVisible = value; OnProp(); OnProp(nameof(ActionStripVisibility)); }
+        }
+        public Visibility ActionStripVisibility =>
+            IsActionStripVisible ? Visibility.Visible : Visibility.Collapsed;
 
         // ── Search status (tool use 进行中显示在气泡下方) ─────────────────────
         private string _searchStatusText = "";
@@ -332,10 +350,17 @@ namespace yanshuai
         private Conversation _conv;
         private string _loadedConvId;  // 上次渲染的对话 ID
         private bool _isSending = false;
-        private bool _isPendingConv = false;  // true = _conv not yet added to DataManager
-        private string _pendingImageBase64 = null;
-        private string _pendingImageMimeType = null;
+        private bool _isPendingConv = false;
+        // 多附件支持
+        private List<string> _pendingImagesBase64   = new List<string>();
+        private List<string> _pendingImagesMimeType = new List<string>();
+        private List<string> _pendingFileNames      = new List<string>(); // 文本文件 "name\x01content"
+        // 兼容旧单图字段（供 PendingImageThumb 使用）
+        private string _pendingImageBase64   { get => _pendingImagesBase64.Count  > 0 ? _pendingImagesBase64[0]  : null; }
+        private string _pendingImageMimeType { get => _pendingImagesMimeType.Count > 0 ? _pendingImagesMimeType[0] : null; }
+        private string _pendingFileName      = null; // 保留供单文件兼容
         private System.Threading.CancellationTokenSource _streamCts = null;
+        private ChatBubble _expandedBubble = null;
 
         // ── Cached brushes (rebuilt once per conversation, not once per bubble) ─
         private static readonly SolidColorBrush _whiteBrush      = new SolidColorBrush(Colors.White);
@@ -421,13 +446,11 @@ namespace yanshuai
                 _isPendingConv = true;
                 ResetToolPermissions();
                 if (FunctionCallEngine.FullTrust)
-                {
                     FunctionCallEngine.FullTrust = false;
-                    if (FullTrustIcon != null)
-                    {
-                        FullTrustIcon.Foreground = (SolidColorBrush)Application.Current.Resources["ApplicationForegroundThemeBrush"];
-                        FullTrustIcon.Opacity = 0.6;
-                    }
+                if (FullTrustIcon != null)
+                {
+                    FullTrustIcon.Foreground = (SolidColorBrush)Application.Current.Resources["ApplicationForegroundThemeBrush"];
+                    FullTrustIcon.Opacity = 0.6;
                 }
             }
             AppState.ActiveConversation = _conv;
@@ -451,6 +474,23 @@ namespace yanshuai
             var toolbarFg = new SolidColorBrush(AppSettings.IsDark ? Colors.White : Colors.Black);
             if (FullscreenInputIcon != null) FullscreenInputIcon.Foreground = toolbarFg;
             if (AttachImageIcon    != null) AttachImageIcon.Foreground    = toolbarFg;
+
+            // FullTrust 图标颜色初始化
+            if (FullTrustIcon != null)
+            {
+                FullTrustIcon.Foreground = FunctionCallEngine.FullTrust
+                    ? new SolidColorBrush(Color.FromArgb(255, 255, 80, 40))
+                    : (SolidColorBrush)Application.Current.Resources["ApplicationForegroundThemeBrush"];
+                FullTrustIcon.Opacity = FunctionCallEngine.FullTrust ? 1.0 : 0.6;
+            }
+
+            // 输入框占位符提示
+            if (InputTextBox != null)
+            {
+                InputTextBox.PlaceholderText = AppSettings.EnterBehavior == 1
+                    ? "说点什么… (Ctrl+Enter 发送)"
+                    : "说点什么…";
+            }
 
             var messages = _conv.Messages.ToList();
             bool sameConv = _loadedConvId == _conv.Id;
@@ -615,6 +655,16 @@ namespace yanshuai
         private void Nav_Settings_Click(object sender, RoutedEventArgs e)
         { ClosePane(); Frame.Navigate(typeof(SettingsPage)); }
 
+        // ── New conversation (from top-bar ＋ button) ──────────────────────────
+
+        private void NewConvBtn_Click(object sender, RoutedEventArgs e)
+        {
+            AppState.ActiveConversation = null;
+            Frame.Navigate(typeof(MainPage));
+            if (Frame.BackStack.Count > 0 && Frame.BackStack[Frame.BackStack.Count - 1].SourcePageType == typeof(MainPage))
+                Frame.BackStack.RemoveAt(Frame.BackStack.Count - 1);
+        }
+
         // ── Conversation settings / appearance ────────────────────────────────
 
         private void ConvSettingsBtn_Click(object sender, RoutedEventArgs e)
@@ -623,28 +673,25 @@ namespace yanshuai
         private void ConvAppearanceBtn_Click(object sender, RoutedEventArgs e)
             => Frame.Navigate(typeof(ConvAppearancePage));
 
-        // ── 图片附加 ──────────────────────────────────────────────────────────
+        // ── 文件附加 ─────────────────────────────────────────────────────────
 
-        private async void AttachImageBtn_Click(object sender, RoutedEventArgs e)
+        private class AttachPreview
         {
-            var picker = new Windows.Storage.Pickers.FileOpenPicker();
-            picker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.PicturesLibrary;
-            picker.FileTypeFilter.Add(".jpg");
-            picker.FileTypeFilter.Add(".jpeg");
-            picker.FileTypeFilter.Add(".png");
-            picker.FileTypeFilter.Add(".gif");
-            picker.FileTypeFilter.Add(".webp");
+            public Windows.UI.Xaml.Media.ImageSource Thumb { get; set; }
+            public Visibility ThumbVisibility => Thumb != null ? Visibility.Visible : Visibility.Collapsed;
+            public string Icon { get; set; } = "";
+            public Visibility IconVisibility => Thumb == null ? Visibility.Visible : Visibility.Collapsed;
+            public string Label { get; set; }
+        }
 
-            var file = await picker.PickSingleFileAsync();
-            if (file == null) return;
+        private readonly System.Collections.ObjectModel.ObservableCollection<AttachPreview> _pendingPreviews
+            = new System.Collections.ObjectModel.ObservableCollection<AttachPreview>();
 
-            // 压缩图片：最大边 1024px，JPEG 质量 0.85，减少上传体积
-            byte[] bytes;
-            string mime;
+        private async System.Threading.Tasks.Task<byte[]> CompressImageAsync(Windows.Storage.StorageFile file)
+        {
             using (var stream = await file.OpenReadAsync())
             {
                 var decoder = await BitmapDecoder.CreateAsync(stream);
-                // 用 OrientedPixelWidth/Height，已考虑 EXIF 旋转方向，避免竖拍图片尺寸计算错误导致撕裂
                 uint w = decoder.OrientedPixelWidth, h = decoder.OrientedPixelHeight;
                 const uint MaxDim = 1024;
                 uint newW = w, newH = h;
@@ -657,41 +704,109 @@ namespace yanshuai
                 var pixels = await decoder.GetPixelDataAsync(
                     BitmapPixelFormat.Rgba8, BitmapAlphaMode.Premultiplied, transform,
                     ExifOrientationMode.RespectExifOrientation, ColorManagementMode.DoNotColorManage);
-
                 using (var ms = new Windows.Storage.Streams.InMemoryRandomAccessStream())
                 {
-                    var encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, ms);
-                    encoder.SetPixelData(BitmapPixelFormat.Rgba8, BitmapAlphaMode.Premultiplied,
+                    var enc = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, ms);
+                    enc.SetPixelData(BitmapPixelFormat.Rgba8, BitmapAlphaMode.Premultiplied,
                         newW, newH, 96, 96, pixels.DetachPixelData());
-                    await encoder.FlushAsync();
+                    await enc.FlushAsync();
                     ms.Seek(0);
-                    bytes = new byte[ms.Size];
-                    await ms.ReadAsync(bytes.AsBuffer(), (uint)ms.Size, Windows.Storage.Streams.InputStreamOptions.None);
+                    var b = new byte[ms.Size];
+                    await ms.ReadAsync(b.AsBuffer(), (uint)ms.Size, Windows.Storage.Streams.InputStreamOptions.None);
+                    return b;
                 }
-                mime = "image/jpeg";
             }
-            _pendingImageBase64  = Convert.ToBase64String(bytes);
-            _pendingImageMimeType = mime;
+        }
 
-            // 显示缩略图（直接用压缩后的bytes，无需重新打开文件）
-            var bmp = new Windows.UI.Xaml.Media.Imaging.BitmapImage();
-            using (var previewMs = new Windows.Storage.Streams.InMemoryRandomAccessStream())
+        private async System.Threading.Tasks.Task<string> ReadFileAsTextAsync(Windows.Storage.StorageFile file)
+        {
+            try
             {
-                await previewMs.WriteAsync(bytes.AsBuffer());
-                previewMs.Seek(0);
-                await bmp.SetSourceAsync(previewMs);
+                string t = await Windows.Storage.FileIO.ReadTextAsync(file);
+                return t.Length > 20000 ? t.Substring(0, 20000) + "\n...[已截断]" : t;
             }
-            PendingImageThumb.Source = bmp;
-            ImagePreviewBar.Visibility = Visibility.Visible;
+            catch
+            {
+                try
+                {
+                    var buf = await Windows.Storage.FileIO.ReadBufferAsync(file);
+                    byte[] raw = new byte[buf.Length];
+                    Windows.Storage.Streams.DataReader.FromBuffer(buf).ReadBytes(raw);
+                    string t = System.Text.Encoding.UTF8.GetString(raw);
+                    return t.Length > 20000 ? t.Substring(0, 20000) + "\n...[已截断]" : t;
+
+                }
+                catch (Exception ex) { return "(无法读取: " + ex.Message + ")"; }
+            }
+        }
+
+        private string GetFileIcon(string ext)
+        {
+            switch (ext)
+            {
+                case ".pdf":   return "";
+                case ".doc": case ".docx": return "";
+                case ".xls": case ".xlsx": return "";
+                case ".ppt": case ".pptx": return "";
+                default: return "";
+            }
+        }
+
+        private async void AttachImageBtn_Click(object sender, RoutedEventArgs e)
+        {
+            var picker = new Windows.Storage.Pickers.FileOpenPicker();
+            picker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.DocumentsLibrary;
+            string[] imgExts  = { ".jpg",".jpeg",".png",".gif",".webp" };
+            string[] docExts  = { ".pdf",".doc",".docx",".xls",".xlsx",".ppt",".pptx" };
+            string[] txtExts  = { ".txt",".md",".csv",".json",".xml",".html",".htm",
+                                  ".cs",".py",".js",".ts",".cpp",".c",".h",".java",
+                                  ".log",".yaml",".yml",".toml",".ini",".cfg",".sh",".bat" };
+            foreach (var t in imgExts) picker.FileTypeFilter.Add(t);
+            foreach (var t in docExts) picker.FileTypeFilter.Add(t);
+            foreach (var t in txtExts) picker.FileTypeFilter.Add(t);
+
+            var files = await picker.PickMultipleFilesAsync();
+            if (files == null || files.Count == 0) return;
+
+            foreach (var file in files)
+            {
+                string ext = file.FileType.ToLowerInvariant();
+                bool isImg = System.Array.IndexOf(imgExts, ext) >= 0;
+                if (isImg)
+                {
+                    byte[] bytes = await CompressImageAsync(file);
+                    _pendingImagesBase64.Add(Convert.ToBase64String(bytes));
+                    _pendingImagesMimeType.Add("image/jpeg");
+                    var bmp = new Windows.UI.Xaml.Media.Imaging.BitmapImage();
+                    using (var ms = new Windows.Storage.Streams.InMemoryRandomAccessStream())
+                    {
+                        await ms.WriteAsync(bytes.AsBuffer());
+                        ms.Seek(0);
+                        await bmp.SetSourceAsync(ms);
+                    }
+                    _pendingPreviews.Add(new AttachPreview { Thumb = bmp, Label = file.Name });
+                }
+                else
+                {
+                    string text = await ReadFileAsTextAsync(file);
+                    _pendingFileNames.Add(file.Name + "" + text);
+                    _pendingPreviews.Add(new AttachPreview { Icon = "", Label = file.Name });
+                }
+            }
+            PendingAttachList.ItemsSource = _pendingPreviews;
+            ImagePreviewBar.Visibility = _pendingPreviews.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private void ClearImageBtn_Click(object sender, RoutedEventArgs e)
         {
-            _pendingImageBase64  = null;
-            _pendingImageMimeType = null;
-            PendingImageThumb.Source = null;
+            _pendingImagesBase64.Clear();
+            _pendingImagesMimeType.Clear();
+            _pendingFileNames.Clear();
+            _pendingPreviews.Clear();
+            _pendingFileName = null;
             ImagePreviewBar.Visibility = Visibility.Collapsed;
         }
+
 
         // ── Input toolbar ─────────────────────────────────────────────────────
 
@@ -844,7 +959,32 @@ namespace yanshuai
                 return;
             }
             string userInput = InputTextBox.Text.Trim();
-            if (string.IsNullOrWhiteSpace(userInput)) return;
+            // 构建 API 消息（文件内容内联）和气泡文字（只显示文件名）
+            string apiUserInput = userInput;
+            var bubbleFileTags = new List<string>();
+
+            // 新多文件系统
+            foreach (var pf in _pendingFileNames)
+            {
+                int sep = pf.IndexOf('\x01');
+                if (sep < 0) continue;
+                string fname   = pf.Substring(0, sep);
+                string fcontent = pf.Substring(sep + 1);
+                apiUserInput = "【附件：" + fname + "】\n```\n" + fcontent + "\n```\n\n" + apiUserInput;
+                bubbleFileTags.Add(fname);
+            }
+            // 兼容旧单文件字段
+            if (!string.IsNullOrEmpty(_pendingFileName) && _pendingFileName.Contains("\x01"))
+            {
+                int sep = _pendingFileName.IndexOf('\x01');
+                string fname    = _pendingFileName.Substring(0, sep);
+                string fcontent = _pendingFileName.Substring(sep + 1);
+                apiUserInput = "【附件：" + fname + "】\n```\n" + fcontent + "\n```\n\n" + apiUserInput;
+                bubbleFileTags.Add(fname);
+            }
+
+            bool hasAttachment = _pendingImagesBase64.Count > 0 || bubbleFileTags.Count > 0;
+            if (string.IsNullOrWhiteSpace(apiUserInput) && !hasAttachment) return;
 
             var profile = DataManager.GetProfileForConversation(_conv);
             if (profile == null)
@@ -867,36 +1007,52 @@ namespace yanshuai
             // Create message first so its Id is available for the bubble
             var userMsg = new ConversationMessage
             {
-                Role = "user", Content = userInput, Timestamp = DateTime.Now,
-                ImageBase64   = _pendingImageBase64,
-                ImageMimeType = _pendingImageMimeType,
+                Role = "user", Content = apiUserInput, Timestamp = DateTime.Now,
+                ImagesBase64    = _pendingImagesBase64.Count > 0 ? new List<string>(_pendingImagesBase64) : null,
+                ImagesMimeType  = _pendingImagesBase64.Count > 0 ? new List<string>(_pendingImagesMimeType) : null,
+                AttachedFileNames = bubbleFileTags.Count > 0 ? new List<string>(bubbleFileTags) : null,
+                // 兼容旧字段
+                ImageBase64     = _pendingImagesBase64.Count > 0 ? _pendingImagesBase64[0] : null,
+                ImageMimeType   = _pendingImagesMimeType.Count > 0 ? _pendingImagesMimeType[0] : null,
             };
             _conv.Messages.Add(userMsg);
             _conv.UpdatedAt = DateTime.Now;
 
+            // 气泡只显示用户输入 + 文件名标签
+            string bubbleContent = userInput;
+            if (bubbleFileTags.Count > 0)
+                bubbleContent = (string.IsNullOrEmpty(userInput) ? "" : userInput + "\n")
+                    + string.Join("  ", bubbleFileTags.Select(n => "📎 " + n));
+
             if (_conv.Messages.Count(m => m.Role == "user") == 1)
             {
-                _conv.Title = userInput.Length > 20 ? userInput.Substring(0, 20) + "…" : userInput;
+                string titleText = string.IsNullOrEmpty(userInput)
+                    ? (bubbleFileTags.Count > 0 ? bubbleFileTags[0] : "附件") : userInput;
+                _conv.Title = titleText.Length > 20 ? titleText.Substring(0, 20) + "…" : titleText;
                 UpdateTitleLabel();
             }
 
-            // User bubble
+            // User bubble — 首张图显示缩略图
+            Windows.UI.Xaml.Media.ImageSource firstThumb =
+                _pendingPreviews.Count > 0 ? _pendingPreviews[0].Thumb : null;
             var userBubble = new ChatBubble
             {
-                Role = "user", Content = userInput,
+                Role = "user", Content = bubbleContent,
                 MessageId = userMsg.Id,
                 BackgroundColor = UserBubbleBg(), ForegroundColor = UserBubbleFg(),
                 ReasoningBgColor = _reasoningBrush,
-                ImageSource = PendingImageThumb.Source,  // 复用已加载的缩略图
+                ImageSource = firstThumb,
             };
             if (WelcomePanel != null)
                 WelcomePanel.Visibility = Windows.UI.Xaml.Visibility.Collapsed;
             _bubbles.Add(userBubble);
             InputTextBox.Text = "";
-            // 清理pending图片
-            _pendingImageBase64   = null;
-            _pendingImageMimeType = null;
-            PendingImageThumb.Source = null;
+            // 清理所有附件
+            _pendingImagesBase64.Clear();
+            _pendingImagesMimeType.Clear();
+            _pendingFileNames.Clear();
+            _pendingPreviews.Clear();
+            _pendingFileName = null;
             ImagePreviewBar.Visibility = Visibility.Collapsed;
             ScrollToBottom();
 
@@ -1038,6 +1194,8 @@ namespace yanshuai
                 sb.AppendLine("- contacts_search：搜索联系人");
                 sb.AppendLine("- make_call / send_sms：拨打电话或发送短信（仅手机端）");
                 sb.AppendLine("- open_app：打开系统应用或设置页面");
+                sb.AppendLine("- media_control：控制媒体播放（play/pause/next/previous/stop）或打开音量设置");
+                sb.AppendLine("- spawn_subagent：派生子代理执行独立子任务（深度研究、批量处理等），子代理有独立上下文和工具权限");
 
                 // 注入已授权的文件夹列表，让 AI 知道哪些路径不需要再请求授权
                 try
@@ -1067,6 +1225,30 @@ namespace yanshuai
                 {
                     sb.AppendLine("【搜索策略】需要实时信息时必须调用 web_search；fetch_page 仅用于读取 web_search 返回结果中的具体页面 URL，禁止用于抓取任何搜索引擎页面。");
                 }
+
+                sb.AppendLine();
+                sb.AppendLine("## 推理与工具调用规则");
+                sb.AppendLine();
+                sb.AppendLine("你在思考和行动时遵循严格的循环，不允许跳步：");
+                sb.AppendLine();
+                sb.AppendLine("1. Thought：分析当前情况，说明为什么需要调用下一个工具，预期得到什么。");
+                sb.AppendLine("2. Action：调用一个工具。每轮只调用一个。");
+                sb.AppendLine("3. Observation：读取工具返回结果，在下一个 Thought 中处理——评估结果是否充分，还缺少什么。");
+                sb.AppendLine("4. 重复，直到信息充分，再输出面向用户的最终回复。");
+                sb.AppendLine();
+                sb.AppendLine("约束：");
+                sb.AppendLine("- 禁止无 Thought 直接调用工具。");
+                sb.AppendLine("- 禁止连续调用多个工具而不分析中间结果。");
+                sb.AppendLine("- 工具返回错误或空结果时，在 Thought 中分析原因并调整参数或换用其他工具，不要用相同参数重试。");
+                sb.AppendLine("- 只有在确认信息充分后，才输出最终回复。");
+
+                sb.AppendLine();
+                sb.AppendLine("## 行为准则");
+                sb.AppendLine();
+                sb.AppendLine("- 回复语言跟随用户输入语言。");
+                sb.AppendLine("- 上下文中已有搜索结果或文件内容时，优先使用这些信息，不重复搜索已知内容。");
+                sb.AppendLine("- 写文件、执行命令等不可逆操作前，在 Thought 中说明操作内容和影响范围，通过权限确认回调等待用户确认后再执行（Full Trust 模式除外）。");
+                sb.AppendLine("- 回答完整，不主动截断；如内容较长，完整输出后再询问用户是否需要展开说明。");
             }
             return sb.ToString().Trim();
         }
@@ -1183,6 +1365,23 @@ namespace yanshuai
             }
             await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                 bubble.Content = newContent);
+        }
+
+        // ── Bubble tap toggles action strip ──────────────────────────────────
+
+        private void BubbleTapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
+        {
+            if (!((sender as FrameworkElement)?.Tag is ChatBubble b)) return;
+            if (_expandedBubble == b)
+            {
+                b.IsActionStripVisible = false;
+                _expandedBubble = null;
+                return;
+            }
+            if (_expandedBubble != null)
+                _expandedBubble.IsActionStripVisible = false;
+            b.IsActionStripVisible = true;
+            _expandedBubble = b;
         }
 
         // ── Reasoning toggle ──────────────────────────────────────────────────
@@ -1557,13 +1756,37 @@ namespace yanshuai
                 .Skip(Math.Max(0, _conv.Messages.Count - windowSize))
                 .ToList();
             foreach (var m in windowMsgs)
-                apiMessages.Add(new ApiRequestMessage
+            {
+                var images = m.GetAllImages();
+                if (images.Count > 1)
                 {
-                    Role          = m.Role.Equals("user", StringComparison.OrdinalIgnoreCase) ? "user" : "assistant",
-                    Content       = m.Content,
-                    ImageBase64   = m.ImageBase64,
-                    ImageMimeType = m.ImageMimeType,
-                });
+                    apiMessages.Add(new ApiRequestMessage
+                    {
+                        Role          = m.Role.Equals("user", StringComparison.OrdinalIgnoreCase) ? "user" : "assistant",
+                        Content       = m.Content,
+                        ImageBase64   = images[0].Base64,
+                        ImageMimeType = images[0].Mime,
+                    });
+                    for (int ii = 1; ii < images.Count; ii++)
+                        apiMessages.Add(new ApiRequestMessage
+                        {
+                            Role          = "user",
+                            Content       = "",
+                            ImageBase64   = images[ii].Base64,
+                            ImageMimeType = images[ii].Mime,
+                        });
+                }
+                else
+                {
+                    apiMessages.Add(new ApiRequestMessage
+                    {
+                        Role          = m.Role.Equals("user", StringComparison.OrdinalIgnoreCase) ? "user" : "assistant",
+                        Content       = m.Content,
+                        ImageBase64   = images.Count == 1 ? images[0].Base64 : null,
+                        ImageMimeType = images.Count == 1 ? images[0].Mime   : null,
+                    });
+                }
+            }
             string memoryBlock = BuildMemoryBlock();
             if (!string.IsNullOrEmpty(memoryBlock))
                 apiMessages.Add(new ApiRequestMessage { Role = "system", Content = memoryBlock });
@@ -1708,6 +1931,8 @@ namespace yanshuai
                 {
                     Role = m.Role,
                     Content = m.Content,
+                    ImageBase64 = m.ImageBase64,
+                    ImageMimeType = m.ImageMimeType,
                 });
             }
 
@@ -1787,11 +2012,29 @@ namespace yanshuai
             {
                 var _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                 {
-                    if (phase == "start")
+                    if (phase == "thinking")
                     {
-                        stepsLog.Add("⏳ " + toolName + "  " + detail);
+                        // Thinking step: show a 💭 entry with the tool about to be called
+                        stepsLog.Add("💭 " + toolName + "  " + detail);
                     }
-                    else
+                    else if (phase == "calling")
+                    {
+                        // Calling step: replace last 💭 with ⏳, or add new ⏳
+                        string thoughtPrefix = "💭 " + toolName;
+                        bool replaced = false;
+                        for (int i = stepsLog.Count - 1; i >= 0; i--)
+                        {
+                            if (stepsLog[i].StartsWith(thoughtPrefix))
+                            {
+                                stepsLog[i] = "⏳ " + toolName + "  " + detail;
+                                replaced = true;
+                                break;
+                            }
+                        }
+                        if (!replaced)
+                            stepsLog.Add("⏳ " + toolName + "  " + detail);
+                    }
+                    else if (phase == "result" || phase == "error")
                     {
                         string prefix = phase == "error" ? "❌ " : "✅ ";
                         string pending = "⏳ " + toolName;
@@ -1806,17 +2049,35 @@ namespace yanshuai
                     }
                     aiBubble.ToolStepsText = string.Join("\n", stepsLog);
                     aiBubble.ToolStepsExpanded = true;
-                    // 同时更新状态栏
                     int running = stepsLog.Count(s => s.StartsWith("⏳"));
                     aiBubble.SearchStatusText = running > 0 ? "⏳ 执行中 (" + running + " 个工具)…" : "";
                 });
             };
 
+            // 中间文本实时推送回调
+            ToolTextContentCallback textCb = (intermediateText) =>
+            {
+                var _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
+                    aiBubble.Content = intermediateText;
+                });
+            };
+
             // 用 FunctionCallEngine 跑完整工具循环
             FunctionCallLoopResult result = await FunctionCallEngine.RunFunctionCallLoopAsync(
-                profile, toolMessages, _conv, permCb, folderCb, progCb);
+                profile, toolMessages, _conv, permCb, folderCb, progCb, textCb, profile.VisionEnabled);
             string content = result.Content;
+            string reasoning = result.Reasoning ?? "";
             List<ApiMessageWithTools> allMessages = result.AllMessages ?? new List<ApiMessageWithTools>();
+
+            // 推送 reasoning 到气泡（DeepSeek V4 等模型的思考过程）
+            if (!string.IsNullOrEmpty(reasoning))
+            {
+                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
+                    aiBubble.ReasoningContent = reasoning;
+                });
+            }
 
             // 显示工具调用状态
             int toolCount = allMessages.Count(m => m.Role == "tool");

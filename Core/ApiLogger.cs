@@ -1,32 +1,37 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Json;
+using System.Text;
+using Windows.Storage;
 
 namespace yanshuai
 {
     // 日志条目类型
     public enum ApiLogEntryType { Api, ToolCall }
 
+    [DataContract]
     public class ToolCallLogEntry
     {
-        public string Phase      { get; set; }  // "start" / "done" / "error"
-        public string ToolName   { get; set; }
-        public string ArgsJson   { get; set; }
-        public string Result     { get; set; }
-        public long   ElapsedMs  { get; set; }
+        [DataMember] public string Phase     { get; set; }
+        [DataMember] public string ToolName  { get; set; }
+        [DataMember] public string ArgsJson  { get; set; }
+        [DataMember] public string Result    { get; set; }
+        [DataMember] public long   ElapsedMs { get; set; }
     }
 
+    [DataContract]
     public class ApiLogEntry
     {
-        public DateTime          Timestamp    { get; set; }
-        public ApiLogEntryType   EntryType    { get; set; } = ApiLogEntryType.Api;
-        public string            Provider     { get; set; }
-        public string            Model        { get; set; }
-        public string            RequestJson  { get; set; }
-        public string            ResponseBody { get; set; }
-        public bool              IsError      { get; set; }
-
-        // 工具调用日志（EntryType == ToolCall 时使用）
-        public List<ToolCallLogEntry> ToolCalls { get; set; } = new List<ToolCallLogEntry>();
+        [DataMember] public DateTime         Timestamp    { get; set; }
+        [DataMember] public ApiLogEntryType  EntryType    { get; set; } = ApiLogEntryType.Api;
+        [DataMember] public string           Provider     { get; set; }
+        [DataMember] public string           Model        { get; set; }
+        [DataMember] public string           RequestJson  { get; set; }
+        [DataMember] public string           ResponseBody { get; set; }
+        [DataMember] public bool             IsError      { get; set; }
+        [DataMember] public List<ToolCallLogEntry> ToolCalls { get; set; } = new List<ToolCallLogEntry>();
 
         public string TimestampDisplay => Timestamp.ToString("HH:mm:ss");
 
@@ -36,15 +41,8 @@ namespace yanshuai
             {
                 if (EntryType == ApiLogEntryType.ToolCall)
                 {
-                    int done  = 0;
-                    int error = 0;
-                    foreach (var t in ToolCalls)
-                    {
-                        if (t.Phase == "done")  done++;
-                        if (t.Phase == "error") error++;
-                    }
-                    string status = error > 0 ? "❌" : "✅";
-                    return string.Format("{0}  工具调用  {1} 个  {2}", TimestampDisplay, ToolCalls.Count, status);
+                    int error = ToolCalls.Count(t => t.Phase == "error");
+                    return string.Format("{0}  工具调用  {1} 个  {2}", TimestampDisplay, ToolCalls.Count, error > 0 ? "❌" : "✅");
                 }
                 return string.Format("{0}  {1}  {2}", TimestampDisplay, Model ?? Provider, IsError ? "❌" : "✓");
             }
@@ -55,29 +53,22 @@ namespace yanshuai
             get
             {
                 if (EntryType == ApiLogEntryType.ToolCall)
-                {
-                    var names = new List<string>();
-                    foreach (var t in ToolCalls) names.Add(t.ToolName);
-                    return string.Join("  /  ", names);
-                }
+                    return string.Join("  /  ", ToolCalls.Select(t => t.ToolName));
                 return Provider ?? "";
             }
         }
 
-        // 合并所有工具调用信息为可显示的文本（供详情面板使用）
         public string ToolCallsText
         {
             get
             {
-                var sb = new System.Text.StringBuilder();
+                var sb = new StringBuilder();
                 foreach (var t in ToolCalls)
                 {
                     string icon = t.Phase == "error" ? "❌" : "✅";
                     sb.AppendLine(string.Format("{0} {1}  ({2}ms)", icon, t.ToolName, t.ElapsedMs));
                     if (!string.IsNullOrEmpty(t.ArgsJson))
-                    {
                         sb.AppendLine("  参数: " + t.ArgsJson);
-                    }
                     if (!string.IsNullOrEmpty(t.Result))
                     {
                         string r = t.Result.Length > 300 ? t.Result.Substring(0, 300) + "…" : t.Result;
@@ -90,20 +81,90 @@ namespace yanshuai
         }
     }
 
+    [DataContract]
+    public class ApiLogStore
+    {
+        [DataMember] public List<ApiLogEntry> Entries { get; set; } = new List<ApiLogEntry>();
+    }
+
     public static class ApiLogger
     {
-        private const int MaxEntries = 60;
+        private const int MaxEntries = 200;
+        private const string FileName = "yanshuaiApiLog.json";
         private static readonly List<ApiLogEntry> _entries = new List<ApiLogEntry>();
         private static readonly object _lock = new object();
+        private static bool _loaded = false;
 
         public static IReadOnlyList<ApiLogEntry> Entries
         {
-            get { lock (_lock) return _entries.ToArray(); }
+            get
+            {
+                EnsureLoaded();
+                lock (_lock) return _entries.ToArray();
+            }
         }
 
-        // 普通 API 请求日志
+        private static void EnsureLoaded()
+        {
+            if (_loaded) return;
+            _loaded = true;
+            try
+            {
+                var folder = ApplicationData.Current.LocalFolder;
+                // 同步读取（仅在首次访问时执行一次）
+                var task = folder.GetFileAsync(FileName).AsTask();
+                task.Wait(500);
+                if (task.IsCompleted && task.Result != null)
+                {
+                    var readTask = FileIO.ReadTextAsync(task.Result).AsTask();
+                    readTask.Wait(500);
+                    if (readTask.IsCompleted && !string.IsNullOrWhiteSpace(readTask.Result))
+                    {
+                        using (var ms = new System.IO.MemoryStream(Encoding.UTF8.GetBytes(readTask.Result)))
+                        {
+                            var ser = new DataContractJsonSerializer(typeof(ApiLogStore));
+                            var store = (ApiLogStore)ser.ReadObject(ms);
+                            if (store?.Entries != null)
+                            {
+                                lock (_lock)
+                                {
+                                    _entries.Clear();
+                                    _entries.AddRange(store.Entries);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch { }
+        }
+
+        private static void SaveAsync()
+        {
+            // fire-and-forget
+            System.Threading.Tasks.Task.Run(async () =>
+            {
+                try
+                {
+                    ApiLogStore store;
+                    lock (_lock) { store = new ApiLogStore { Entries = new List<ApiLogEntry>(_entries) }; }
+                    using (var ms = new System.IO.MemoryStream())
+                    {
+                        var ser = new DataContractJsonSerializer(typeof(ApiLogStore));
+                        ser.WriteObject(ms, store);
+                        string json = Encoding.UTF8.GetString(ms.ToArray());
+                        var folder = ApplicationData.Current.LocalFolder;
+                        var file = await folder.CreateFileAsync(FileName, CreationCollisionOption.ReplaceExisting);
+                        await FileIO.WriteTextAsync(file, json);
+                    }
+                }
+                catch { }
+            });
+        }
+
         public static void Log(string provider, string model, string requestJson, string responseBody, bool isError = false)
         {
+            EnsureLoaded();
             var entry = new ApiLogEntry
             {
                 Timestamp    = DateTime.Now,
@@ -117,12 +178,11 @@ namespace yanshuai
             AddEntry(entry);
         }
 
-        // 工具调用批次日志（一次 turn 的所有工具）
         public static void LogToolCalls(string model, List<ToolCallLogEntry> calls)
         {
             if (calls == null || calls.Count == 0) return;
-            bool hasError = false;
-            foreach (var c in calls) if (c.Phase == "error") hasError = true;
+            EnsureLoaded();
+            bool hasError = calls.Any(c => c.Phase == "error");
             var entry = new ApiLogEntry
             {
                 Timestamp = DateTime.Now,
@@ -142,11 +202,13 @@ namespace yanshuai
                 if (_entries.Count > MaxEntries)
                     _entries.RemoveAt(_entries.Count - 1);
             }
+            SaveAsync();
         }
 
         public static void Clear()
         {
             lock (_lock) { _entries.Clear(); }
+            SaveAsync();
         }
     }
 }

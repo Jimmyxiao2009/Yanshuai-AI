@@ -1,43 +1,67 @@
-# 言枢 AI (yanshuai)
+# Lumina Agent
 
-**言枢 AI** 是一款适配 Windows 10 Mobile 的 UWP AI 对话应用，基于 WinRT / Visual Studio 2015 构建，提供流畅的 Metro 风格聊天体验。
+言枢AI 的 UWP Agent 组件，基于 WinRT / Visual Studio 2015 构建，运行于 Windows 10 Mobile。
 
-> 开发者：1b4e28ba-2fa1-5f3d-85e5-740e1a5a8a1f
+提供 AI 对话代理能力，包含多模型 API 接入、RAG 记忆检索、角色卡与世界观系统。
 
----
+## 功能
 
-## ✨ 特性
+- **多 LLM 支持** — DeepSeek、LLaMA3、自定义 API 接入
+- **RAG 记忆检索** — 本地嵌入模型离线语义搜索
+- **角色卡 & 世界观** — 分支对话、人物设定、世界书
+- **会话管理** — 历史导入导出、分支回溯
+- **Windows 10 Mobile 优化** — 触控交互、低内存适配、Metro 风格 UI
 
-- 轻量级 AI 对话界面
-- 暗色 Metro 风格 UI
-- 支持 Windows 10 Mobile（Build 10240）
-- 支持 DeepSeek、LLaMA3 等多种 LLM
-- 针对触控和低内存设备优化
-- 角色卡、世界书、多 API 配置
-- 分支对话与长期记忆系统
+## 项目结构
 
----
+```
+Lumina.Agent/
+├── AI/                # AI 核心
+│   ├── OnEmbedder.cs    本地嵌入引擎
+│   └── RagMemory.cs     RAG 记忆存储与检索
+├── Core/              # 核心逻辑
+│   ├── AppSettings.cs   应用设置管理
+│   ├── AppState.cs      全局状态
+│   ├── DataManager.cs   数据持久化
+│   ├── ApiLogger.cs     API 调用日志
+│   └── Tools.cs         工具函数
+├── Common/            # 通用组件
+│   ├── NavigationHelper.cs
+│   ├── ObservableDictionary.cs
+│   ├── RelayCommand.cs
+│   └── SuspensionManager.cs
+├── Models/            # 数据模型
+│   ├── ChatMessage.cs   消息模型
+│   ├── ChatSession.cs   会话模型
+│   └── SessionManager.cs
+├── Pages/             # UI 页面
+│   ├── Chat/            对话页面
+│   ├── Data/            数据管理
+│   ├── Oobe/            首次引导
+│   └── Settings/        设置页面
+└── Assets/            # 资源文件
+```
 
-## 🛠️ 构建说明
+## 构建
 
-1. 使用 **Visual Studio 2015** 打开解决方案。
-2. 目标平台：**Windows 10 Mobile (10240)**。
-3. 手动还原缺失的引用。
-4. 构建并部署到 Lumia 950 或模拟器（ARM 平台）。
+| 环境 | 要求 |
+|------|------|
+| IDE | Visual Studio 2015 |
+| SDK | Windows 10 SDK 10.0.10240.0 |
+| 目标 | Windows 10 Mobile (ARM) |
+| 部署 | Lumia 950 / ARM 模拟器 |
 
----
+```bash
+# 构建命令
+msbuild Lumina.Agent.sln /p:Configuration=Release /p:Platform=ARM
+```
 
-## 📄 许可证
+## 依赖
 
-MIT License — 允许自由使用、修改和分发，但须保留归属声明。
+- [OnDeviceAI](https://github.com/Jimmyxiao2009/OnDeviceAI) — 本地嵌入模型推理引擎
+- Newtonsoft.Json
+- Microsoft.Toolkit.Uwp
 
-1b4e28ba-2fa1-5f3d-85e5-740e1a5a8a1f
+## License
 
----
-
-## 📝 更新日志
-
-### latest
-- Bug fix
-- 性能优化
-- 移除了 Herobrine
+MIT

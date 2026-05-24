@@ -103,19 +103,21 @@
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="51"/>   <!-- top bar -->
-                        <RowDefinition Height="40"/>   <!-- conv title -->
                         <RowDefinition Height="*"/>    <!-- chat -->
                         <RowDefinition Height="Auto"/> <!-- input -->
                     </Grid.RowDefinitions>
 
-                    <!-- ── Top bar ────────────────────────────────────── -->
+                    <!-- ── Top bar (merged: hamburger + title + buttons) ── -->
                     <Grid Grid.Row="0" Background="#1A1A1A">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="52"/>
                             <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
 
-                        <!-- 汉堡按钮：用 Grid 作 Content，确保图标真正居左 -->
+                        <!-- 汉堡按钮 -->
                         <Button Grid.Column="0"
                                 Click="HamburgerBtn_Click"
                                 Background="Transparent" BorderThickness="0"
@@ -129,53 +131,49 @@
                             </Grid>
                         </Button>
 
-                        <TextBlock Grid.Column="1"
-                                   Text="言枢"
+                        <TextBlock x:Name="ConvTitleLabel"
+                                   Grid.Column="1"
+                                   Text="新对话"
                                    Foreground="White"
-                                   FontSize="16"
+                                   FontSize="15"
                                    FontWeight="Light"
                                    VerticalAlignment="Center"
-                                   Margin="4,0"/>
-                    </Grid>
-
-                    <!-- ── Conversation title bar ─────────────────────── -->
-                    <Grid Grid.Row="1"
-                          Background="{ThemeResource SystemControlBackgroundChromeMediumBrush}"
-                          BorderBrush="{ThemeResource SystemControlForegroundBaseLowBrush}"
-                          BorderThickness="0,0,0,1">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>     <!-- title -->
-                            <ColumnDefinition Width="Auto"/>  <!-- appearance -->
-                            <ColumnDefinition Width="Auto"/>  <!-- settings -->
-                        </Grid.ColumnDefinitions>
-
-                        <TextBlock x:Name="ConvTitleLabel"
-                                   Grid.Column="0"
-                                   Text="新对话"
-                                   FontSize="13"
-                                   VerticalAlignment="Center"
-                                   Margin="14,0,8,0"
-                                   Opacity="0.7"
+                                   Margin="4,0"
                                    TextTrimming="CharacterEllipsis"/>
 
-                        <Button Grid.Column="1"
+                        <Button x:Name="ConvAppearanceBtn"
+                                Grid.Column="2"
                                 Click="ConvAppearanceBtn_Click"
                                 Background="Transparent" BorderThickness="0"
-                                Width="40" Height="40"
+                                Width="40" Height="51"
+                                Foreground="White"
                                 ToolTipService.ToolTip="外观设置">
                             <FontIcon Glyph="&#xE771;" FontSize="15"/>
                         </Button>
 
-                        <Button Grid.Column="2"
+                        <Button x:Name="ConvSettingsBtn"
+                                Grid.Column="3"
                                 Click="ConvSettingsBtn_Click"
                                 Background="Transparent" BorderThickness="0"
-                                Width="44" Height="40">
+                                Width="44" Height="51"
+                                Foreground="White"
+                                ToolTipService.ToolTip="会话设置">
                             <FontIcon Glyph="&#xE713;" FontSize="16"/>
+                        </Button>
+
+                        <Button x:Name="NewConvBtn"
+                                Grid.Column="4"
+                                Click="NewConvBtn_Click"
+                                Background="Transparent" BorderThickness="0"
+                                Width="44" Height="51"
+                                Foreground="White"
+                                ToolTipService.ToolTip="新建对话">
+                            <FontIcon Glyph="&#xE710;" FontSize="16"/>
                         </Button>
                     </Grid>
 
                     <!-- ── Chat area ──────────────────────────────────── -->
-                    <Grid Grid.Row="2">
+                    <Grid Grid.Row="1">
                         <!-- Appearance: background layer (solid color or image) -->
                         <Border x:Name="ChatBgSolid"
                                 Visibility="Collapsed"/>
@@ -213,7 +211,7 @@
                         <ItemsControl x:Name="ChatItems" VerticalAlignment="Top">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <StackPanel Margin="0,3">
+                                    <StackPanel Margin="0,3" Tag="{Binding}" Tapped="BubbleTapped">
 
                                         <!-- Reasoning block: left-accent border style -->
                                         <Border Visibility="{Binding HasReasoningVisibility}"
@@ -389,6 +387,7 @@
 
                                         <!-- ── Action strip ───────────────────────────── -->
                                         <StackPanel Orientation="Horizontal"
+                                                    Visibility="{Binding ActionStripVisibility}"
                                                     HorizontalAlignment="{Binding Align}"
                                                     Margin="12,1,12,2">
 
@@ -483,7 +482,7 @@
                     </Grid><!-- /ChatArea -->
 
                     <!-- ── Input bar ───────────────────────────────────── -->
-                    <Grid Grid.Row="3"
+                    <Grid Grid.Row="2"
                           Background="{ThemeResource SystemControlBackgroundChromeMediumBrush}"
                           BorderBrush="{ThemeResource SystemControlForegroundBaseLowBrush}"
                           BorderThickness="0,1,0,0">
@@ -498,28 +497,48 @@
                             <ColumnDefinition Width="Auto"/>  <!-- 发送 -->
                         </Grid.ColumnDefinitions>
 
-                        <!-- 图片预览条（有图片时显示） -->
+                        <!-- 文件预览条（有附件时显示） -->
                         <Border x:Name="ImagePreviewBar"
                                 Grid.Row="0" Grid.ColumnSpan="3"
                                 Visibility="Collapsed"
-                                Padding="10,6" BorderThickness="0,0,0,1"
+                                Padding="8,6" BorderThickness="0,0,0,1"
                                 BorderBrush="{ThemeResource SystemControlForegroundBaseLowBrush}">
                             <Grid>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <Image x:Name="PendingImageThumb"
-                                       Grid.Column="0"
-                                       Width="48" Height="48"
-                                       Stretch="UniformToFill"/>
-                                <TextBlock Grid.Column="1"
-                                           Text="已附加图片"
-                                           FontSize="12" Opacity="0.6"
-                                           VerticalAlignment="Center"
-                                           Margin="10,0"/>
-                                <Button Grid.Column="2"
+                                <!-- 预览列表 -->
+                                <ItemsControl x:Name="PendingAttachList"
+                                              Grid.Column="0"
+                                              ItemsSource="{x:Null}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Horizontal"/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Margin="2,0" CornerRadius="4"
+                                                    BorderThickness="1"
+                                                    BorderBrush="{ThemeResource SystemControlForegroundBaseLowBrush}"
+                                                    Padding="4,2">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <Image Source="{Binding Thumb}" Width="40" Height="40"
+                                                           Stretch="UniformToFill"
+                                                           Visibility="{Binding ThumbVisibility}"/>
+                                                    <FontIcon Glyph="{Binding Icon}" FontSize="20"
+                                                              VerticalAlignment="Center"
+                                                              Visibility="{Binding IconVisibility}"/>
+                                                    <TextBlock Text="{Binding Label}" FontSize="11"
+                                                               VerticalAlignment="Center"
+                                                               MaxWidth="100" TextTrimming="CharacterEllipsis"/>
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <Button Grid.Column="1"
                                         Click="ClearImageBtn_Click"
                                         Background="Transparent" BorderThickness="0"
                                         Width="36" Height="36" Padding="0">
@@ -546,8 +565,8 @@
                                     <Button x:Name="WebSearchBtn" Click="WebSearchBtn_Click"
                                             Background="Transparent" BorderThickness="0"
                                             Width="40" Height="36" Padding="0"
-                                            ToolTipService.ToolTip="Web 搜索">
-                                        <FontIcon x:Name="WebSearchIcon" Glyph="&#xE721;" FontSize="15" Opacity="0.6"
+                                            ToolTipService.ToolTip="工具调用">
+                                        <FontIcon x:Name="WebSearchIcon" Glyph="&#xE90F;" FontSize="15" Opacity="0.6"
                                                   Foreground="{ThemeResource ApplicationForegroundThemeBrush}"/>
                                     </Button>
                                     <!-- Full Trust：跳过敏感操作权限确认 -->
@@ -555,7 +574,7 @@
                                             Background="Transparent" BorderThickness="0"
                                             Width="40" Height="36" Padding="0"
                                             ToolTipService.ToolTip="完全信任模式（跳过权限确认）">
-                                        <FontIcon x:Name="FullTrustIcon" Glyph="&#xE72E;" FontSize="15" Opacity="0.6"
+                                        <FontIcon x:Name="FullTrustIcon" Glyph="&#xE8D7;" FontSize="15" Opacity="0.6"
                                                   Foreground="{ThemeResource ApplicationForegroundThemeBrush}"/>
                                     </Button>
                                     <!-- 允许 AI 直接 Fetch 搜索页 -->
@@ -571,15 +590,16 @@
                             </Grid>
                         </Border>
 
-                        <!-- 图片附加按钮 -->
+                        <!-- 文件附加按钮 -->
                         <Button x:Name="AttachImageBtn"
                                 Grid.Row="2" Grid.Column="0"
                                 Click="AttachImageBtn_Click"
                                 Background="Transparent" BorderThickness="0"
                                 Width="42" MinHeight="42"
                                 Margin="4,6,0,6"
-                                VerticalAlignment="Bottom">
-                            <FontIcon x:Name="AttachImageIcon" Glyph="&#xEB9F;" FontSize="18" Opacity="0.6"
+                                VerticalAlignment="Bottom"
+                                ToolTipService.ToolTip="附加文件（图片/文本/PDF）">
+                            <FontIcon x:Name="AttachImageIcon" Glyph="&#xE8A5;" FontSize="18" Opacity="0.6"
                                       Foreground="{ThemeResource ApplicationForegroundThemeBrush}"/>
                         </Button>
 

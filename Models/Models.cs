@@ -25,6 +25,27 @@ namespace yanshuai
         /// <summary>Shown in lists; prepends ★ when this profile is the global default.</summary>
         public string NameWithDefault =>
             AppSettings.DefaultApiProfileId == Id ? $"★  {Name}" : Name;
+
+        /// <summary>预设 API 配置列表，供用户快速选择</summary>
+        public static List<ApiProfile> GetPresets()
+        {
+            return new List<ApiProfile>
+            {
+                new ApiProfile { Name = "DeepSeek V4 Pro", Url = "https://api.deepseek.com/v1/chat/completions", Model = "deepseek-v4-pro", ProviderType = "openai" },
+                new ApiProfile { Name = "DeepSeek V4 Flash", Url = "https://api.deepseek.com/v1/chat/completions", Model = "deepseek-v4-flash", ProviderType = "openai" },
+                new ApiProfile { Name = "Groq (Llama 4 Scout)", Url = "https://api.groq.com/openai/v1/chat/completions", Model = "meta-llama/llama-4-scout-17b-16e-instruct", ProviderType = "openai" },
+                new ApiProfile { Name = "Groq (Qwen3 32B)", Url = "https://api.groq.com/openai/v1/chat/completions", Model = "qwen/qwen3-32b", ProviderType = "openai" },
+                new ApiProfile { Name = "OpenRouter", Url = "https://openrouter.ai/api/v1/chat/completions", Model = "anthropic/claude-sonnet-4", ProviderType = "openai" },
+                new ApiProfile { Name = "Mistral Large", Url = "https://api.mistral.ai/v1/chat/completions", Model = "mistral-large-latest", ProviderType = "openai" },
+                new ApiProfile { Name = "Mistral Small", Url = "https://api.mistral.ai/v1/chat/completions", Model = "mistral-small-latest", ProviderType = "openai" },
+                new ApiProfile { Name = "Google Gemini", Url = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", Model = "gemini-2.5-flash", ProviderType = "openai", VisionEnabled = true },
+                new ApiProfile { Name = "Moonshot Kimi", Url = "https://api.moonshot.cn/v1/chat/completions", Model = "kimi-k2", ProviderType = "openai" },
+                new ApiProfile { Name = "智谱 GLM-4", Url = "https://open.bigmodel.cn/api/paas/v4/chat/completions", Model = "glm-4-flash", ProviderType = "openai" },
+                new ApiProfile { Name = "SiliconFlow", Url = "https://api.siliconflow.cn/v1/chat/completions", Model = "deepseek-ai/DeepSeek-V3", ProviderType = "openai" },
+                new ApiProfile { Name = "Together AI", Url = "https://api.together.xyz/v1/chat/completions", Model = "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8", ProviderType = "openai" },
+                new ApiProfile { Name = "Claude (Anthropic)", Url = "https://api.anthropic.com/v1/messages", Model = "claude-sonnet-4-6", ProviderType = "claude", VisionEnabled = true },
+            };
+        }
     }
 
     [DataContract]
@@ -70,16 +91,43 @@ namespace yanshuai
     }
 
     [DataContract]
+    public class ImageEntry
+    {
+        public string Base64 { get; set; }
+        public string Mime   { get; set; }
+    }
+
     public class ConversationMessage
     {
         [DataMember] public string Id { get; set; } = Guid.NewGuid().ToString();
         [DataMember] public string Role { get; set; }
         [DataMember] public string Content { get; set; } = "";
         [DataMember] public string ReasoningContent { get; set; } = "";
-        /// <summary>用户附加的图片（Base64），仅user消息有效</summary>
+        /// <summary>用户附加的图片列表（每项 Base64），仅user消息有效</summary>
+        [DataMember] public List<string> ImagesBase64 { get; set; }
+        [DataMember] public List<string> ImagesMimeType { get; set; }
+        // 兼容旧数据
         [DataMember] public string ImageBase64 { get; set; }
         [DataMember] public string ImageMimeType { get; set; }
+        /// <summary>附加的文本文件名（显示用，不含内容）</summary>
+        [DataMember] public List<string> AttachedFileNames { get; set; }
         [DataMember] public DateTime Timestamp { get; set; } = DateTime.Now;
+
+        /// <summary>获取所有图片（合并新旧字段）</summary>
+        public List<ImageEntry> GetAllImages()
+        {
+            var result = new List<ImageEntry>();
+            if (ImagesBase64 != null && ImagesMimeType != null)
+            {
+                for (int i = 0; i < ImagesBase64.Count; i++)
+                    result.Add(new ImageEntry { Base64 = ImagesBase64[i], Mime = i < ImagesMimeType.Count ? ImagesMimeType[i] : "image/jpeg" });
+            }
+            else if (!string.IsNullOrEmpty(ImageBase64))
+            {
+                result.Add(new ImageEntry { Base64 = ImageBase64, Mime = ImageMimeType ?? "image/jpeg" });
+            }
+            return result;
+        }
     }
 
     [DataContract]

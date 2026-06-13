@@ -1,0 +1,389 @@
+<Page x:Class="yanshuai.SettingsPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:local="using:yanshuai"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      mc:Ignorable="d">
+
+    <Page.Resources>
+        <Style TargetType="ToggleSwitch">
+            <Setter Property="MinWidth" Value="0"/>
+        </Style>
+    </Page.Resources>
+
+    <Grid x:Name="RootGrid" Background="{ThemeResource YanshuaiPageBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- 顶栏 -->
+        <Grid Grid.Row="0" Background="{ThemeResource YanshuaiPanelBrush}"
+              BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="0,0,0,1"
+              Padding="14,8">
+            <TextBlock x:Name="PageTitle" Text="设置"
+                       FontSize="18" FontWeight="SemiBold"
+                       VerticalAlignment="Center" Opacity="0.9"/>
+        </Grid>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+
+                <!-- ══ 显示 section ════════════════════════════════════ -->
+                <Grid Margin="18,0,18,12" Tapped="DisplaySection_Tapped">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock x:Name="DisplaySectionTitle"
+                                   Text="显示"
+                                   FontSize="14"
+                                   FontWeight="SemiBold"
+                                   Foreground="{ThemeResource YanshuaiAccentBrush}"
+                                   CharacterSpacing="80"/>
+                        <Border BorderBrush="{ThemeResource YanshuaiAccentBrush}"
+                                BorderThickness="0,0,0,1" Margin="0,3,0,0"
+                                Opacity="0.4"/>
+                    </StackPanel>
+                    <FontIcon x:Name="DisplaySectionIcon" Grid.Column="1"
+                              Glyph="&#xE76E;" FontSize="11"
+                              Opacity="{StaticResource ToolbarIconOpacity}" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                </Grid>
+
+                <StackPanel x:Name="DisplaySection">
+                    <Grid Margin="18,0,18,8"
+                          Background="{ThemeResource YanshuaiPanelBrush}"
+                          BorderBrush="{ThemeResource YanshuaiBorderBrush}"
+                          BorderThickness="0,0,0,1"
+                          Padding="12,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                            <TextBlock x:Name="DarkModeLabel" Text="深色模式" FontSize="15"/>
+                            <TextBlock x:Name="DarkModeDesc" Text="切换深色/浅色主题"
+                                       FontSize="12" Opacity="0.55" Margin="0,2,0,0"/>
+                        </StackPanel>
+                        <ToggleSwitch x:Name="DarkModeToggle" Grid.Column="1"
+                                      VerticalAlignment="Center"
+                                      Toggled="DarkModeToggle_Toggled"
+                                      Margin="0,0,0,0"/>
+                    </Grid>
+
+                    <!-- 主题与字体 → 子页面 -->
+                    <Grid Margin="18,0,18,8"
+                          Background="{ThemeResource YanshuaiPanelBrush}"
+                          BorderBrush="{ThemeResource YanshuaiBorderBrush}"
+                          BorderThickness="0,0,0,1"
+                          Padding="12,12"
+                          Tapped="ThemeSettingsBtn_Tapped">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                            <TextBlock x:Name="ThemeFontLabel" Text="主题与字体" FontSize="15"/>
+                            <TextBlock x:Name="ThemeFontDesc" Text="切换配色风格、字体和主色调"
+                                       FontSize="12" Opacity="0.55" Margin="0,2,0,0"/>
+                        </StackPanel>
+                        <FontIcon Grid.Column="1" Glyph="&#xE76E;" FontSize="13"
+                                  Opacity="0.5" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <Grid Margin="18,0,18,8"
+                          Background="{ThemeResource YanshuaiPanelBrush}"
+                          BorderBrush="{ThemeResource YanshuaiBorderBrush}"
+                          BorderThickness="0,0,0,1"
+                          Padding="12,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                            <TextBlock x:Name="LangLabel" Text="Language / 语言" FontSize="15"/>
+                            <TextBlock x:Name="LangDesc" Text="切换界面语言"
+                                       FontSize="12" Opacity="0.55" Margin="0,2,0,0"/>
+                        </StackPanel>
+                        <ComboBox x:Name="LangPicker" Grid.Column="1"
+                                  MinWidth="140" SelectionChanged="LangPicker_SelectionChanged"/>
+                    </Grid>
+
+                    <Grid Margin="18,0,18,8"
+                          Background="{ThemeResource YanshuaiPanelBrush}"
+                          BorderBrush="{ThemeResource YanshuaiBorderBrush}"
+                          BorderThickness="0,0,0,1"
+                          Padding="12,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                            <TextBlock x:Name="ReplySoundLabel" Text="回复声音" FontSize="15"/>
+                            <TextBlock x:Name="ReplySoundDesc" Text="AI 回复完成时播放提示音"
+                                       FontSize="12" Opacity="0.55" Margin="0,2,0,0"/>
+                        </StackPanel>
+                        <ToggleSwitch x:Name="ReplySoundToggle" Grid.Column="1"
+                                      VerticalAlignment="Center"
+                                      Toggled="ReplySoundToggle_Toggled"
+                                      Margin="0,0,0,0"/>
+                    </Grid>
+
+                    <Grid Margin="18,0,18,8"
+                          Background="{ThemeResource YanshuaiPanelBrush}"
+                          BorderBrush="{ThemeResource YanshuaiBorderBrush}"
+                          BorderThickness="0,0,0,1"
+                          Padding="12,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                            <TextBlock x:Name="ReasoningExpandedLabel" Text="默认展开思考过程" FontSize="15"/>
+                            <TextBlock x:Name="ReasoningExpandedDesc" Text="AI 回复完成后自动展开思维链"
+                                       FontSize="12" Opacity="0.55" Margin="0,2,0,0"/>
+                        </StackPanel>
+                        <ToggleSwitch x:Name="ReasoningExpandedToggle" Grid.Column="1"
+                                      VerticalAlignment="Center"
+                                      Toggled="ReasoningExpandedToggle_Toggled"
+                                      Margin="0,0,0,0"/>
+                    </Grid>
+
+                </StackPanel>
+
+                <!-- ══ 输入行为 section ══════════════════════════════ -->
+                <Grid Margin="18,4,18,12" Tapped="InputSection_Tapped">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock x:Name="InputSectionTitle"
+                                   Text="输入行为"
+                                   FontSize="14" FontWeight="SemiBold"
+                                   Foreground="{ThemeResource YanshuaiAccentBrush}"
+                                   CharacterSpacing="80"/>
+                        <Border BorderBrush="{ThemeResource YanshuaiAccentBrush}"
+                                BorderThickness="0,0,0,1" Margin="0,3,0,0" Opacity="0.4"/>
+                    </StackPanel>
+                    <FontIcon x:Name="InputSectionIcon" Grid.Column="1"
+                              Glyph="&#xE76E;" FontSize="11"
+                              Opacity="{StaticResource ToolbarIconOpacity}" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                </Grid>
+
+                <StackPanel x:Name="InputSection">
+                    <TextBlock x:Name="EnterBehaviorLabel" Text="Enter 键行为"
+                               FontSize="12" Opacity="0.5" Margin="18,0,18,8"/>
+                    <ComboBox x:Name="EnterBehaviorPicker"
+                              HorizontalAlignment="Stretch"
+                              Margin="18,0,18,28"
+                              SelectionChanged="EnterBehaviorPicker_SelectionChanged">
+                        <ComboBoxItem Content="Enter 发送，Shift+Enter 换行"/>
+                        <ComboBoxItem Content="Enter 换行，Ctrl+Enter 发送"/>
+                    </ComboBox>
+                </StackPanel>
+
+                <!-- ══ 启动行为 section ══════════════════════════════ -->
+                <Grid Margin="18,4,18,12" Tapped="StartupSection_Tapped">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock x:Name="StartupSectionTitle"
+                                   Text="启动行为"
+                                   FontSize="14" FontWeight="SemiBold"
+                                   Foreground="{ThemeResource YanshuaiAccentBrush}"
+                                   CharacterSpacing="80"/>
+                        <Border BorderBrush="{ThemeResource YanshuaiAccentBrush}"
+                                BorderThickness="0,0,0,1" Margin="0,3,0,0" Opacity="0.4"/>
+                    </StackPanel>
+                    <FontIcon x:Name="StartupSectionIcon" Grid.Column="1"
+                              Glyph="&#xE76E;" FontSize="11"
+                              Opacity="{StaticResource ToolbarIconOpacity}" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                </Grid>
+
+                <StackPanel x:Name="StartupSection">
+                    <TextBlock x:Name="StartupBehaviorLabel" Text="启动应用时自动进入"
+                               FontSize="12" Opacity="0.5" Margin="18,0,18,8"/>
+                    <ComboBox x:Name="StartupBehaviorPicker"
+                              HorizontalAlignment="Stretch"
+                              Margin="18,0,18,8"
+                              SelectionChanged="StartupBehaviorPicker_SelectionChanged">
+                        <ComboBoxItem Content="最近的对话"/>
+                        <ComboBoxItem Content="新对话"/>
+                    </ComboBox>
+                    <TextBlock x:Name="StartupRestartHint"
+                               Text="✓ 返回主界面后即生效"
+                               FontSize="12"
+                               Foreground="{ThemeResource YanshuaiAccentBrush}"
+                               Margin="18,0,18,28"
+                               Visibility="Collapsed"/>
+                </StackPanel>
+
+                <!-- ══ 角色卡 section ══════════════════════════════════ -->
+                <Grid Margin="18,4,18,12" Tapped="CharaSection_Tapped">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock x:Name="CharaSectionTitle"
+                                   Text="角色卡"
+                                   FontSize="14" FontWeight="SemiBold"
+                                   Foreground="{ThemeResource YanshuaiAccentBrush}"
+                                   CharacterSpacing="80"/>
+                        <Border BorderBrush="{ThemeResource YanshuaiAccentBrush}"
+                                BorderThickness="0,0,0,1" Margin="0,3,0,0" Opacity="0.4"/>
+                    </StackPanel>
+                    <FontIcon x:Name="CharaSectionIcon" Grid.Column="1"
+                              Glyph="&#xE76E;" FontSize="11"
+                              Opacity="{StaticResource ToolbarIconOpacity}" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                </Grid>
+
+                <StackPanel x:Name="CharaSection">
+                    <Grid Margin="18,0,18,24" Padding="12,12"
+                          BorderBrush="{ThemeResource YanshuaiBorderBrush}"
+                          BorderThickness="0,0,0,1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                            <TextBlock x:Name="CharaIllustBgLabel" Text="使用角色卡立绘作为对话背景" FontSize="15"/>
+                            <TextBlock x:Name="CharaIllustBgDesc" Text="有立绘的角色卡会自动设为对话背景图" FontSize="12" Opacity="0.55" Margin="0,2,0,0"/>
+                        </StackPanel>
+                        <ToggleSwitch x:Name="CharaIllustBgToggle" Grid.Column="1"
+                                      VerticalAlignment="Center"
+                                      Toggled="CharaIllustBgToggle_Toggled"
+                                      Margin="0,0,0,0"/>
+                    </Grid>
+                </StackPanel>
+
+                <!-- ══ 数据备份 section ══════════════════════════════════ -->
+                <Grid Margin="18,4,18,12" Tapped="BackupSection_Tapped">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock x:Name="BackupSectionTitle"
+                                   Text="数据备份"
+                                   FontSize="14" FontWeight="SemiBold"
+                                   Foreground="{ThemeResource YanshuaiAccentBrush}"
+                                   CharacterSpacing="80"/>
+                        <Border BorderBrush="{ThemeResource YanshuaiAccentBrush}"
+                                BorderThickness="0,0,0,1" Margin="0,3,0,0" Opacity="0.4"/>
+                    </StackPanel>
+                    <FontIcon x:Name="BackupSectionIcon" Grid.Column="1"
+                              Glyph="&#xE76E;" FontSize="11"
+                              Opacity="{StaticResource ToolbarIconOpacity}" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                </Grid>
+
+                <StackPanel x:Name="BackupSection">
+                    <TextBlock x:Name="BackupDesc" Text="将所有对话、角色卡、世界书、API配置打包导出或从备份恢复"
+                               FontSize="12" Opacity="0.5" Margin="18,0,18,12" TextWrapping="Wrap"/>
+                    <StackPanel Orientation="Horizontal" Margin="18,0,18,10">
+                        <Button x:Name="ExportZipBtn" Content="导出备份(.zip)" Click="ExportZip_Click"
+                                Padding="14,8" Margin="0,0,10,0"/>
+                        <Button x:Name="ImportZipBtn" Content="从备份恢复" Click="ImportZip_Click"
+                                Padding="14,8"/>
+                    </StackPanel>
+                    <TextBlock x:Name="BackupStatus" Text="" FontSize="12" Opacity="{StaticResource ToolbarIconOpacity}"
+                               Margin="18,4,18,28" TextWrapping="Wrap"/>
+                </StackPanel>
+
+                <!-- ══ 引导 section ════════════════════════════════════ -->
+                <Grid Margin="18,4,18,12" Tapped="OobeSection_Tapped">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock x:Name="OobeSectionTitle"
+                                   Text="引导向导"
+                                   FontSize="14" FontWeight="SemiBold"
+                                   Foreground="{ThemeResource YanshuaiAccentBrush}"
+                                   CharacterSpacing="80"/>
+                        <Border BorderBrush="{ThemeResource YanshuaiAccentBrush}"
+                                BorderThickness="0,0,0,1" Margin="0,3,0,0" Opacity="0.4"/>
+                    </StackPanel>
+                    <FontIcon x:Name="OobeSectionIcon" Grid.Column="1"
+                              Glyph="&#xE76E;" FontSize="11"
+                              Opacity="{StaticResource ToolbarIconOpacity}" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                </Grid>
+
+                <StackPanel x:Name="OobeSection">
+                    <Button x:Name="ReEnterOobeBtn" Content="重新进入初始引导向导"
+                            Click="ReEnterOobeBtn_Click"
+                            HorizontalAlignment="Left"
+                            Margin="18,0,0,28" Padding="16,10"/>
+                </StackPanel>
+
+                <!-- ══ API 日志 section ════════════════════════════════════ -->
+                <Grid Margin="18,4,18,12">
+                    <StackPanel>
+                        <TextBlock x:Name="DebugSectionTitle"
+                                   Text="调试"
+                                   FontSize="14" FontWeight="SemiBold"
+                                   Foreground="{ThemeResource YanshuaiAccentBrush}"
+                                   CharacterSpacing="80"/>
+                        <Border BorderBrush="{ThemeResource YanshuaiAccentBrush}"
+                                BorderThickness="0,0,0,1" Margin="0,3,0,0" Opacity="0.4"/>
+                    </StackPanel>
+                </Grid>
+                <StackPanel Margin="0,0,0,8">
+                    <Button x:Name="ApiLogBtn" Content="查看 API 日志"
+                            Click="ApiLogBtn_Click"
+                            HorizontalAlignment="Left"
+                            Margin="18,0,0,20" Padding="16,10"/>
+                </StackPanel>
+
+                <!-- ══ 关于 section ════════════════════════════════════ -->
+                <Grid Margin="18,4,18,12" Tapped="AboutSection_Tapped">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock x:Name="CreditsSectionTitle"
+                                   Text="关于"
+                                   FontSize="14"
+                                   FontWeight="SemiBold"
+                                   Foreground="{ThemeResource YanshuaiAccentBrush}"
+                                   CharacterSpacing="80"/>
+                        <Border BorderBrush="{ThemeResource YanshuaiAccentBrush}"
+                                BorderThickness="0,0,0,1" Margin="0,3,0,0"
+                                Opacity="0.4"/>
+                    </StackPanel>
+                    <FontIcon x:Name="AboutSectionIcon" Grid.Column="1"
+                              Glyph="&#xE76E;" FontSize="11"
+                              Opacity="{StaticResource ToolbarIconOpacity}" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                </Grid>
+
+                <StackPanel x:Name="AboutSection">
+                    <StackPanel Margin="18,0,18,18">
+                        <TextBlock Text="言枢"
+                                   FontSize="22" FontWeight="Light" Margin="0,0,0,2"/>
+                        <TextBlock x:Name="OrigDevLabel"
+                                   Text="AI 对话助手 · 适配 Windows 10 Mobile"
+                                   FontSize="12" Opacity="0.55"/>
+                    </StackPanel>
+
+                    <Button x:Name="AboutBtn" Content="关于言枢 AI"
+                            Click="OpenWebsiteButton_Click"
+                            HorizontalAlignment="Left"
+                            Margin="18,0,0,36"
+                            Padding="16,8"/>
+                </StackPanel>
+
+            </StackPanel>
+        </ScrollViewer>
+        <CommandBar Grid.Row="0" Grid.RowSpan="99" VerticalAlignment="Bottom">
+            <AppBarButton x:Name="ExportZipBarBtn" Icon="Upload" Label="导出备份" Click="ExportZip_Click"/>
+            <AppBarButton x:Name="ImportZipBarBtn" Icon="Download" Label="从备份恢复" Click="ImportZip_Click"/>
+        </CommandBar>
+    </Grid>
+</Page>

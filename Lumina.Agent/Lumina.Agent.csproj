@@ -1,0 +1,483 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       Global properties
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">ARM</Platform>
+    <ProjectGuid>{11791B28-0D70-421B-B23E-E995D6C8282E}</ProjectGuid>
+    <OutputType>AppContainerExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>yanshuai</RootNamespace>
+    <AssemblyName>Lumina.Agent</AssemblyName>
+    <LangVersion>7.2</LangVersion>
+    <DefaultLanguage>zh-CN</DefaultLanguage>
+    <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
+    <!-- Target SDK: 10.0.19041 (supports HttpCompletionOption, INotifyPropertyChanged, etc.) -->
+    <TargetPlatformVersion>10.0.15063.0</TargetPlatformVersion>
+    <!-- Minimum: 10.0.10240 — Lumia 950 ships with this -->
+    <TargetPlatformMinVersion>10.0.15063.0</TargetPlatformMinVersion>
+    <MinimumVisualStudioVersion>14</MinimumVisualStudioVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{A5A43C5B-DE2A-4C0C-9213-0A381AF9435A};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <AppxAutoIncrementPackageRevision>False</AppxAutoIncrementPackageRevision>
+    <GenerateLibraryLayout>true</GenerateLibraryLayout>
+    <AppxBundle>Always</AppxBundle>
+    <AppxPackageSigningEnabled>true</AppxPackageSigningEnabled>
+    <GenerateAppInstallerFile>False</GenerateAppInstallerFile>
+    <AppxBundlePlatforms>x86|x64|arm</AppxBundlePlatforms>
+    <PackageCertificateThumbprint>32B03A555710F107B1B3C49A4BCAAD04586DB650</PackageCertificateThumbprint>
+    <PackageCertificateKeyFile>Lumina.Agent_TemporaryKey.pfx</PackageCertificateKeyFile>
+    <AppInstallerUpdateFrequency>1</AppInstallerUpdateFrequency>
+    <AppInstallerCheckForUpdateFrequency>OnApplicationRun</AppInstallerCheckForUpdateFrequency>
+  </PropertyGroup>
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       Per-platform / per-configuration build settings
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- ARM Debug (primary target: Lumia 950) -->
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|ARM'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\ARM\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>full</DebugType>
+    <PlatformTarget>ARM</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <!-- ARM Release -->
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|ARM'">
+    <OutputPath>bin\ARM\Release\</OutputPath>
+    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <Optimize>true</Optimize>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>ARM</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>true</Prefer32Bit>
+    <UseDotNetNativeToolchain>true</UseDotNetNativeToolchain>
+  </PropertyGroup>
+  <!-- x86 Debug -->
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x86\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <!-- x86 Release -->
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <OutputPath>bin\x86\Release\</OutputPath>
+    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <Optimize>true</Optimize>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>true</Prefer32Bit>
+    <UseDotNetNativeToolchain>true</UseDotNetNativeToolchain>
+  </PropertyGroup>
+  <!-- x64 Debug -->
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <!-- x64 Release -->
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutputPath>bin\x64\Release\</OutputPath>
+    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <Optimize>true</Optimize>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <AppxBundle>Always</AppxBundle>
+    <AppxBundlePlatforms>x86|x64|arm</AppxBundlePlatforms>
+    <UseDotNetNativeToolchain>true</UseDotNetNativeToolchain>
+  </PropertyGroup>
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       C# source files
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <ItemGroup>
+    <!-- App bootstrap -->
+    <Compile Include="App.xaml.cs">
+      <DependentUpon>App.xaml</DependentUpon>
+    </Compile>
+    <!-- Core services -->
+    <Compile Include="Core\AppSettings.cs" />
+    <!-- Core\AppState.cs → shared Lumina.Core -->
+    <Compile Include="Core\DataManager.cs" />
+    <!-- Core\ApiLogger.cs → shared Lumina.Core -->
+    <Compile Include="Core\Tools.cs" />
+    <Compile Include="Core\Tools.Permissions.cs" />
+    <Compile Include="Core\Tools.WebSearch.cs" />
+    <Compile Include="Core\Tools.FileSystem.cs" />
+    <Compile Include="Core\Tools.Device.cs" />
+    <Compile Include="Core\ImageStore.cs" />
+    <Compile Include="Core\SubagentTracker.cs" />
+    <Compile Include="Core\ContextCompressor.cs" />
+    <Compile Include="Core\MemoryManager.cs" />
+    <Compile Include="Core\ApiModelFetcher.cs" />
+    <!-- Data models -->
+    <Compile Include="Models\Models.cs" />
+    <!-- AI engine -->
+    <!-- AI\OnEmbedder.cs → shared Lumina.Core -->
+    <!-- Stubs for removed classes -->
+    <Compile Include="ChatMessage.cs" />
+    <Compile Include="ChatSession.cs" />
+    <Compile Include="SessionManager.cs" />
+    <!-- Common helpers → moved to shared Lumina.Core (see Import below) -->
+    <!-- Pages -->
+    <!-- Chat -->
+    <Compile Include="Pages\Chat\MainPage.xaml.cs">
+      <DependentUpon>MainPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Chat\MainPage.Navigation.cs">
+      <DependentUpon>MainPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Chat\MainPage.Tokens.cs">
+      <DependentUpon>MainPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Chat\MainPage.Composer.cs">
+      <DependentUpon>MainPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Chat\MainPage.SystemPrompt.cs">
+      <DependentUpon>MainPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Chat\MainPage.Response.cs">
+      <DependentUpon>MainPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Chat\MainPage.Bubbles.cs">
+      <DependentUpon>MainPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Chat\MainPage.Send.cs">
+      <DependentUpon>MainPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Chat\MainPage.BubbleRender.cs">
+      <DependentUpon>MainPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Chat\MainPage.Json.cs">
+      <DependentUpon>MainPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Chat\MainPage.Theme.cs">
+      <DependentUpon>MainPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Chat\MainPage.Subagents.cs">
+      <DependentUpon>MainPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Chat\MainPage.ViewModels.cs">
+      <DependentUpon>MainPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Chat\ConvAppearancePage.xaml.cs">
+      <DependentUpon>ConvAppearancePage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Chat\DefaultAppearancePage.xaml.cs">
+      <DependentUpon>DefaultAppearancePage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Evaluation\EvaluationPage.xaml.cs">
+      <DependentUpon>EvaluationPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Services\PlaaApiClient.cs" />
+    <Compile Include="Services\EvaluationService.cs" />
+    <Compile Include="Services\LatentChart.cs" />
+    <Compile Include="Pages\Chat\MarkdownBlock.cs" />
+    <Compile Include="Pages\Chat\LatexRenderer.cs" />
+    <Compile Include="Pages\Chat\StreamFade.cs" />
+    <Compile Include="Pages\Chat\MessageTemplateSelector.cs" />
+    <Compile Include="Pages\Chat\ChatBubble.cs" />
+    <!-- Data -->
+    <Compile Include="Pages\Data\ConversationsListPage.xaml.cs">
+      <DependentUpon>ConversationsListPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Data\ConversationsListPage.Search.cs">
+      <DependentUpon>ConversationsListPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Data\ConversationsListPage.List.cs">
+      <DependentUpon>ConversationsListPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Data\ConversationsListPage.Groups.cs">
+      <DependentUpon>ConversationsListPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Data\ConversationsListPage.Items.cs">
+      <DependentUpon>ConversationsListPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Data\ConversationsListPage.SelectMode.cs">
+      <DependentUpon>ConversationsListPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Data\ConversationsListPage.BatchOps.cs">
+      <DependentUpon>ConversationsListPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Data\ConversationsListPage.Nav.cs">
+      <DependentUpon>ConversationsListPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Data\ImportExportPage.xaml.cs">
+      <DependentUpon>ImportExportPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Data\ChatHistoryPage.xaml.cs">
+      <DependentUpon>ChatHistoryPage.xaml</DependentUpon>
+    </Compile>
+    <!-- Settings -->
+    <Compile Include="Pages\Settings\ConvSettingsPage.xaml.cs">
+      <DependentUpon>ConvSettingsPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Settings\SettingsPage.xaml.cs">
+      <DependentUpon>SettingsPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Settings\ApiProfilesPage.xaml.cs">
+      <DependentUpon>ApiProfilesPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Settings\SearchSettingsPage.xaml.cs">
+      <DependentUpon>SearchSettingsPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Settings\ApiLogPage.xaml.cs">
+      <DependentUpon>ApiLogPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Settings\InfoPage.xaml.cs">
+      <DependentUpon>InfoPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Settings\McpSkillsPage.xaml.cs">
+      <DependentUpon>McpSkillsPage.xaml</DependentUpon>
+    </Compile>
+    <!-- Oobe -->
+    <Compile Include="Pages\Oobe\OobeBasicPage.xaml.cs">
+      <DependentUpon>OobeBasicPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Oobe\OobePermissionPage.xaml.cs">
+      <DependentUpon>OobePermissionPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Oobe\OobePage1.xaml.cs">
+      <DependentUpon>OobePage1.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Oobe\OobePage2.xaml.cs">
+      <DependentUpon>OobePage2.xaml</DependentUpon>
+    </Compile>
+    <!-- Projects -->
+    <Compile Include="Pages\Projects\ProjectsListPage.xaml.cs">
+      <DependentUpon>ProjectsListPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Projects\ProjectSettingsPage.xaml.cs">
+      <DependentUpon>ProjectSettingsPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       Package manifest
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <ItemGroup>
+    <AppxManifest Include="Package.appxmanifest">
+      <SubType>Designer</SubType>
+    </AppxManifest>
+  </ItemGroup>
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       XAML pages
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <ItemGroup>
+    <ApplicationDefinition Include="App.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </ApplicationDefinition>
+    <!-- Chat -->
+    <Page Include="Pages\Chat\MainPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\Chat\ConvAppearancePage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\Chat\DefaultAppearancePage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <!-- Data -->
+    <Page Include="Pages\Data\ConversationsListPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\Data\ImportExportPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\Data\ChatHistoryPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <!-- Settings -->
+    <Page Include="Pages\Settings\ConvSettingsPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\Settings\ApiProfilesPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\Settings\SearchSettingsPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\Settings\ApiLogPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\Settings\SettingsPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\Settings\InfoPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\Settings\McpSkillsPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <!-- Oobe -->
+    <Page Include="Pages\Oobe\OobeBasicPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\Oobe\OobePermissionPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\Oobe\OobePage1.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\Oobe\OobePage2.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <!-- Evaluation -->
+    <Page Include="Pages\Evaluation\EvaluationPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <!-- Projects -->
+    <Page Include="Pages\Projects\ProjectsListPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\Projects\ProjectSettingsPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       Assets / content files (已更新为 UWP 标准格式)
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <ItemGroup>
+    <!-- BadgeLogo -->
+    <Content Include="Assets\BadgeLogo.scale-100.png" />
+    <Content Include="Assets\BadgeLogo.scale-125.png" />
+    <Content Include="Assets\BadgeLogo.scale-150.png" />
+    <Content Include="Assets\BadgeLogo.scale-200.png" />
+    <Content Include="Assets\BadgeLogo.scale-400.png" />
+    <!-- LargeTile -->
+    <Content Include="Assets\LargeTile.scale-100.png" />
+    <Content Include="Assets\LargeTile.scale-125.png" />
+    <Content Include="Assets\LargeTile.scale-150.png" />
+    <Content Include="Assets\LargeTile.scale-200.png" />
+    <Content Include="Assets\LargeTile.scale-400.png" />
+    <!-- Logo (UWP标准格式) -->
+    <Content Include="Assets\Logo.png" />
+    <Content Include="Assets\Logo.scale-100.png" />
+    <Content Include="Assets\Logo.scale-125.png" />
+    <Content Include="Assets\Logo.scale-150.png" />
+    <Content Include="Assets\Logo.scale-200.png" />
+    <Content Include="Assets\Logo.scale-400.png" />
+    <!-- SmallLogo (UWP标准格式) -->
+    <Content Include="Assets\SmallLogo.png" />
+    <Content Include="Assets\SmallLogo.scale-100.png" />
+    <Content Include="Assets\SmallLogo.scale-125.png" />
+    <Content Include="Assets\SmallLogo.scale-150.png" />
+    <Content Include="Assets\SmallLogo.scale-200.png" />
+    <Content Include="Assets\SmallLogo.scale-400.png" />
+    <!-- SmallLogo altform unplated -->
+    <Content Include="Assets\SmallLogo.altform-unplated_targetsize-16.png" />
+    <Content Include="Assets\SmallLogo.altform-unplated_targetsize-24.png" />
+    <Content Include="Assets\SmallLogo.altform-unplated_targetsize-32.png" />
+    <Content Include="Assets\SmallLogo.altform-unplated_targetsize-48.png" />
+    <Content Include="Assets\SmallLogo.altform-unplated_targetsize-256.png" />
+    <!-- SmallLogo targetsize -->
+    <Content Include="Assets\SmallLogo.targetsize-16.png" />
+    <Content Include="Assets\SmallLogo.targetsize-24.png" />
+    <Content Include="Assets\SmallLogo.targetsize-32.png" />
+    <Content Include="Assets\SmallLogo.targetsize-48.png" />
+    <Content Include="Assets\SmallLogo.targetsize-256.png" />
+    <!-- SplashScreen (UWP标准格式) -->
+    <Content Include="Assets\SplashScreen.png" />
+    <Content Include="Assets\SplashScreen.scale-100.png" />
+    <Content Include="Assets\SplashScreen.scale-125.png" />
+    <Content Include="Assets\SplashScreen.scale-150.png" />
+    <Content Include="Assets\SplashScreen.scale-200.png" />
+    <Content Include="Assets\SplashScreen.scale-400.png" />
+    <!-- Square71x71Logo (UWP标准格式) -->
+    <Content Include="Assets\Square71x71Logo.png" />
+    <Content Include="Assets\Square71x71Logo.scale-100.png" />
+    <Content Include="Assets\Square71x71Logo.scale-125.png" />
+    <Content Include="Assets\Square71x71Logo.scale-150.png" />
+    <Content Include="Assets\Square71x71Logo.scale-200.png" />
+    <Content Include="Assets\Square71x71Logo.scale-400.png" />
+    <!-- StoreLogo (UWP标准格式) -->
+    <Content Include="Assets\StoreLogo.png" />
+    <Content Include="Assets\StoreLogo.scale-100.png" />
+    <Content Include="Assets\StoreLogo.scale-125.png" />
+    <Content Include="Assets\StoreLogo.scale-150.png" />
+    <Content Include="Assets\StoreLogo.scale-200.png" />
+    <Content Include="Assets\StoreLogo.scale-400.png" />
+    <!-- WideLogo (UWP标准格式) -->
+    <Content Include="Assets\WideLogo.png" />
+    <Content Include="Assets\WideLogo.scale-100.png" />
+    <Content Include="Assets\WideLogo.scale-125.png" />
+    <Content Include="Assets\WideLogo.scale-150.png" />
+    <Content Include="Assets\WideLogo.scale-200.png" />
+    <Content Include="Assets\WideLogo.scale-400.png" />
+    <!-- 其他资源文件 -->
+    <Content Include="Assets\replySound.mp3" />
+    <Content Include="Assets\UserAvatar.jpg" />
+    <!-- OnDeviceAI 嵌入模型 -->
+    <Content Include="Assets\bge.embmodel" />
+  </ItemGroup>
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       SDK references
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <ItemGroup>
+    <!-- Windows Mobile Extensions — required for StatusBar API on Lumia 950 -->
+    <SDKReference Include="WindowsMobile, Version=10.0.10240.0">
+      <n>Windows Mobile Extensions for the UWP</n>
+    </SDKReference>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform" Version="6.2.14" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Lumina.Agent_TemporaryKey.pfx" />
+  </ItemGroup>
+  <!-- 共享底层：编译标识，供 Lumina.Core 中的 #if AGENT 使用 -->
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);AGENT</DefineConstants>
+  </PropertyGroup>
+  <!-- 共享底层：Lumina.Core 共享项目（源码级共享，编译进本 app） -->
+  <Import Project="..\Lumina.Core\Lumina.Core.projitems" Label="Shared" />
+  <Import Project="$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets" />
+  <PropertyGroup>
+    <DisableWireUpCoreRuntime>true</DisableWireUpCoreRuntime>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,45 @@
+<Page
+    x:Class="yanshuai.OobeDonePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid x:Name="RootGrid" Background="{ThemeResource YanshuaiPageBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
+                        Margin="32,40,32,24" MaxWidth="400">
+
+                <FontIcon Glyph="&#xE930;" FontSize="64" Opacity="0.4"
+                          HorizontalAlignment="Center" Margin="0,0,0,16"/>
+
+                <TextBlock x:Name="DoneTitle" Text="设置完成"
+                           FontSize="28" FontWeight="Light"
+                           HorizontalAlignment="Center" Margin="0,0,0,24"/>
+
+                <Border Background="{ThemeResource YanshuaiSubtlePanelBrush}"
+                        CornerRadius="8" Padding="16,12">
+                    <StackPanel x:Name="SummaryPanel">
+                        <!-- Dynamically populated -->
+                    </StackPanel>
+                </Border>
+
+                <TextBlock x:Name="HintText"
+                           Text="随时可以在设置里修改这些配置。"
+                           FontSize="13" Opacity="0.4" TextAlignment="Center"
+                           TextWrapping="Wrap" Margin="0,20,0,0"/>
+
+            </StackPanel>
+        </ScrollViewer>
+        <CommandBar Grid.Row="0" Grid.RowSpan="99" VerticalAlignment="Bottom">
+            <AppBarButton x:Name="FinishBtn" Icon="Accept" Label="开始使用"
+                          Click="FinishBtn_Click"/>
+        </CommandBar>
+    </Grid>
+</Page>

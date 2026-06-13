@@ -1,0 +1,79 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- 🤖 言枢·智能体 — 严肃专业主题 -->
+    <!-- 主色调：钢蓝 #2C3E8C，辅助：冷灰 #4A5568 -->
+
+    <!-- 颜色资源 -->
+    <Color x:Key="ThemeAccentColor">#FF2C3E8C</Color>
+    <Color x:Key="ThemeAccentColorDark">#FF1E2D6B</Color>
+    <Color x:Key="ThemeAccentColorLight">#FF5A6FB5</Color>
+    <SolidColorBrush x:Key="ThemeAccentBrush" Color="#FF2C3E8C"/>
+    <SolidColorBrush x:Key="ThemeAccentBrushDark" Color="#FF1E2D6B"/>
+    <SolidColorBrush x:Key="ThemeAccentBrushLight" Color="#FF5A6FB5"/>
+
+    <!-- 导航栏配色 -->
+    <Color x:Key="NavHeaderColor">#FF2C3E8C</Color>
+    <Color x:Key="NavHeaderGradientEnd">#FF4A6FA5</Color>
+    <Color x:Key="NavBackground">#FF1A1D2E</Color>
+
+    <!-- 对话气泡 -->
+    <Color x:Key="UserBubbleColor">#FF3A5BAF</Color>
+    <Color x:Key="UserBubbleFgColor">#FFFFFFFF</Color>
+    <Color x:Key="AiBubbleColor">#FF2A2D3E</Color>
+    <Color x:Key="AiBubbleFgColor">#FFE0E4F0</Color>
+    <Color x:Key="ReasoningBgColor">#302C3E8C</Color>
+
+    <!-- 输入区 -->
+    <Color x:Key="InputBoxBgColor">#FF1E2132</Color>
+    <Color x:Key="InputBoxBorderColor">#402C3E8C</Color>
+    <SolidColorBrush x:Key="InputBoxBg" Color="#FF1E2132"/>
+    <SolidColorBrush x:Key="InputBoxBorder" Color="#402C3E8C"/>
+
+    <!-- 标题/品牌 -->
+    <SolidColorBrush x:Key="BrandTitleBrush" Color="#FF5A6FB5"/>
+    <SolidColorBrush x:Key="BrandSubtitleBrush" Color="#FF8A9FD5"/>
+
+    <!-- 按钮样式 — 简洁直角风格 -->
+    <Style x:Key="NavButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Height" Value="48"/>
+        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid Background="{TemplateBinding Background}">
+                        <ContentPresenter Margin="16,0" VerticalAlignment="Center"/>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsPointerOver" Value="True">
+                <Setter Property="Background" Value#302C3E8C"/>
+            </Trigger>
+            <Trigger Property="IsPressed" Value="True">
+                <Setter Property="Background" Value#552C3E8C"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- 发送按钮 — 方形硬朗 -->
+    <Style x:Key="SendButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="#FF2C3E8C"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/>
+        <Setter Property="Width" Value="40"/>
+        <Setter Property="Height" Value="40"/>
+        <Setter Property="CornerRadius" Value="4"/>
+    </Style>
+
+    <!-- 工具栏图标 -->
+    <Style x:Key="ToolbarIconStyle" TargetType="FontIcon">
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="Foreground" Value="#AA5A6FB5"/>
+    </Style>
+</ResourceDictionary>
+

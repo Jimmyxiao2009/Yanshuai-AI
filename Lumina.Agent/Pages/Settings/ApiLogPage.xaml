@@ -1,0 +1,101 @@
+<Page
+    x:Class="yanshuai.ApiLogPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid x:Name="RootGrid" Background="#0C0C0C">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- 终端顶栏 -->
+        <Grid Grid.Row="0" Margin="12,12,12,4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                <TextBlock Foreground="#4CAF50" FontFamily="Consolas" FontSize="13">
+                    <Run Text="yanshuai@agent:~$ "/><Run Text="api_log" Foreground="#81C784"/>
+                </TextBlock>
+                <TextBlock Text="{}{count} 条记录 · 仅存于内存"
+                           Foreground="#555" FontSize="10"
+                           FontFamily="Consolas" Margin="0,2,0,0"/>
+            </StackPanel>
+            <Button Grid.Column="1" Click="ClearBtn_Click"
+                    Background="Transparent" BorderThickness="0"
+                    Foreground="#666" FontFamily="Consolas" FontSize="12"
+                    Padding="8,4" Margin="0,0,4,0"
+                    Content="[clear]"/>
+            <Button Grid.Column="2" Click="BackBtn_Click"
+                    Background="Transparent" BorderThickness="0"
+                    Foreground="#666" FontFamily="Consolas" FontSize="12"
+                    Padding="8,4"
+                    Content="[back]"/>
+        </Grid>
+
+        <!-- 终端输出列表 -->
+        <ListView x:Name="LogList"
+                  Grid.Row="1"
+                  SelectionMode="Single"
+                  SelectionChanged="LogList_SelectionChanged"
+                  Background="Transparent"
+                  BorderThickness="0"
+                  Margin="0,0,0,0">
+            <ListView.ItemContainerStyle>
+                <Style TargetType="ListViewItem">
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                    <Setter Property="Padding" Value="0"/>
+                    <Setter Property="MinHeight" Value="0"/>
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ListViewItem">
+                                <ContentPresenter HorizontalAlignment="Stretch"
+                                                  VerticalAlignment="Stretch"/>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </ListView.ItemContainerStyle>
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <Grid Padding="12,2,12,2"
+                          Background="{Binding BgBrush}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0"
+                                   Text="{Binding Prefix}"
+                                   FontFamily="Consolas" FontSize="12"
+                                   Foreground="{Binding PrefixColor}"
+                                   Margin="0,0,6,0" VerticalAlignment="Top"/>
+                        <StackPanel Grid.Column="1">
+                            <!-- 摘要行 -->
+                            <TextBlock FontFamily="Consolas" FontSize="11"
+                                       Foreground="{Binding LineColor}"
+                                       Text="{Binding LineText}"
+                                       TextWrapping="Wrap"/>
+                            <!-- 展开后的详情（JSON/工具调用） -->
+                            <TextBlock x:Name="ExpandedDetail"
+                                       FontFamily="Consolas" FontSize="10"
+                                       Foreground="#888"
+                                       Text="{Binding DetailText}"
+                                       TextWrapping="Wrap"
+                                       IsTextSelectionEnabled="True"
+                                       Visibility="{Binding DetailVisibility}"
+                                       MaxHeight="200"
+                                       Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Grid>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+    </Grid>
+</Page>

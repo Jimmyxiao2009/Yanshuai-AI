@@ -1,0 +1,126 @@
+<Page
+    x:Class="yanshuai.McpSkillsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid x:Name="RootGrid" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Margin="14,16,14,4">
+            <TextBlock x:Name="PageTitle" Text="MCP &amp; Skills"
+                       FontSize="32" FontWeight="Light"/>
+            <TextBlock Text="管理 Model Context Protocol 服务器与自定义技能"
+                       FontSize="12" Opacity="0.5" Margin="0,4,0,12"/>
+        </StackPanel>
+
+        <Pivot x:Name="MainPivot" Grid.Row="1" Margin="0,0,0,0">
+            <PivotItem Header="MCP 服务器">
+                <Grid>
+                    <ListView x:Name="McpList"
+                              SelectionMode="Single"
+                              SelectionChanged="McpList_SelectionChanged">
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem">
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                <Setter Property="Padding" Value="0"/>
+                                <Setter Property="Margin" Value="0"/>
+                                <Setter Property="MinHeight" Value="0"/>
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderBrush="{ThemeResource SystemControlForegroundBaseLowBrush}"
+                                        BorderThickness="0,0,0,1" Padding="14,10">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="{Binding Name}" FontSize="15"/>
+                                            <TextBlock Text="{Binding TransportType}" FontSize="11" Opacity="0.45" Margin="0,2,0,0"/>
+                                            <TextBlock Text="{Binding Endpoint}" FontSize="11" Opacity="0.55"
+                                                       TextTrimming="CharacterEllipsis" Margin="0,1,0,0"/>
+                                        </StackPanel>
+                                        <ToggleSwitch Grid.Column="1"
+                                                      IsOn="{Binding Enabled, Mode=TwoWay}"
+                                                      Toggled="McpToggle_Toggled"
+                                                      Tag="{Binding}"
+                                                      OnContent="" OffContent=""
+                                                      MinWidth="0"
+                                                      VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </Grid>
+            </PivotItem>
+
+            <PivotItem Header="Skills">
+                <Grid>
+                    <ListView x:Name="SkillsList"
+                              SelectionMode="Single"
+                              SelectionChanged="SkillsList_SelectionChanged">
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem">
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                <Setter Property="Padding" Value="0"/>
+                                <Setter Property="Margin" Value="0"/>
+                                <Setter Property="MinHeight" Value="0"/>
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderBrush="{ThemeResource SystemControlForegroundBaseLowBrush}"
+                                        BorderThickness="0,0,0,1" Padding="14,10">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="{Binding Icon}"
+                                                   FontSize="20" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Name}" FontSize="15"/>
+                                            <TextBlock Text="{Binding Description}" FontSize="11" Opacity="0.55"
+                                                       TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                        <ToggleSwitch Grid.Column="2"
+                                                      IsOn="{Binding Enabled, Mode=TwoWay}"
+                                                      Toggled="SkillToggle_Toggled"
+                                                      Tag="{Binding}"
+                                                      OnContent="" OffContent=""
+                                                      MinWidth="0"
+                                                      VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </Grid>
+            </PivotItem>
+        </Pivot>
+    </Grid>
+
+    <Page.BottomAppBar>
+        <CommandBar>
+            <AppBarButton Icon="Add" Label="新增" Click="AddButton_Click"/>
+            <AppBarButton x:Name="EditBtn" Icon="Edit" Label="编辑"
+                          IsEnabled="False" Click="EditButton_Click"/>
+            <AppBarButton x:Name="DeleteBtn" Icon="Delete" Label="删除"
+                          IsEnabled="False" Click="DeleteButton_Click"/>
+            <CommandBar.Content>
+                <AppBarButton Icon="Back" Label="" Click="BackButton_Click"/>
+            </CommandBar.Content>
+        </CommandBar>
+    </Page.BottomAppBar>
+</Page>

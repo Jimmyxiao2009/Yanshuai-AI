@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>b1a2c3d4-1111-2222-3333-444455556666</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>yanshuai</Import_RootNamespace>
+  </PropertyGroup>
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       Lumina.Core — 言枢 AI 共享底层（Agent / Roleplay 共用同一份源码）
+       分歧处用 #if AGENT / #if ROLEPLAY 区分（各 app 在 DefineConstants 中定义）
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <ItemGroup>
+    <!-- Common helpers -->
+    <Compile Include="$(MSBuildThisFileDirectory)Common\NavigationHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Common\ObservableDictionary.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Common\RelayCommand.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Common\SuspensionManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Common\UiHelpers.cs" />
+    <!-- Shared chat helpers (deduped from Agent/Roleplay MainPage) -->
+    <Compile Include="$(MSBuildThisFileDirectory)AI\ChatJson.cs" />
+    <!-- Core infrastructure -->
+    <Compile Include="$(MSBuildThisFileDirectory)Core\AppState.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\ApiLogger.cs" />
+    <!-- AI engine -->
+    <Compile Include="$(MSBuildThisFileDirectory)AI\OnEmbedder.cs" />
+    <!-- Shared RAG memory layer (deduped from Agent/Roleplay AI\RagMemory.cs) -->
+    <Compile Include="$(MSBuildThisFileDirectory)AI\RagMemory.cs" />
+    <!-- MVVM infrastructure (shared base for migrating code-behind) -->
+    <Compile Include="$(MSBuildThisFileDirectory)ViewModels\ViewModelBase.cs" />
+  </ItemGroup>
+</Project>

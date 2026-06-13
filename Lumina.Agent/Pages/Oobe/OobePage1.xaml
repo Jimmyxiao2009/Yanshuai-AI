@@ -1,0 +1,48 @@
+<Page
+    x:Class="yanshuai.OobePage1"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid x:Name="RootGrid" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
+                    Margin="32,0" MaxWidth="360">
+
+            <FontIcon Glyph="&#xE8BD;" FontSize="72" Opacity="0.15"
+                      HorizontalAlignment="Center" Margin="0,0,0,32"/>
+
+            <TextBlock Text="言枢"
+                       FontSize="48" FontWeight="Light"
+                       HorizontalAlignment="Center"
+                       Margin="0,0,0,12"/>
+
+            <TextBlock Text="AI 对话助手"
+                       FontSize="18" Opacity="0.6" FontWeight="Light"
+                       HorizontalAlignment="Center"
+                       Margin="0,0,0,8"/>
+
+            <TextBlock Text="适配 Windows 10 Mobile"
+                       FontSize="14" Opacity="0.35"
+                       HorizontalAlignment="Center"
+                       Margin="0,0,0,48"/>
+
+            <TextBlock Text="接下来将引导你完成基本设置，只需几分钟。"
+                       FontSize="15" Opacity="0.7"
+                       HorizontalAlignment="Center"
+                       TextWrapping="Wrap" TextAlignment="Center"
+                       Margin="0,0,0,8"/>
+
+        </StackPanel>
+    </Grid>
+
+    <Page.BottomAppBar>
+        <CommandBar>
+            <AppBarButton Icon="Forward" Label="开始" Click="NextBtn_Click"/>
+            <CommandBar.SecondaryCommands>
+                <AppBarButton Icon="Download" Label="从备份恢复" Click="RestoreBackupBtn_Click"/>
+            </CommandBar.SecondaryCommands>
+        </CommandBar>
+    </Page.BottomAppBar>
+</Page>

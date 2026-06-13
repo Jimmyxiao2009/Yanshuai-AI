@@ -1,0 +1,44 @@
+# =====================
+# Agent / IDE settings
+# =====================
+.claude/
+.vs/
+AGENTS.md
+CLAUDE.md
+
+# =====================
+# Build artifacts
+# =====================
+obj/
+bin/
+AppPackages/
+BundleArtifacts/
+TestResults/
+*.user
+*.suo
+*.pfx
+
+# =====================
+# Project documents
+# =====================
+Docs/
+
+# =====================
+# Source archives
+# =====================
+*.zip
+
+# =====================
+# Temporary / generated
+# =====================
+*.bak
+*.tmp
+*.log
+__pycache__/
+*.pyc
+
+# =====================
+# Build scripts (local)
+# =====================
+build.ps1
+CopyWin32Resources.bat

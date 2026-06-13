@@ -1,0 +1,267 @@
+<Page
+    x:Class="yanshuai.ConversationsListPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:yanshuai"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Page.Resources>
+        <!-- 分组头模板 -->
+        <DataTemplate x:Key="ConvGroupHeaderTemplate">
+            <Border Background="{ThemeResource SystemControlBackgroundChromeMediumBrush}"
+                    Tapped="GroupHeader_Tapped"
+                    RightTapped="GroupHeader_RightTapped"
+                    Holding="GroupHeader_Holding">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <!-- 复选框区（多选模式才显示） -->
+                        <ColumnDefinition Width="Auto"/>
+                        <!-- 展开/收纳箭头 -->
+                        <ColumnDefinition Width="Auto"/>
+                        <!-- 图钉图标 -->
+                        <ColumnDefinition Width="Auto"/>
+                        <!-- 组名 -->
+                        <ColumnDefinition Width="*"/>
+                        <!-- 数量 -->
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- 复选框区域（仅多选模式可见，点击选/取消选整组） -->
+                    <Border Grid.Column="0"
+                            Width="44" Height="44"
+                            Tapped="GroupCheckBox_Tapped"
+                            Visibility="{Binding CheckBoxVisibility}">
+                        <Grid Width="18" Height="18" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Border BorderBrush="{ThemeResource SystemControlForegroundBaseMediumBrush}"
+                                    BorderThickness="1.5" CornerRadius="2"
+                                    Background="{Binding CheckedBrush}"/>
+                            <FontIcon Glyph="&#xE8FB;" FontSize="11"
+                                      Foreground="White"
+                                      HorizontalAlignment="Center" VerticalAlignment="Center"
+                                      Visibility="{Binding CheckedVisibility}"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- 展开/收纳箭头（始终显示） -->
+                    <FontIcon Grid.Column="1" Glyph="{Binding ExpandGlyph}" FontSize="11"
+                              Opacity="0.6" Margin="14,0,8,0"
+                              VerticalAlignment="Center"/>
+
+                    <!-- 图钉图标（置顶组才显示） -->
+                    <FontIcon Grid.Column="2" Glyph="&#xE840;" FontSize="12"
+                              Opacity="0.7" Margin="0,0,6,0"
+                              VerticalAlignment="Center"
+                              Visibility="{Binding IsPinnedGroup}"/>
+
+                    <TextBlock Grid.Column="3" Text="{Binding Key}"
+                               FontSize="12" FontWeight="SemiBold"
+                               Opacity="0.6" CharacterSpacing="60"
+                               VerticalAlignment="Center"
+                               Margin="0,11,0,11"/>
+
+                    <TextBlock Grid.Column="4" Text="{Binding CountText}"
+                               FontSize="11" Opacity="0.4" Margin="8,0,14,0"
+                               VerticalAlignment="Center"/>
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <!-- 对话条目模板 -->
+        <DataTemplate x:Key="ConvItemTemplate">
+            <Border BorderBrush="{ThemeResource SystemControlForegroundBaseLowBrush}"
+                    BorderThickness="0,0,0,1"
+                    Padding="14,11,14,11"
+                    Background="{Binding SelectedBrush}"
+                    RightTapped="ConvItem_RightTapped"
+                    Holding="ConvItem_Holding"
+                    Tapped="ConvItem_Tapped">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <!-- 复选框列（隐藏时宽度为0） -->
+                        <ColumnDefinition Width="Auto"/>
+                        <!-- 内容列 -->
+                        <ColumnDefinition Width="*"/>
+                        <!-- 时间/删除列 -->
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- 复选框（多选模式才显示，隐藏时不占宽度） -->
+                    <Grid Grid.Column="0" Grid.RowSpan="2"
+                          Width="18" Height="18"
+                          HorizontalAlignment="Center" VerticalAlignment="Center"
+                          Margin="0,0,12,0"
+                          Visibility="{Binding CheckBoxVisibility}">
+                        <Border BorderBrush="{ThemeResource SystemControlForegroundBaseMediumBrush}"
+                                BorderThickness="1.5" CornerRadius="2"
+                                Background="{Binding CheckedBrush}"/>
+                        <FontIcon Glyph="&#xE8FB;" FontSize="11"
+                                  Foreground="White"
+                                  HorizontalAlignment="Center" VerticalAlignment="Center"
+                                  Visibility="{Binding CheckedVisibility}"/>
+                    </Grid>
+
+                    <!-- 标题行 -->
+                    <StackPanel Grid.Column="1" Grid.Row="0" Orientation="Horizontal">
+                        <FontIcon Glyph="&#xE840;" FontSize="11"
+                                  Opacity="0.55" Margin="0,0,5,0"
+                                  VerticalAlignment="Center"
+                                  Visibility="{Binding PinIconVisibility}"/>
+                        <TextBlock Text="{Binding Title}"
+                                   FontSize="15"
+                                   TextTrimming="CharacterEllipsis"/>
+                    </StackPanel>
+
+                    <!-- 时间 -->
+                    <TextBlock Grid.Column="2" Grid.Row="0"
+                               Text="{Binding UpdatedAtDisplay}"
+                               FontSize="12" Opacity="0.5"
+                               VerticalAlignment="Center"
+                               Margin="8,0,0,0"/>
+
+                    <!-- 预览文字 -->
+                    <TextBlock Grid.Column="1" Grid.Row="1"
+                               Grid.ColumnSpan="2"
+                               Text="{Binding LastMessagePreview}"
+                               FontSize="13" Opacity="0.55"
+                               TextTrimming="CharacterEllipsis"
+                               Margin="0,2,36,0"/>
+
+                    <!-- 单条删除按钮（多选模式隐藏） -->
+                    <Button Grid.Column="2" Grid.Row="1"
+                            Tag="{Binding}"
+                            Click="DeleteConvBtn_Click"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Width="44" Height="44"
+                            Padding="0"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Right"
+                            Visibility="{Binding DeleteBtnVisibility}"
+                            Tapped="DeleteConvBtn_Tapped">
+                        <FontIcon Glyph="&#xE74D;" FontSize="14" Opacity="0.5"/>
+                    </Button>
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <local:ConvTemplateSelector x:Key="ConvTemplateSelector"
+                                    GroupHeaderTemplate="{StaticResource ConvGroupHeaderTemplate}"
+                                    ConvItemTemplate="{StaticResource ConvItemTemplate}"/>
+    </Page.Resources>
+
+    <Grid x:Name="RootGrid"
+          Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Margin="14,16,14,8">
+            <TextBlock Text="对话列表" FontSize="32" FontWeight="Light"/>
+            <TextBlock x:Name="SelectHint"
+                       Text="已选 0 条"
+                       FontSize="13" Opacity="0.7"
+                       Foreground="{ThemeResource SystemAccentColor}"
+                       Margin="0,4,0,0"
+                       Visibility="Collapsed"/>
+        </StackPanel>
+
+        <!-- 搜索栏（默认收起，点搜索按钮展开） -->
+        <Grid x:Name="SearchBar"
+              Grid.Row="1"
+              Visibility="Collapsed"
+              BorderBrush="{ThemeResource SystemControlForegroundBaseLowBrush}"
+              BorderThickness="0,0,0,1"
+              Padding="14,6,14,6">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <FontIcon Grid.Column="0" Glyph="&#xE721;" FontSize="15"
+                      Opacity="0.5" Margin="0,0,10,0" VerticalAlignment="Center"/>
+            <TextBox x:Name="SearchBox"
+                     Grid.Column="1"
+                     PlaceholderText="搜索对话…"
+                     BorderThickness="0"
+                     Background="Transparent"
+                     VerticalAlignment="Center"
+                     TextChanged="SearchBox_TextChanged"/>
+            <Button x:Name="ClearSearchBtn"
+                    Grid.Column="2"
+                    Click="ClearSearchBtn_Click"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Visibility="Collapsed"
+                    Width="36" Height="36" Padding="0">
+                <FontIcon Glyph="&#xE711;" FontSize="13" Opacity="0.6"/>
+            </Button>
+        </Grid>
+
+        <ListView x:Name="ConvList"
+                  Grid.Row="2"
+                  SelectionMode="None"
+                  IsItemClickEnabled="False"
+                  IsTabStop="False"
+                  ItemTemplateSelector="{StaticResource ConvTemplateSelector}"
+                  Background="Transparent">
+            <ListView.ItemContainerStyle>
+                <Style TargetType="ListViewItem">
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                    <Setter Property="Padding" Value="0"/>
+                    <Setter Property="Margin" Value="0"/>
+                    <Setter Property="MinHeight" Value="0"/>
+                    <Setter Property="IsTabStop" Value="False"/>
+                </Style>
+            </ListView.ItemContainerStyle>
+        </ListView>
+
+        <StackPanel x:Name="EmptyState"
+                    Grid.Row="2"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Center"
+                    Visibility="Collapsed">
+            <FontIcon Glyph="&#xE8F1;" FontSize="48" Opacity="0.2"/>
+            <TextBlock x:Name="EmptyTitle"
+                       Text="还没有对话"
+                       FontSize="18"
+                       FontWeight="Light"
+                       Opacity="0.45"
+                       HorizontalAlignment="Center"
+                       Margin="0,14,0,0"/>
+            <TextBlock x:Name="EmptyHint"
+                       Text="点击下方 ＋ 开始新对话"
+                       FontSize="13"
+                       Opacity="0.35"
+                       HorizontalAlignment="Center"
+                       Margin="0,4,0,0"/>
+        </StackPanel>
+    </Grid>
+
+    <Page.BottomAppBar>
+        <CommandBar>
+            <!-- 普通模式 -->
+            <AppBarButton x:Name="NewConvBtn"  Icon="Add"      Label="新建对话" Click="NewConvBtn_Click"/>
+            <AppBarButton x:Name="SearchBtn2"  Icon="Find"     Label="搜索"    Click="SearchToggleBtn_Click"/>
+            <AppBarButton x:Name="ImportBtn"   Icon="Download" Label="导入"    Click="ImportConv_Click"/>
+            <AppBarButton x:Name="SelectBtn"   Icon="Bullets"  Label="多选"    Click="SelectBtn_Click"/>
+            <!-- 选择模式 -->
+            <AppBarButton x:Name="ToggleAllBtn"    Icon="SelectAll"  Label="全选"  Visibility="Collapsed" Click="ToggleAllBtn_Click"/>
+            <AppBarButton x:Name="PinSelectBtn"    Icon="Pin"        Label="置顶"  Visibility="Collapsed" IsEnabled="False" Click="PinSelectedBtn_Click"/>
+            <AppBarButton x:Name="GroupSelectBtn"  Icon="Folder"     Label="分组"  Visibility="Collapsed" IsEnabled="False" Click="GroupSelectedBtn_Click"/>
+            <AppBarButton x:Name="ExportSelectBtn" Icon="Upload"     Label="导出"  Visibility="Collapsed" IsEnabled="False" Click="ExportSelectedConv_Click"/>
+            <AppBarButton x:Name="DeleteSelectBtn" Icon="Delete"     Label="删除"  Visibility="Collapsed" IsEnabled="False" Click="DeleteSelectedConv_Click"/>
+            <AppBarButton x:Name="CancelSelectBtn" Icon="Cancel"     Label="取消"  Visibility="Collapsed" Click="CancelSelectBtn_Click"/>
+            <CommandBar.Content>
+                <AppBarButton x:Name="BackBtn" Icon="Back" Label="" Click="BackBtn_Click"/>
+            </CommandBar.Content>
+        </CommandBar>
+    </Page.BottomAppBar>
+</Page>

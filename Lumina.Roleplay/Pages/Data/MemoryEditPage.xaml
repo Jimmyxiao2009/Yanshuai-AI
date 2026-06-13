@@ -1,0 +1,43 @@
+<Page x:Class="yanshuai.MemoryEditPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid x:Name="RootGrid" Background="{ThemeResource YanshuaiPageBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- 顶栏 -->
+        <Grid Grid.Row="0" Background="{ThemeResource YanshuaiPanelBrush}"
+              BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="0,0,0,1"
+              Padding="14,8">
+            <TextBlock Text="记忆库" FontSize="18" FontWeight="SemiBold"
+                       VerticalAlignment="Center" Opacity="0.9"/>
+        </Grid>
+
+        <!-- 分段导航 -->
+        <Pivot Grid.Row="1" x:Name="SectionPivot"
+               Background="{ThemeResource YanshuaiPanelBrush}"
+               Padding="14,0">
+            <PivotItem x:Name="ProfilePivot" Header="用户画像">
+                <!-- 内容在背景填充 -->
+            </PivotItem>
+            <PivotItem x:Name="MemoriesPivot" Header="RAG 查询">
+                <!-- 内容在背景填充 -->
+            </PivotItem>
+        </Pivot>
+
+        <!-- 内容区（通过代码填充） -->
+        <ScrollViewer x:Name="ContentArea" Grid.Row="2"
+                      VerticalScrollBarVisibility="Auto"
+                      Padding="18,8,18,30"/>
+        <CommandBar Grid.Row="0" Grid.RowSpan="99" VerticalAlignment="Bottom">
+            <AppBarButton x:Name="SaveBtn" Icon="Save" Label="保存"
+                          Click="SaveBtn_Click"/>
+            <AppBarButton x:Name="AddBtn" Icon="Add" Label="添加记忆"
+                          Click="AddBtn_Click"/>
+        </CommandBar>
+    </Grid>
+</Page>

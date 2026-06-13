@@ -1,0 +1,105 @@
+<Page
+    x:Class="yanshuai.ImportExportPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid x:Name="RootGrid" Background="{ThemeResource YanshuaiPageBrush}">
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+
+                <!-- ══ 对话 ══ -->
+                <StackPanel Margin="14,16,14,8">
+                    <TextBlock Text="对话记录" FontSize="12" FontWeight="SemiBold"
+                               Foreground="{ThemeResource YanshuaiAccentBrush}" CharacterSpacing="80"/>
+                    <Border BorderBrush="{ThemeResource YanshuaiAccentBrush}"
+                            BorderThickness="0,0,0,1" Margin="0,3,0,0" Opacity="0.4"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="14,0,14,6">
+                    <Button Content="导出当前对话" Click="ExportCurrentConv_Click"
+                            Padding="14,8" Margin="0,0,8,0"/>
+                    <Button Content="批量导出所有" Click="ExportAllConv_Click"
+                            Padding="14,8" Margin="0,0,8,0"/>
+                    <Button Content="导入对话(.jsonl)" Click="ImportConv_Click"
+                            Padding="14,8"/>
+                </StackPanel>
+                <TextBlock x:Name="ConvStatus" Text="" FontSize="12" Opacity="0.6"
+                           Margin="14,4,14,16" TextWrapping="Wrap"/>
+
+                <!-- ══ 角色卡 ══ -->
+                <StackPanel Margin="14,8,14,8">
+                    <TextBlock Text="角色卡" FontSize="12" FontWeight="SemiBold"
+                               Foreground="{ThemeResource YanshuaiAccentBrush}" CharacterSpacing="80"/>
+                    <Border BorderBrush="{ThemeResource YanshuaiAccentBrush}"
+                            BorderThickness="0,0,0,1" Margin="0,3,0,0" Opacity="0.4"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="14,0,14,6">
+                    <Button Content="批量导出角色卡" Click="ExportChara_Click"
+                            Padding="14,8" Margin="0,0,8,0"/>
+                    <Button Content="导入角色卡(.json/.png)" Click="ImportChara_Click"
+                            Padding="14,8"/>
+                </StackPanel>
+                <TextBlock x:Name="CharaStatus" Text="" FontSize="12" Opacity="0.6"
+                           Margin="14,4,14,16" TextWrapping="Wrap"/>
+
+                <!-- ══ 世界书 ══ -->
+                <StackPanel Margin="14,8,14,8">
+                    <TextBlock Text="世界书" FontSize="12" FontWeight="SemiBold"
+                               Foreground="{ThemeResource YanshuaiAccentBrush}" CharacterSpacing="80"/>
+                    <Border BorderBrush="{ThemeResource YanshuaiAccentBrush}"
+                            BorderThickness="0,0,0,1" Margin="0,3,0,0" Opacity="0.4"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="14,0,14,6">
+                    <Button Content="导出世界书" Click="ExportWorld_Click"
+                            Padding="14,8" Margin="0,0,8,0"/>
+                    <Button Content="导入世界书(.json)" Click="ImportWorld_Click"
+                            Padding="14,8"/>
+                </StackPanel>
+                <TextBlock x:Name="WorldStatus" Text="" FontSize="12" Opacity="0.6"
+                           Margin="14,4,14,16" TextWrapping="Wrap"/>
+
+                <!-- ══ API 配置 ══ -->
+                <StackPanel Margin="14,8,14,8">
+                    <TextBlock Text="API 配置" FontSize="12" FontWeight="SemiBold"
+                               Foreground="{ThemeResource YanshuaiAccentBrush}" CharacterSpacing="80"/>
+                    <Border BorderBrush="{ThemeResource YanshuaiAccentBrush}"
+                            BorderThickness="0,0,0,1" Margin="0,3,0,0" Opacity="0.4"/>
+                </StackPanel>
+                <TextBlock Text="导出文件包含 API Key，请妥善保管"
+                           FontSize="12" Opacity="0.55" Margin="14,0,14,8"
+                           Foreground="{ThemeResource SystemControlForegroundBaseHighBrush}"/>
+                <StackPanel Orientation="Horizontal" Margin="14,0,14,6">
+                    <Button Content="导出 API 配置" Click="ExportApi_Click"
+                            Padding="14,8" Margin="0,0,8,0"/>
+                    <Button Content="导入 API 配置(.json)" Click="ImportApi_Click"
+                            Padding="14,8"/>
+                </StackPanel>
+                <TextBlock x:Name="ApiStatus" Text="" FontSize="12" Opacity="0.6"
+                           Margin="14,4,14,24" TextWrapping="Wrap"/>
+
+                <!-- ══ 全局备份 ══ -->
+                <StackPanel Margin="14,8,14,8">
+                    <TextBlock Text="全局备份" FontSize="12" FontWeight="SemiBold"
+                               Foreground="{ThemeResource YanshuaiAccentBrush}" CharacterSpacing="80"/>
+                    <Border BorderBrush="{ThemeResource YanshuaiAccentBrush}"
+                            BorderThickness="0,0,0,1" Margin="0,3,0,0" Opacity="0.4"/>
+                </StackPanel>
+                <TextBlock Text="将所有数据打包为 ZIP 文件，或从备份中恢复"
+                           FontSize="12" Opacity="0.55" Margin="14,0,14,8"
+                           Foreground="{ThemeResource SystemControlForegroundBaseHighBrush}"/>
+                <StackPanel Orientation="Horizontal" Margin="14,0,14,6">
+                    <Button Content="导出 ZIP 备份" Click="ExportZip_Click"
+                            Padding="14,8" Margin="0,0,8,0"/>
+                    <Button Content="从 ZIP 恢复" Click="ImportZip_Click"
+                            Padding="14,8"/>
+                </StackPanel>
+                <TextBlock x:Name="ZipStatus" Text="" FontSize="12" Opacity="0.6"
+                           Margin="14,4,14,24" TextWrapping="Wrap"/>
+
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Page>

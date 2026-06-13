@@ -1,0 +1,39 @@
+﻿<Page
+    x:Class="UniversalSend.Views.SettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:UniversalSend.Views"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:settingcontrols="using:UniversalSend.Controls.SettingControls"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+    Loaded="Page_Loaded">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <TextBlock Text="设置" Style="{ThemeResource TitleTextBlockStyle}" Name="PageHeader"/>
+        <ScrollViewer Grid.Row="1">
+            <StackPanel Name="RootStackPanel">
+                <TextBlock Text="接收" Style="{ThemeResource SubtitleTextBlockStyle}"/>
+                <StackPanel Name="ReceiveSettingsStackPanel">
+                    
+                </StackPanel>
+                <TextBlock Text="网络" Style="{ThemeResource SubtitleTextBlockStyle}"/>
+                <StackPanel Name="NetworkSettingsStackPanel">
+                    
+                </StackPanel>
+                <TextBlock Text="实验" Style="{ThemeResource SubtitleTextBlockStyle}"/>
+                <StackPanel Name="LabSettingsStackPanel">
+                    
+                </StackPanel>
+                <Button Margin="0,4,0,8" Content="开发者选项" Name="NavigateToDevPageButton" Visibility="Collapsed" Click="NavigateToDevPageButton_Click"/>
+                <TextBlock Text="关于" Style="{ThemeResource SubtitleTextBlockStyle}"/>
+
+                <settingcontrols:AboutControl/>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Page>

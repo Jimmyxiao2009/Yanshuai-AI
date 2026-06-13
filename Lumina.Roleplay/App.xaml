@@ -1,0 +1,29 @@
+<Application
+    x:Class="yanshuai.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:yanshuai">
+    <Application.Resources>
+        <ResourceDictionary>
+            <!--
+                默认主题：墨韵书卷（InkScroll）
+                运行时切换：App.xaml.cs 在启动时根据 AppSettings.ThemeName
+                替换此 MergedDictionary 来加载 Celadon/MidnightVermilion
+                每个主题自带 Light/Dark 颜色表 + 字体 + 按钮样式
+            -->
+            <ResourceDictionary.MergedDictionaries>
+                <!-- [0] 当前主题（App.xaml.cs ApplyTheme 在启动时换成所选主题）。
+                     [1..] 设计系统 base（固定，不随主题切换）：token + 排版 + 控件样式，
+                     base 样式经 ThemeResource 引用主题颜色/字体，自动适配每套主题。 -->
+                <ResourceDictionary Source="Themes/InkScroll.xaml"/>
+                <ResourceDictionary Source="Themes/Base/Tokens.xaml"/>
+                <ResourceDictionary Source="Themes/Base/Typography.xaml"/>
+                <ResourceDictionary Source="Themes/Base/Controls.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+            <CornerRadius x:Key="ControlCornerRadius">6</CornerRadius>
+            <CornerRadius x:Key="OverlayCornerRadius">10</CornerRadius>
+            <CornerRadius x:Key="TextControlCornerRadius">6</CornerRadius>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

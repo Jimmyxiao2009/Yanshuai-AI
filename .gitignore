@@ -1,0 +1,24 @@
+# Build output
+[Bb]in/
+[Oo]bj/
+AppPackages/
+*.appx
+*.appxbundle
+*.appxupload
+
+# NuGet
+packages/
+*.nupkg
+
+# VS
+.vs/
+*.user
+*.suo
+
+# Large archives / model assets / backups (kept out of VCS)
+*.zip
+*.embmodel
+Lumina.Agent.backup/
+
+# Logs
+*.log

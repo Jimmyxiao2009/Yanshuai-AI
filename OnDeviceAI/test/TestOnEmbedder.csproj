@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\OnEmbedder\OnEmbedder.cs" Link="OnEmbedder.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\model_export\bge.embmodel" Link="bge.embmodel">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

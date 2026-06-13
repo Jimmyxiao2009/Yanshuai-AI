@@ -1,0 +1,613 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       Global properties
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <PropertyGroup>
+    <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
+    <Platform Condition="'$(Platform)' == ''">x86</Platform>
+    <ProjectGuid>{2C5E2329-7A48-44C2-8A0F-6C22153307F3}</ProjectGuid>
+    <OutputType>AppContainerExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>yanshuai</RootNamespace>
+    <AssemblyName>yanshuai</AssemblyName>
+    <DefaultLanguage>zh-CN</DefaultLanguage>
+    <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
+    <TargetPlatformVersion>10.0.19041.0</TargetPlatformVersion>
+    <!-- min 提到 15063：解锁 VisualState Setters 等更可靠的 XAML 行为（与 Lumina.Agent 一致） -->
+    <TargetPlatformMinVersion>10.0.15063.0</TargetPlatformMinVersion>
+    <MinimumVisualStudioVersion>14</MinimumVisualStudioVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{A5A43C5B-DE2A-4C0C-9213-0A381AF9435A};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <PackageCertificateKeyFile>yanshuai_TemporaryKey.pfx</PackageCertificateKeyFile>
+    <AppxAutoIncrementPackageRevision>False</AppxAutoIncrementPackageRevision>
+    <AppxBundle>Always</AppxBundle>
+    <AppxPackageSigningEnabled>true</AppxPackageSigningEnabled>
+    <GenerateAppInstallerFile>False</GenerateAppInstallerFile>
+    <AppxBundlePlatforms>x86|x64|arm</AppxBundlePlatforms>
+    <AppInstallerUpdateFrequency>1</AppInstallerUpdateFrequency>
+    <AppInstallerCheckForUpdateFrequency>OnApplicationRun</AppInstallerCheckForUpdateFrequency>
+    <PackageCertificateThumbprint>FFAEF887165785940D086A941A68FCF1C0B5ED7D</PackageCertificateThumbprint>
+    <AppxSymbolPackageEnabled>False</AppxSymbolPackageEnabled>
+  </PropertyGroup>
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       Per-platform / per-configuration build settings
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- x86 Debug -->
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x86\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <!-- x86 Release -->
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <OutputPath>bin\x86\Release\</OutputPath>
+    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <Optimize>true</Optimize>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>true</Prefer32Bit>
+    <UseDotNetNativeToolchain>true</UseDotNetNativeToolchain>
+  </PropertyGroup>
+  <!-- x64 Debug -->
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <!-- x64 Release -->
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutputPath>bin\x64\Release\</OutputPath>
+    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <Optimize>true</Optimize>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <UseDotNetNativeToolchain>true</UseDotNetNativeToolchain>
+  </PropertyGroup>
+  <!-- ARM Debug -->
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|ARM'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\ARM\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>full</DebugType>
+    <PlatformTarget>ARM</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <!-- ARM Release -->
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|ARM'">
+    <OutputPath>bin\ARM\Release\</OutputPath>
+    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <Optimize>true</Optimize>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>ARM</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>true</Prefer32Bit>
+    <UseDotNetNativeToolchain>true</UseDotNetNativeToolchain>
+  </PropertyGroup>
+  <!-- ARM64 Debug -->
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|ARM64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\ARM64\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>full</DebugType>
+    <PlatformTarget>ARM64</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <!-- ARM64 Release -->
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|ARM64'">
+    <OutputPath>bin\ARM64\Release\</OutputPath>
+    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <Optimize>true</Optimize>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>ARM64</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <UseDotNetNativeToolchain>true</UseDotNetNativeToolchain>
+  </PropertyGroup>
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       C# source files
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <ItemGroup>
+    <!-- App bootstrap -->
+    <Compile Include="App.xaml.cs">
+      <DependentUpon>App.xaml</DependentUpon>
+    </Compile>
+    <!-- AI layer -->
+    <!-- AI\ApiLogger.cs → shared Lumina.Core -->
+    <Compile Include="AI\CardCompleter.cs" />
+    <Compile Include="AI\CharaWizardData.cs" />
+    <Compile Include="AI\CharaSource.cs" />
+    <Compile Include="AI\CharaSource.Url.cs" />
+    <Compile Include="AI\CharaSource.CharacterHub.cs" />
+    <Compile Include="AI\CharaSource.RisuRealm.cs" />
+    <Compile Include="AI\CharaSource.JanitorAI.cs" />
+    <Compile Include="AI\CharaSource.CharacterTavern.cs" />
+    <Compile Include="AI\CharaSource.AICharacterCards.cs" />
+    <Compile Include="AI\CharaSource.AutoDetect.cs" />
+    <Compile Include="AI\CharaSource.Huayu.cs" />
+    <Compile Include="AI\CharaSource.XingyeAI.cs" />
+    <Compile Include="AI\CharaSource.Quack.cs" />
+    <Compile Include="AI\CharaSource.DZMM.cs" />
+    <Compile Include="AI\DialoguePool.cs" />
+    <Compile Include="AI\DialoguePool.Models.cs" />
+    <Compile Include="AI\DialoguePool.Manager.cs" />
+    <!-- AI\OnEmbedder.cs → shared Lumina.Core -->
+    <Compile Include="AI\RagMemory.cs" />
+    <!-- Common helpers → moved to shared Lumina.Core (see Import below) -->
+    <!-- ViewModels (ViewModelBase → shared Lumina.Core) -->
+    <Compile Include="ViewModels\ShellViewModel.cs" />
+    <Compile Include="ViewModels\ConversationsViewModel.cs" />
+    <Compile Include="ViewModels\ChatMessageViewModel.cs" />
+    <Compile Include="ViewModels\CharacterCardsViewModel.cs" />
+    <!-- Services -->
+    <Compile Include="Services\NavigationService.cs" />
+    <!-- Controls -->
+    <Compile Include="Controls\ColorPresetPanel.xaml.cs">
+      <DependentUpon>ColorPresetPanel.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\CharacterCardView.xaml.cs">
+      <DependentUpon>CharacterCardView.xaml</DependentUpon>
+    </Compile>
+    <!-- Core -->
+    <Compile Include="Core\AppSettings.cs" />
+    <!-- Core\AppState.cs → shared Lumina.Core -->
+    <Compile Include="Core\BuiltinCards.cs" />
+    <Compile Include="Core\Translations.cs" />
+    <Compile Include="Core\Translations.en.cs" />
+    <Compile Include="Core\Translations.ja.cs" />
+    <Compile Include="Core\Translations.ko.cs" />
+    <Compile Include="Core\Translations.es.cs" />
+    <Compile Include="Core\Translations.fr.cs" />
+    <Compile Include="Core\Translations.de.cs" />
+    <Compile Include="Core\DataManager.cs" />
+    <Compile Include="Core\MarkdownBlock.cs" />
+    <Compile Include="Core\Models.cs" />
+    <!-- Pages - Characters -->
+    <Compile Include="Pages\Characters\CharaWizardPage1.xaml.cs">
+      <DependentUpon>CharaWizardPage1.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Characters\CharaWizardPage2.xaml.cs">
+      <DependentUpon>CharaWizardPage2.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Characters\CharaWizardPage3.xaml.cs">
+      <DependentUpon>CharaWizardPage3.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Characters\CharaWizardPage4.xaml.cs">
+      <DependentUpon>CharaWizardPage4.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Characters\CharacterCardsPage.xaml.cs">
+      <DependentUpon>CharacterCardsPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Characters\CharacterDetailPage.xaml.cs">
+      <DependentUpon>CharacterDetailPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Characters\NetworkCharaPreviewPage.xaml.cs">
+      <DependentUpon>NetworkCharaPreviewPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Characters\NetworkCharaPage.xaml.cs">
+      <DependentUpon>NetworkCharaPage.xaml</DependentUpon>
+    </Compile>
+    <!-- Pages - Chat -->
+    <Compile Include="Pages\Chat\ConvAppearancePage.xaml.cs">
+      <DependentUpon>ConvAppearancePage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Chat\ConvSettingsPage.xaml.cs">
+      <DependentUpon>ConvSettingsPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Chat\DefaultAppearancePage.xaml.cs">
+      <DependentUpon>DefaultAppearancePage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Chat\MainPage.xaml.cs">
+      <DependentUpon>MainPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Chat\MainPage.Navigation.cs">
+      <DependentUpon>MainPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Chat\MainPage.Composer.cs">
+      <DependentUpon>MainPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Chat\MainPage.Memory.cs">
+      <DependentUpon>MainPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Chat\MainPage.SystemPrompt.cs">
+      <DependentUpon>MainPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Chat\MainPage.Response.cs">
+      <DependentUpon>MainPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Chat\MainPage.Bubbles.cs">
+      <DependentUpon>MainPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Chat\MainPage.Send.cs">
+      <DependentUpon>MainPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Chat\MainPage.Suggest.cs">
+      <DependentUpon>MainPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Chat\MainPage.BubbleRender.cs">
+      <DependentUpon>MainPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Chat\MainPage.TopBar.cs">
+      <DependentUpon>MainPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Chat\MainPage.Json.cs">
+      <DependentUpon>MainPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Chat\MainPage.Theme.cs">
+      <DependentUpon>MainPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Chat\ConversationsListPage.xaml.cs">
+      <DependentUpon>ConversationsListPage.xaml</DependentUpon>
+    </Compile>
+    <!-- Pages - Data -->
+    <Compile Include="Pages\Data\ImportExportPage.xaml.cs">
+      <DependentUpon>ImportExportPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Data\ImportExportPage.Conversations.cs">
+      <DependentUpon>ImportExportPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Data\ImportExportPage.Characters.cs">
+      <DependentUpon>ImportExportPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Data\ImportExportPage.WorldBook.cs">
+      <DependentUpon>ImportExportPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Data\ImportExportPage.ApiProfiles.cs">
+      <DependentUpon>ImportExportPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Data\ImportExportPage.Helpers.cs">
+      <DependentUpon>ImportExportPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Data\ImportExportPage.Zip.cs">
+      <DependentUpon>ImportExportPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Data\MemoryEditPage.xaml.cs">
+      <DependentUpon>MemoryEditPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Data\UserProfilePage.xaml.cs">
+      <DependentUpon>UserProfilePage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Data\UserProfilesPage.xaml.cs">
+      <DependentUpon>UserProfilesPage.xaml</DependentUpon>
+    </Compile>
+    <!-- Pages - OOBE -->
+    <Compile Include="Pages\Oobe\OobeWelcomePage.xaml.cs">
+      <DependentUpon>OobeWelcomePage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Oobe\OobeAppearancePage.xaml.cs">
+      <DependentUpon>OobeAppearancePage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Oobe\OobeApiMainPage.xaml.cs">
+      <DependentUpon>OobeApiMainPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Oobe\OobeApiSubPage.xaml.cs">
+      <DependentUpon>OobeApiSubPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Oobe\OobeCharaPage.xaml.cs">
+      <DependentUpon>OobeCharaPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Oobe\OobeUserPage.xaml.cs">
+      <DependentUpon>OobeUserPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Oobe\OobePrefsPage.xaml.cs">
+      <DependentUpon>OobePrefsPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Oobe\OobeDonePage.xaml.cs">
+      <DependentUpon>OobeDonePage.xaml</DependentUpon>
+    </Compile>
+    <!-- Pages - Settings -->
+    <Compile Include="Pages\Settings\ApiLogPage.xaml.cs">
+      <DependentUpon>ApiLogPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Settings\ApiProfileEditPage.xaml.cs">
+      <DependentUpon>ApiProfileEditPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Settings\ApiProfilesPage.xaml.cs">
+      <DependentUpon>ApiProfilesPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Settings\InfoPage.xaml.cs">
+      <DependentUpon>InfoPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Settings\SettingsPage.xaml.cs">
+      <DependentUpon>SettingsPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Settings\ThemeSettingsPage.xaml.cs">
+      <DependentUpon>ThemeSettingsPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Settings\ThemeSettingsPage.Lifecycle.cs">
+      <DependentUpon>ThemeSettingsPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Settings\ThemeSettingsPage.ThemeSelection.cs">
+      <DependentUpon>ThemeSettingsPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Settings\ThemeSettingsPage.CustomEditor.cs">
+      <DependentUpon>ThemeSettingsPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Settings\ThemeSettingsPage.Fonts.cs">
+      <DependentUpon>ThemeSettingsPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Settings\ThemeSettingsPage.Accent.cs">
+      <DependentUpon>ThemeSettingsPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Settings\ThemeSettingsPage.Misc.cs">
+      <DependentUpon>ThemeSettingsPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Settings\ThemeSettingsPage.DefaultAppearance.cs">
+      <DependentUpon>ThemeSettingsPage.xaml</DependentUpon>
+    </Compile>
+    <!-- Shell -->
+    <Compile Include="Shell\ShellPage.xaml.cs">
+      <DependentUpon>ShellPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Shell\StartingPage.xaml.cs">
+      <DependentUpon>StartingPage.xaml</DependentUpon>
+    </Compile>
+    <!-- Properties -->
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       Package manifest
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <ItemGroup>
+    <AppxManifest Include="Package.appxmanifest">
+      <SubType>Designer</SubType>
+    </AppxManifest>
+  </ItemGroup>
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       XAML pages
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <ItemGroup>
+    <ApplicationDefinition Include="App.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </ApplicationDefinition>
+    <!-- Controls -->
+    <Page Include="Controls\ColorPresetPanel.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Controls\CharacterCardView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <!-- Pages - Characters -->
+    <Page Include="Pages\Characters\CharaWizardPage1.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\Characters\CharaWizardPage2.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\Characters\CharaWizardPage3.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\Characters\CharaWizardPage4.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\Characters\CharacterCardsPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\Characters\CharacterDetailPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\Characters\NetworkCharaPreviewPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\Characters\NetworkCharaPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <!-- Pages - Chat -->
+    <Page Include="Pages\Chat\ConvAppearancePage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\Chat\ConvSettingsPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\Chat\DefaultAppearancePage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\Chat\MainPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\Chat\ConversationsListPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <!-- Pages - Data -->
+    <Page Include="Pages\Data\ImportExportPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\Data\MemoryEditPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\Data\UserProfilePage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\Data\UserProfilesPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <!-- Pages - OOBE -->
+    <Page Include="Pages\Oobe\OobeWelcomePage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\Oobe\OobeAppearancePage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\Oobe\OobeApiMainPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\Oobe\OobeApiSubPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\Oobe\OobeCharaPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\Oobe\OobeUserPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\Oobe\OobePrefsPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\Oobe\OobeDonePage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <!-- Pages - Settings -->
+    <Page Include="Pages\Settings\ApiLogPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\Settings\ApiProfileEditPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\Settings\ApiProfilesPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\Settings\InfoPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\Settings\SettingsPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\Settings\ThemeSettingsPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <!-- Shell -->
+    <Page Include="Shell\ShellPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Shell\StartingPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <!-- Themes -->
+    <Page Include="Themes\Base\Tokens.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Themes\Base\Typography.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Themes\Base\Controls.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Themes\Celadon.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Themes\InkScroll.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Themes\MidnightVermilion.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Themes\ModernSlate.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+  </ItemGroup>
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       Assets / content files
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <ItemGroup>
+    <Content Include="Assets\*.embmodel">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\*.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\*.mp3">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\*.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Fonts\*.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       SDK references
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <ItemGroup>
+    <SDKReference Include="WindowsMobile, Version=10.0.10240.0">
+      <n>Windows Mobile Extensions for the UWP</n>
+    </SDKReference>
+  </ItemGroup>
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       NuGet packages
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">
+      <Version>6.2.14</Version>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="yanshuai_TemporaryKey.pfx" />
+  </ItemGroup>
+  <!-- 共享底层：编译标识，供 Lumina.Core 中的 #if ROLEPLAY 使用 -->
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);ROLEPLAY</DefineConstants>
+  </PropertyGroup>
+  <!-- 共享底层：Lumina.Core 共享项目（源码级共享，编译进本 app） -->
+  <Import Project="..\Lumina.Core\Lumina.Core.projitems" Label="Shared" />
+  <Import Project="$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets" />
+</Project>

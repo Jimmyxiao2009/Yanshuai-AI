@@ -1,0 +1,204 @@
+<Page
+    x:Class="yanshuai.OobeAppearancePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+    <Page.Resources>
+        <Style TargetType="ToggleSwitch">
+            <Setter Property="MinWidth" Value="0"/>
+        </Style>
+    </Page.Resources>
+
+    <Grid x:Name="RootGrid" Background="{ThemeResource YanshuaiPageBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- 顶栏 -->
+        <Grid Grid.Row="0" Background="{ThemeResource YanshuaiPanelBrush}"
+              BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="0,0,0,1"
+              Padding="14,8">
+            <StackPanel VerticalAlignment="Center">
+                <TextBlock x:Name="PageTitle" Text="外观"
+                           FontSize="18" FontWeight="SemiBold" Opacity="0.9"/>
+                <TextBlock x:Name="PageStepHint" Text="步骤 1 / 8  ·  可跳过"
+                           FontSize="12" Opacity="0.5"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Content -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="14,8,14,24">
+
+                <!-- Dark mode -->
+                <Grid Margin="0,16,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                        <TextBlock x:Name="DarkModeLabel" Text="深色模式" FontSize="15"/>
+                        <TextBlock x:Name="DarkModeDesc" Text="切换深色/浅色界面" FontSize="12" Opacity="0.5" Margin="0,2,0,0"/>
+                    </StackPanel>
+                    <ToggleSwitch x:Name="DarkModeToggle" Grid.Column="1"
+                                  HorizontalAlignment="Right" Toggled="DarkModeToggle_Toggled"/>
+                </Grid>
+                <Border BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="0,0,0,1" Margin="0,8,0,0"/>
+
+                <!-- Language -->
+                <Grid Margin="0,16,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                        <TextBlock x:Name="LangLabel" Text="语言 / Language" FontSize="15"/>
+                        <TextBlock x:Name="LangDesc" Text="切换界面语言" FontSize="12" Opacity="0.5" Margin="0,2,0,0"/>
+                    </StackPanel>
+                    <ComboBox x:Name="LangPicker" Grid.Column="1"
+                              MinWidth="140" SelectionChanged="LangPicker_SelectionChanged"/>
+                </Grid>
+                <Border BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="0,0,0,1" Margin="0,8,0,0"/>
+
+                <!-- Theme selection -->
+                <TextBlock x:Name="ThemeLabel" Text="主题" FontSize="16" FontWeight="SemiBold"
+                           Margin="0,20,0,12"/>
+                <ScrollViewer HorizontalScrollMode="Auto" VerticalScrollMode="Disabled" Height="110"
+                              Margin="0,0,0,16">
+                    <StackPanel Orientation="Horizontal">
+                        <Border x:Name="ThemeCardInk" Width="150" Height="100" CornerRadius="8"
+                                Background="#F5F0E8" BorderBrush="#C9B99A" BorderThickness="1"
+                                Margin="0,0,8,0" Tapped="ThemeCardInk_Tapped">
+                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                <TextBlock Text="墨韵书卷" FontSize="14"
+                                           Foreground="#5C4A32" HorizontalAlignment="Center"/>
+                                <TextBlock Text="InkScroll" FontSize="11"
+                                           Foreground="#8B7A62" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                            </StackPanel>
+                        </Border>
+                        <Border x:Name="ThemeCardCeladon" Width="150" Height="100" CornerRadius="8"
+                                Background="#E8F0ED" BorderBrush="#7DB6B0" BorderThickness="1"
+                                Margin="0,0,8,0" Tapped="ThemeCardCeladon_Tapped">
+                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                <TextBlock Text="青瓷雅韵" FontSize="14"
+                                           Foreground="#3D6B65" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Celadon" FontSize="11"
+                                           Foreground="#6B9E98" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                            </StackPanel>
+                        </Border>
+                        <Border x:Name="ThemeCardMidnight" Width="150" Height="100" CornerRadius="8"
+                                Background="#1A1A2E" BorderBrush="#C53A3A" BorderThickness="1"
+                                Margin="0,0,8,0" Tapped="ThemeCardMidnight_Tapped">
+                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                <TextBlock Text="朱砂深夜" FontSize="14"
+                                           Foreground="#E8D5D5" HorizontalAlignment="Center"/>
+                                <TextBlock Text="MidnightVermilion" FontSize="11"
+                                           Foreground="#B88A8A" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                            </StackPanel>
+                        </Border>
+                        <Border x:Name="ThemeCardModern" Width="150" Height="100" CornerRadius="8"
+                                Background="#EEF1F5" BorderBrush="#4F6BED" BorderThickness="1"
+                                Margin="0,0,8,0" Tapped="ThemeCardModern_Tapped">
+                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                <TextBlock Text="现代·石板" FontSize="14"
+                                           Foreground="#2B3245" HorizontalAlignment="Center"/>
+                                <TextBlock Text="ModernSlate" FontSize="11"
+                                           Foreground="#6B7280" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                            </StackPanel>
+                        </Border>
+                        <Border x:Name="ThemeCardCustom" Width="150" Height="100" CornerRadius="8"
+                                Background="#F0F0F0" BorderBrush="#888888" BorderThickness="1"
+                                Margin="0,0,8,0" Tapped="ThemeCardCustom_Tapped">
+                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                <Border Width="22" Height="22" CornerRadius="3" HorizontalAlignment="Center" Margin="0,0,0,6">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                            <GradientStop Color="#A33A2C" Offset="0.0"/>
+                                            <GradientStop Color="#7DB6B0" Offset="0.33"/>
+                                            <GradientStop Color="#D4504A" Offset="0.66"/>
+                                            <GradientStop Color="#C9A86A" Offset="1.0"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+                                <TextBlock Text="自定义" FontSize="14"
+                                           Foreground="#333333" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Custom" FontSize="11"
+                                           Foreground="#888888" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <TextBlock x:Name="ThemeSelectedLabel" FontSize="13" Opacity="0.5" Margin="0,0,0,8"/>
+
+                <!-- Custom accent -->
+                <StackPanel x:Name="CustomAccentPanel" Visibility="Collapsed" Margin="0,0,0,16">
+                    <Border BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="0,0,0,1" Margin="0,0,0,12"/>
+                    <TextBlock x:Name="AccentLabel" Text="自定义主色" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                    <ItemsControl x:Name="AccentSwatchList">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                    <Grid Margin="0,10,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="AccentHexBox" Grid.Column="0" PlaceholderText="#RRGGBB"/>
+                        <Button Grid.Column="2" x:Name="ApplyAccentBtn" Content="应用"
+                                Padding="14,8" Click="ApplyAccentBtn_Click"/>
+                    </Grid>
+                </StackPanel>
+
+                <!-- Chinese font -->
+                <TextBlock x:Name="CnFontLabel" Text="中文字体" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                <ComboBox x:Name="ChineseFontPicker" Margin="0,0,0,20"
+                          SelectionChanged="ChineseFontPicker_SelectionChanged">
+                    <x:String>跟随主题</x:String>
+                    <x:String>LXGW</x:String>
+                    <x:String>SourceHanSerif</x:String>
+                    <x:String>ZCOOL</x:String>
+                    <x:String>NotoSansSC</x:String>
+                    <x:String>MaShanZheng</x:String>
+                    <x:String>System</x:String>
+                </ComboBox>
+
+                <!-- English font -->
+                <TextBlock x:Name="EnFontLabel" Text="英文字体" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                <ComboBox x:Name="EnglishFontPicker" Margin="0,0,0,8"
+                          SelectionChanged="EnglishFontPicker_SelectionChanged">
+                    <x:String>跟随主题</x:String>
+                    <x:String>EBGaramond</x:String>
+                    <x:String>Cormorant</x:String>
+                    <x:String>Lora</x:String>
+                    <x:String>PlayfairDisplay</x:String>
+                    <x:String>System</x:String>
+                </ComboBox>
+
+            </StackPanel>
+        </ScrollViewer>
+        <CommandBar Grid.Row="0" Grid.RowSpan="99" VerticalAlignment="Bottom">
+            <AppBarButton x:Name="NextBtn" Icon="Forward" Label="下一步" Click="NextBtn_Click"/>
+            <CommandBar.Content>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0">
+                    <Ellipse Fill="{ThemeResource YanshuaiAccentBrush}" Width="10" Height="10" Margin="3,0"/>
+                    <Ellipse Width="10" Height="10" Margin="3,0" Fill="Gray" Opacity="0.4"/>
+                    <Ellipse Width="10" Height="10" Margin="3,0" Fill="Gray" Opacity="0.4"/>
+                    <Ellipse Width="10" Height="10" Margin="3,0" Fill="Gray" Opacity="0.4"/>
+                    <Ellipse Width="10" Height="10" Margin="3,0" Fill="Gray" Opacity="0.4"/>
+                    <Ellipse Width="10" Height="10" Margin="3,0" Fill="Gray" Opacity="0.4"/>
+                    <Ellipse Width="10" Height="10" Margin="3,0" Fill="Gray" Opacity="0.4"/>
+                    <Ellipse Width="10" Height="10" Margin="3,0" Fill="Gray" Opacity="0.4"/>
+                    <TextBlock x:Name="StepLabel" Text="1/8" FontSize="11" Opacity="0.4" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
+            </CommandBar.Content>
+        </CommandBar>
+    </Grid>
+</Page>

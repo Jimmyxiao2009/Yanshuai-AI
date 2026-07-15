@@ -17,7 +17,7 @@
     <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
     <!-- Target SDK: 10.0.19041 (supports HttpCompletionOption, INotifyPropertyChanged, etc.) -->
     <TargetPlatformVersion>10.0.15063.0</TargetPlatformVersion>
-    <!-- Minimum: 10.0.10240 — Lumia 950 ships with this -->
+    <!-- Minimum: 10.0.15063 (Creators Update) — matches Package.appxmanifest TargetDeviceFamily MinVersion -->
     <TargetPlatformMinVersion>10.0.15063.0</TargetPlatformMinVersion>
     <MinimumVisualStudioVersion>14</MinimumVisualStudioVersion>
     <FileAlignment>512</FileAlignment>

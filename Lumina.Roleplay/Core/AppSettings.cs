@@ -189,7 +189,7 @@ namespace yanshuai
 
         public static string ThemeName
         {
-            get => GetString("ThemeName", "InkScroll");
+            get => GetString("ThemeName", "Mindscape");   // 默认：心象（全新设计语言）
             set => SetString("ThemeName", value);
         }
 

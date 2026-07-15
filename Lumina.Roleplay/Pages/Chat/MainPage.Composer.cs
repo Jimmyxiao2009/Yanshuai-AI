@@ -53,7 +53,14 @@ namespace yanshuai
                     if (w > h) { newW = MaxDim; newH = (uint)(h * MaxDim / w); }
                     else        { newH = MaxDim; newW = (uint)(w * MaxDim / h); }
                 }
-                var transform = new BitmapTransform { ScaledWidth = newW, ScaledHeight = newH };
+                uint scaleW = newW, scaleH = newH;
+                if (decoder.OrientedPixelWidth != decoder.PixelWidth &&
+                    decoder.OrientedPixelWidth == decoder.PixelHeight)
+                {
+                    scaleW = newH;
+                    scaleH = newW;
+                }
+                var transform = new BitmapTransform { ScaledWidth = scaleW, ScaledHeight = scaleH };
                 var pixels = await decoder.GetPixelDataAsync(
                     BitmapPixelFormat.Rgba8, BitmapAlphaMode.Premultiplied, transform,
                     ExifOrientationMode.RespectExifOrientation, ColorManagementMode.DoNotColorManage);
@@ -230,6 +237,16 @@ namespace yanshuai
             if (profile == null)
             {
                 AddSystemBubble("⚠ 没有选择 API 配置，请从菜单进入 API 配置页面。");
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(profile.Url))
+            {
+                AddSystemBubble("⚠ 当前 API 配置的接口 URL 为空，请在 API 配置页面中进行完善。");
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(profile.ApiKey) && profile.ProviderType != "ollama" && profile.ProviderType != "local")
+            {
+                AddSystemBubble("⚠ 当前 API 配置的 API Key 为空，请在 API 配置页面中进行完善。");
                 return;
             }
 

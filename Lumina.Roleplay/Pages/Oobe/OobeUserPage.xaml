@@ -12,15 +12,20 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- 顶栏 -->
+        <!-- 顶栏：心象点 + 标题字体 -->
         <Grid Grid.Row="0" Background="{ThemeResource YanshuaiPanelBrush}"
               BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="0,0,0,1"
-              Padding="14,8">
-            <StackPanel VerticalAlignment="Center">
-                <TextBlock x:Name="PageTitle" Text="用户资料"
-                           FontSize="18" FontWeight="SemiBold" Opacity="0.9"/>
-                <TextBlock x:Name="PageStepHint" Text="步骤 5 / 8  ·  可跳过"
-                           FontSize="12" Opacity="0.5"/>
+              Padding="18,12">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <Ellipse Width="9" Height="9" Fill="{ThemeResource YanshuaiAccentBrush}"
+                         VerticalAlignment="Top" Margin="0,7,12,0"/>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock x:Name="PageTitle" Text="用户资料"
+                               FontFamily="{ThemeResource YanshuaiTitleFont}"
+                               FontSize="{StaticResource FontSizeSubtitle}"/>
+                    <TextBlock x:Name="PageStepHint" Text="步骤 5 / 8  ·  可跳过"
+                               Style="{StaticResource CaptionTextStyle}"/>
+                </StackPanel>
             </StackPanel>
         </Grid>
 
@@ -29,7 +34,10 @@
 
                 <TextBlock x:Name="DescText"
                            Text="设置你的名字和人设，AI 会更了解你。填写后会注入到每次对话的 System Prompt 中。"
-                           FontSize="15" Opacity="0.7" TextWrapping="Wrap" Margin="0,0,0,32"/>
+                           Style="{StaticResource BodyTextStyle}"
+                           Foreground="{ThemeResource YanshuaiMutedTextBrush}"
+                           FontSize="{StaticResource FontSizeBodyLarge}"
+                           TextWrapping="Wrap" Margin="0,0,0,32"/>
 
                 <!-- Avatar -->
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,32">
@@ -39,20 +47,23 @@
                             BorderThickness="2" Margin="0,0,20,0">
                         <Grid>
                             <FontIcon x:Name="AvatarPlaceholder" Glyph="&#xE77B;"
-                                      FontSize="36" Opacity="0.55"/>
+                                      FontSize="36"
+                                      Foreground="{ThemeResource YanshuaiAccentBrush}"
+                                      Opacity="{StaticResource OpacitySubtle}"/>
                             <Image x:Name="AvatarImage" Stretch="UniformToFill"
                                    Visibility="Collapsed"/>
                         </Grid>
                     </Border>
                     <Button x:Name="PickAvatarBtn" Content="选择头像" Click="PickAvatarBtn_Click"
+                            Style="{StaticResource SecondaryButtonStyle}"
                             VerticalAlignment="Center" Padding="20,12" FontSize="15"/>
                 </StackPanel>
 
-                <TextBlock x:Name="NameLabel" Text="名字" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                <TextBlock x:Name="NameLabel" Text="名字" Style="{StaticResource LabelTextStyle}" Margin="0,0,0,8"/>
                 <TextBox x:Name="NameBox" PlaceholderText="你的名字（可选）"
                          FontSize="16" Padding="12,14" Margin="0,0,0,20"/>
 
-                <TextBlock x:Name="DescLabel" Text="人设简介" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                <TextBlock x:Name="DescLabel" Text="人设简介" Style="{StaticResource LabelTextStyle}" Margin="0,0,0,8"/>
                 <TextBox x:Name="DescBox"
                          PlaceholderText="简单介绍一下自己，AI 会据此了解你的背景和偏好…"
                          AcceptsReturn="True" TextWrapping="Wrap"
@@ -67,15 +78,15 @@
             <AppBarButton x:Name="NextBtn" Icon="Forward" Label="下一步" Click="NextBtn_Click"/>
             <CommandBar.Content>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0">
-                    <Ellipse Width="10" Height="10" Margin="3,0" Fill="Gray" Opacity="0.4"/>
-                    <Ellipse Width="10" Height="10" Margin="3,0" Fill="Gray" Opacity="0.4"/>
-                    <Ellipse Width="10" Height="10" Margin="3,0" Fill="Gray" Opacity="0.4"/>
-                    <Ellipse Width="10" Height="10" Margin="3,0" Fill="Gray" Opacity="0.4"/>
-                    <Ellipse Width="10" Height="10" Margin="3,0" Fill="Gray" Opacity="0.4"/>
-                    <Ellipse Fill="{ThemeResource YanshuaiAccentBrush}" Width="10" Height="10" Margin="3,0"/>
-                    <Ellipse Width="10" Height="10" Margin="3,0" Fill="Gray" Opacity="0.4"/>
-                    <Ellipse Width="10" Height="10" Margin="3,0" Fill="Gray" Opacity="0.4"/>
-                    <TextBlock x:Name="StepLabel" Text="5/8" FontSize="11" Opacity="0.4" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                    <Ellipse Width="7" Height="7" Margin="3,0" Fill="{ThemeResource YanshuaiMutedTextBrush}" Opacity="{StaticResource OpacityFaint}"/>
+                    <Ellipse Width="7" Height="7" Margin="3,0" Fill="{ThemeResource YanshuaiMutedTextBrush}" Opacity="{StaticResource OpacityFaint}"/>
+                    <Ellipse Width="7" Height="7" Margin="3,0" Fill="{ThemeResource YanshuaiMutedTextBrush}" Opacity="{StaticResource OpacityFaint}"/>
+                    <Ellipse Width="7" Height="7" Margin="3,0" Fill="{ThemeResource YanshuaiMutedTextBrush}" Opacity="{StaticResource OpacityFaint}"/>
+                    <Ellipse Fill="{ThemeResource YanshuaiAccentBrush}" Width="7" Height="7" Margin="3,0"/>
+                    <Ellipse Width="7" Height="7" Margin="3,0" Fill="{ThemeResource YanshuaiMutedTextBrush}" Opacity="{StaticResource OpacityFaint}"/>
+                    <Ellipse Width="7" Height="7" Margin="3,0" Fill="{ThemeResource YanshuaiMutedTextBrush}" Opacity="{StaticResource OpacityFaint}"/>
+                    <Ellipse Width="7" Height="7" Margin="3,0" Fill="{ThemeResource YanshuaiMutedTextBrush}" Opacity="{StaticResource OpacityFaint}"/>
+                    <TextBlock x:Name="StepLabel" Text="5/8" Style="{StaticResource CaptionTextStyle}" FontSize="11" Margin="8,0,0,0" VerticalAlignment="Center"/>
                 </StackPanel>
             </CommandBar.Content>
         </CommandBar>

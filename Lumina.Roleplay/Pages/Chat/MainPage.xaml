@@ -16,6 +16,10 @@
 
         <!-- ── Chat area ──────────────────────────────────── -->
         <Grid Grid.Row="0">
+                        <!-- 心象微染：随当前角色心象色着色的环境层（ApplyMindscapeTint 运行时按角色设色）。
+                             置于自定义背景之下：用户设了纯色/图片背景时会覆盖它。 -->
+                        <Border x:Name="MindscapeWash" Background="{ThemeResource YanshuaiAccentWashBrush}"/>
+
                         <!-- Appearance: background layer (solid color or image) -->
                         <Border x:Name="ChatBgSolid"
                                 Visibility="Collapsed"/>
@@ -33,17 +37,24 @@
                                     HorizontalAlignment="Center"
                                     Visibility="Collapsed"
                                     Margin="32,0">
-                            <FontIcon Glyph="&#xE8BD;" FontSize="52"
-                                      Opacity="0.4" HorizontalAlignment="Center"
-                                      Foreground="{ThemeResource YanshuaiMutedTextBrush}"/>
+                            <Border Width="84" Height="84" CornerRadius="42"
+                                    HorizontalAlignment="Center"
+                                    Background="{ThemeResource YanshuaiAccentWashBrush}"
+                                    BorderBrush="{ThemeResource YanshuaiAccentBrush}"
+                                    BorderThickness="1">
+                                <FontIcon Glyph="&#xE8BD;" FontSize="34"
+                                          Foreground="{ThemeResource YanshuaiAccentBrush}"
+                                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
                             <TextBlock Text="言枢"
-                                       FontSize="28" FontWeight="Light"
+                                       FontFamily="{ThemeResource YanshuaiTitleFont}"
+                                       FontSize="30"
                                        Foreground="{ThemeResource YanshuaiTextBrush}"
-                                       Opacity="{StaticResource ActionIconOpacity}" HorizontalAlignment="Center"
-                                       Margin="0,16,0,6"/>
+                                       HorizontalAlignment="Center"
+                                       Margin="0,18,0,6"/>
                             <TextBlock x:Name="WelcomeSubtitle"
                                        Text="在下方输入消息开始对话"
-                                       FontSize="14" Opacity="0.55"
+                                       FontSize="14" Opacity="{StaticResource OpacitySubtle}"
                                        Foreground="{ThemeResource YanshuaiMutedTextBrush}"
                                        HorizontalAlignment="Center"
                                        TextWrapping="Wrap" TextAlignment="Center"/>
@@ -66,208 +77,234 @@
                                     <Setter Property="Background" Value="Transparent"/>
                                 </Style>
                             </ListView.ItemContainerStyle>
+                            <ListView.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <ItemsStackPanel ItemsUpdatingScrollMode="KeepItemsInView" CacheLength="1.0"/>
+                                </ItemsPanelTemplate>
+                            </ListView.ItemsPanel>
                             <ListView.ItemTemplate>
                                 <DataTemplate>
-                                    <StackPanel Margin="0,3">
+                                    <StackPanel Margin="0,4">
 
-                                        <!-- Reasoning block: left-accent border style -->
+                                        <!-- 推理块：记忆线左轨 + 节点 -->
                                         <Border Visibility="{Binding HasReasoningVisibility}"
-                                                BorderBrush="{ThemeResource YanshuaiAccentBrush}"
-                                                BorderThickness="3,0,0,0"
                                                 Background="{ThemeResource YanshuaiSubtlePanelBrush}"
-                                                CornerRadius="6"
-                                                Margin="12,0,12,5"
-                                                MaxWidth="580"
+                                                CornerRadius="4,12,12,12"
+                                                Margin="16,0,16,6"
+                                                MaxWidth="{StaticResource BubbleMaxWidth}"
                                                 HorizontalAlignment="{Binding Align}">
-                                            <StackPanel>
-                                                <Button Tag="{Binding}"
-
-                                                        Click="ToggleReasoning_Click"
-                                                        Background="Transparent"
-                                                        BorderThickness="0"
-                                                        HorizontalAlignment="Stretch"
-                                                        Padding="10,6">
-                                                    <StackPanel Orientation="Horizontal">
-                                                        <FontIcon Glyph="&#xE945;" FontSize="12"
-                                                                  Opacity="0.65" Margin="0,0,6,0"/>
-                                                        <TextBlock Text="{Binding ReasoningLabel}"
-                                                                   FontSize="12" Opacity="0.75"/>
-                                                    </StackPanel>
-                                                </Button>
-                                                <TextBlock Text="{Binding ReasoningContent}"
-                                                           Visibility="{Binding ReasoningBodyVisibility}"
-                                                           TextWrapping="Wrap"
-                                                           FontSize="13" Opacity="0.75"
-                                                           Padding="10,0,10,8"/>
-                                            </StackPanel>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <!-- 记忆线 -->
+                                                <Rectangle Grid.Column="0"
+                                                           Width="{StaticResource MemoryRailWidth}"
+                                                           RadiusX="1" RadiusY="1"
+                                                           Fill="{ThemeResource YanshuaiMemoryLineBrush}"
+                                                           Margin="10,12,0,12"
+                                                           VerticalAlignment="Stretch"/>
+                                                <StackPanel Grid.Column="1">
+                                                    <Button Tag="{Binding}"
+                                                            Click="ToggleReasoning_Click"
+                                                            Style="{StaticResource GhostButtonStyle}"
+                                                            HorizontalAlignment="Stretch"
+                                                            HorizontalContentAlignment="Left"
+                                                            Padding="10,7">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <FontIcon Glyph="&#xE945;" FontSize="12"
+                                                                      Foreground="{ThemeResource YanshuaiAccentBrush}"
+                                                                      Margin="0,0,7,0"/>
+                                                            <TextBlock Text="{Binding ReasoningLabel}"
+                                                                       FontSize="12"
+                                                                       Foreground="{ThemeResource YanshuaiMutedTextBrush}"/>
+                                                        </StackPanel>
+                                                    </Button>
+                                                    <TextBlock Text="{Binding ReasoningContent}"
+                                                               Visibility="{Binding ReasoningBodyVisibility}"
+                                                               FontFamily="{ThemeResource YanshuaiVoiceFont}"
+                                                               TextWrapping="Wrap"
+                                                               FontSize="13"
+                                                               Opacity="{StaticResource OpacityMuted}"
+                                                               Foreground="{ThemeResource YanshuaiTextBrush}"
+                                                               Padding="10,0,12,10"/>
+                                                </StackPanel>
+                                            </Grid>
                                         </Border>
 
-                                                        <!-- User bubble: always plain text -->
-                                        <!-- 图片缩略图（气泡上方，可点击放大） -->
+                                        <!-- 图片缩略图（气泡上方，可点击放大；按比例不裁剪） -->
                                         <Border Visibility="{Binding HasImageVisibility}"
                                                 HorizontalAlignment="{Binding Align}"
-                                                Margin="14,0"
+                                                Margin="16,0"
                                                 Tag="{Binding}"
                                                 Tapped="BubbleImage_Click"
-                                                CornerRadius="8">
+                                                CornerRadius="12">
                                             <Border.RenderTransform>
                                                 <TranslateTransform/>
                                             </Border.RenderTransform>
                                             <Image Source="{Binding ImageSource}"
-                                                   Width="120" Height="120"
-                                                   Stretch="UniformToFill"/>
+                                                   MaxWidth="220" MaxHeight="220"
+                                                   Stretch="Uniform"/>
                                         </Border>
+
+                                        <!-- User bubble: always plain text -->
                                         <Grid Visibility="{Binding UserVisibility}"
-                                              Margin="14,4,14,0"
-                                              MaxWidth="580"
+                                              Margin="16,4,16,0"
+                                              MaxWidth="{StaticResource BubbleMaxWidth}"
                                               HorizontalAlignment="{Binding Align}">
                                             <Border Background="{Binding BackgroundColor}"
-                                                    CornerRadius="10,10,4,10"
+                                                    CornerRadius="14,14,4,14"
                                                     BorderBrush="#22FFFFFF"
                                                     BorderThickness="1">
                                                 <TextBlock Text="{Binding Content}"
                                                            FontSize="15"
                                                            Foreground="{Binding ForegroundColor}"
                                                            TextWrapping="Wrap"
-                                                           Padding="12,8"/>
+                                                           Padding="14,10"/>
                                             </Border>
                                         </Grid>
 
                                         <!-- AI bubble while streaming: plain TextBlock for smooth token updates -->
                                         <Grid Visibility="{Binding AiStreamingVisibility}"
-                                              Margin="14,2,14,0"
-                                              MaxWidth="580"
+                                              Margin="16,2,16,0"
+                                              MaxWidth="{StaticResource BubbleMaxWidth}"
                                               HorizontalAlignment="{Binding Align}">
                                             <Border Background="{Binding BackgroundColor}"
-                                                    CornerRadius="10,10,10,4"
+                                                    CornerRadius="14,14,14,4"
                                                     BorderBrush="{ThemeResource YanshuaiBorderBrush}"
                                                     BorderThickness="1">
                                                 <TextBlock Text="{Binding Content}"
-                                                           FontSize="15"
+                                                           FontFamily="{ThemeResource YanshuaiVoiceFont}"
+                                                           FontSize="15" LineHeight="24"
                                                            Foreground="{Binding ForegroundColor}"
                                                            TextWrapping="Wrap"
-                                                           Padding="12,8"/>
+                                                           Padding="14,10"/>
                                             </Border>
                                         </Grid>
 
                                         <!-- AI bubble after stream: markdown-rendered RichTextBlock -->
                                         <Grid Visibility="{Binding AiRenderedVisibility}"
-                                              Margin="14,2,14,0"
-                                              MaxWidth="580"
+                                              Margin="16,2,16,0"
+                                              MaxWidth="{StaticResource BubbleMaxWidth}"
                                               HorizontalAlignment="{Binding Align}">
                                             <!-- 开场白标签 -->
                                             <Border Visibility="{Binding FirstMessageTagVisibility}"
                                                     Background="{ThemeResource YanshuaiAccentBrush}"
-                                                    CornerRadius="6,6,0,0"
-                                                    Padding="8,2"
+                                                    CornerRadius="8,8,0,0"
+                                                    Padding="9,2"
                                                     HorizontalAlignment="Left"
                                                     VerticalAlignment="Top"
-                                                    Margin="0,-18,0,0"
-                                                    Opacity="0.85">
+                                                    Margin="0,-18,0,0">
                                                 <TextBlock Text="开场白" FontSize="10"
-                                                           Foreground="White" Opacity="0.9"/>
+                                                           Foreground="{ThemeResource YanshuaiOnAccentBrush}"/>
                                             </Border>
                                             <Border Background="{Binding BackgroundColor}"
-                                                    CornerRadius="10,10,10,4"
+                                                    CornerRadius="14,14,14,4"
                                                     BorderBrush="{ThemeResource YanshuaiBorderBrush}"
                                                     BorderThickness="1">
                                                 <RichTextBlock local:MarkdownBlock.Text="{Binding Content}"
                                                                local:MarkdownBlock.QuoteColor="{Binding QuoteColor}"
                                                                local:MarkdownBlock.BracketColor="{Binding BracketColor}"
-                                                               FontSize="15"
+                                                               FontFamily="{ThemeResource YanshuaiVoiceFont}"
+                                                               FontSize="15" LineHeight="24"
                                                                Foreground="{Binding ForegroundColor}"
                                                                TextWrapping="Wrap"
-                                                               Padding="12,8"
+                                                               Padding="14,10"
                                                                IsTextSelectionEnabled="True"/>
                                             </Border>
                                         </Grid>
 
                                         <!-- System message: centered, small, gray -->
-                                        <TextBlock Visibility="{Binding SystemMessageVisibility}"
-                                                   Text="{Binding Content}"
-                                                   FontSize="12" Opacity="0.55"
-                                                   Foreground="{ThemeResource YanshuaiMutedTextBrush}"
-                                                   TextWrapping="Wrap"
-                                                   HorizontalAlignment="Center"
-                                                   TextAlignment="Center"
-                                                   Margin="32,6,32,2"/>
+                                        <Border Visibility="{Binding SystemMessageVisibility}"
+                                                HorizontalAlignment="Center"
+                                                Background="{ThemeResource YanshuaiSubtlePanelBrush}"
+                                                CornerRadius="{StaticResource PillCornerRadius}"
+                                                Padding="12,5"
+                                                Margin="32,8,32,4">
+                                            <TextBlock Text="{Binding Content}"
+                                                       FontSize="12"
+                                                       Foreground="{ThemeResource YanshuaiMutedTextBrush}"
+                                                       TextWrapping="Wrap"
+                                                       TextAlignment="Center"/>
+                                        </Border>
 
                                         <!-- ── Action strip ───────────────────────────── -->
                                         <StackPanel Orientation="Horizontal"
                                                     HorizontalAlignment="{Binding Align}"
-                                                    Margin="14,2,14,4"
+                                                    Margin="12,2,12,4"
                                                     Visibility="{Binding ActionStripVisibility}">
 
                                             <!-- Copy (all messages) -->
                                             <Button Tag="{Binding}" Click="CopyMsg_Click"
-                                                    Background="Transparent" BorderThickness="0"
-                                                    Width="30" Height="28" Padding="0"
+                                                    Style="{StaticResource IconButtonStyle}"
+                                                    Width="34" Height="32"
                                                     ToolTipService.ToolTip="复制">
-                                                <FontIcon Glyph="&#xE8C8;" FontSize="13" Opacity="{StaticResource ActionIconOpacity}"/>
+                                                <FontIcon Glyph="&#xE8C8;" FontSize="14" Opacity="{StaticResource ActionIconOpacity}"/>
                                             </Button>
 
                                             <!-- Edit (user messages only) -->
                                             <Button Visibility="{Binding EditBtnVisibility}"
                                                     Tag="{Binding}" Click="EditMsg_Click"
-                                                    Background="Transparent" BorderThickness="0"
-                                                    Width="30" Height="28" Padding="0"
+                                                    Style="{StaticResource IconButtonStyle}"
+                                                    Width="34" Height="32"
                                                     ToolTipService.ToolTip="编辑">
-                                                <FontIcon Glyph="&#xE70F;" FontSize="13" Opacity="{StaticResource ActionIconOpacity}"/>
+                                                <FontIcon Glyph="&#xE70F;" FontSize="14" Opacity="{StaticResource ActionIconOpacity}"/>
                                             </Button>
 
                                             <!-- Delete this msg + all after -->
                                             <Button Tag="{Binding}" Click="DeleteMsg_Click"
-                                                    Background="Transparent" BorderThickness="0"
-                                                    Width="30" Height="28" Padding="0"
+                                                    Style="{StaticResource IconButtonStyle}"
+                                                    Width="34" Height="32"
                                                     ToolTipService.ToolTip="删除此消息及之后所有消息">
-                                                <FontIcon Glyph="&#xE74D;" FontSize="13" Opacity="{StaticResource ActionIconOpacity}"/>
+                                                <FontIcon Glyph="&#xE74D;" FontSize="14" Opacity="{StaticResource ActionIconOpacity}"/>
                                             </Button>
 
                                             <!-- Regenerate (AI only, after streaming) -->
                                             <Button Visibility="{Binding RegenerateBtnVisibility}"
                                                     Tag="{Binding}" Click="RegenerateMsg_Click"
-                                                    Background="Transparent" BorderThickness="0"
-                                                    Width="30" Height="28" Padding="0"
+                                                    Style="{StaticResource IconButtonStyle}"
+                                                    Width="34" Height="32"
                                                     ToolTipService.ToolTip="重新生成">
-                                                <FontIcon Glyph="&#xE72C;" FontSize="13" Opacity="{StaticResource ActionIconOpacity}"/>
+                                                <FontIcon Glyph="&#xE72C;" FontSize="14" Opacity="{StaticResource ActionIconOpacity}"/>
                                             </Button>
 
                                             <!-- Continue (AI only, after streaming) -->
                                             <Button Visibility="{Binding ContinueBtnVisibility}"
                                                     Tag="{Binding}" Click="ContinueMsg_Click"
-                                                    Background="Transparent" BorderThickness="0"
-                                                    Width="30" Height="28" Padding="0"
+                                                    Style="{StaticResource IconButtonStyle}"
+                                                    Width="34" Height="32"
                                                     ToolTipService.ToolTip="继续">
-                                                <FontIcon Glyph="&#xE768;" FontSize="13" Opacity="{StaticResource ActionIconOpacity}"/>
+                                                <FontIcon Glyph="&#xE768;" FontSize="14" Opacity="{StaticResource ActionIconOpacity}"/>
                                             </Button>
 
                                             <!-- Retry (error bubbles only) -->
                                             <Button Visibility="{Binding RetryBtnVisibility}"
                                                     Tag="{Binding}" Click="RetryMsg_Click"
-                                                    Background="Transparent" BorderThickness="0"
-                                                    Width="30" Height="28" Padding="0"
+                                                    Style="{StaticResource IconButtonStyle}"
+                                                    Width="34" Height="32"
                                                     ToolTipService.ToolTip="重试">
-                                                <FontIcon Glyph="&#xE72C;" FontSize="13" Foreground="#FFC040"/>
+                                                <FontIcon Glyph="&#xE72C;" FontSize="14" Foreground="#FFC040"/>
                                             </Button>
 
                                             <!-- Branch navigator: < 1/3 > (user msgs with branches) -->
                                             <StackPanel Visibility="{Binding BranchNavVisibility}"
-                                                        Orientation="Horizontal">
+                                                        Orientation="Horizontal" VerticalAlignment="Center">
                                                 <Button Tag="{Binding}" Click="PrevBranch_Click"
-                                                        Background="Transparent" BorderThickness="0"
-                                                        Width="26" Height="28" Padding="0"
+                                                        Style="{StaticResource IconButtonStyle}"
+                                                        Width="30" Height="30"
                                                         ToolTipService.ToolTip="上一个分支">
-                                                    <FontIcon Glyph="&#xE76B;" FontSize="11" Opacity="0.7"/>
+                                                    <FontIcon Glyph="&#xE76B;" FontSize="11" Opacity="{StaticResource OpacityMuted}"/>
                                                 </Button>
                                                 <TextBlock Text="{Binding BranchLabel}"
-                                                           FontSize="12" Opacity="0.6"
+                                                           FontSize="12" Opacity="{StaticResource OpacitySubtle}"
                                                            VerticalAlignment="Center"
                                                            Margin="2,0"/>
                                                 <Button Tag="{Binding}" Click="NextBranch_Click"
-                                                        Background="Transparent" BorderThickness="0"
-                                                        Width="26" Height="28" Padding="0"
+                                                        Style="{StaticResource IconButtonStyle}"
+                                                        Width="30" Height="30"
                                                         ToolTipService.ToolTip="下一个分支">
-                                                    <FontIcon Glyph="&#xE76C;" FontSize="11" Opacity="0.7"/>
+                                                    <FontIcon Glyph="&#xE76C;" FontSize="11" Opacity="{StaticResource OpacityMuted}"/>
                                                 </Button>
                                             </StackPanel>
 
@@ -292,18 +329,19 @@
                                              Margin="0,0,0,12"/>
                                 <TextBlock x:Name="LoadingText"
                                            Text="加载中…"
-                                           FontSize="13" Opacity="0.5"
+                                           FontSize="13" Opacity="{StaticResource OpacitySubtle}"
+                                           Foreground="{ThemeResource YanshuaiMutedTextBrush}"
                                            HorizontalAlignment="Center"/>
                             </StackPanel>
                         </Border>
                         <!-- 回到底部按钮 -->
                         <Border HorizontalAlignment="Right" VerticalAlignment="Bottom"
                                 Margin="0,0,16,16" Visibility="Collapsed"
-                                Background="{ThemeResource YanshuaiSurfaceBrush}"
+                                Background="{ThemeResource YanshuaiPanelBrush}"
                                 BorderBrush="{ThemeResource YanshuaiBorderBrush}"
                                 BorderThickness="1"
-                                Width="40" Height="40"
-                                CornerRadius="20"
+                                Width="44" Height="44"
+                                CornerRadius="22"
                                 x:Name="ScrollToBottomBtnBorder">
                             <Button x:Name="ScrollToBottomBtn"
                                     Click="ScrollToBottomBtn_Click"
@@ -311,8 +349,8 @@
                                     HorizontalAlignment="Stretch"
                                     VerticalAlignment="Stretch"
                                     ToolTipService.ToolTip="回到底部">
-                                <FontIcon Glyph="&#xE70D;" FontSize="14" Opacity="0.8"
-                                          Foreground="{ThemeResource YanshuaiTextBrush}"/>
+                                <FontIcon Glyph="&#xE70D;" FontSize="15"
+                                          Foreground="{ThemeResource YanshuaiAccentBrush}"/>
                             </Button>
                         </Border>
                     </Grid><!-- /ChatArea -->
@@ -322,13 +360,13 @@
               Margin="12,8,12,12"
               Background="Transparent">
                         <Border Background="{ThemeResource YanshuaiShadowBrush}"
-                                CornerRadius="18"
+                                CornerRadius="20"
                                 Margin="2,5,0,0"
                                 Opacity="0.62"/>
                         <Border Background="{ThemeResource YanshuaiSurfaceBrush}"
                                 BorderBrush="{ThemeResource YanshuaiBorderBrush}"
                                 BorderThickness="1"
-                                CornerRadius="18"
+                                CornerRadius="20"
                                 Padding="1">
                             <Grid>
                                 <Grid.RowDefinitions>
@@ -349,7 +387,7 @@
                                         Visibility="Collapsed"
                                         Padding="12,8"
                                         BorderThickness="0,0,0,1"
-                                        CornerRadius="18,18,0,0"
+                                        CornerRadius="19,19,0,0"
                                         Background="{ThemeResource YanshuaiPanelBrush}"
                                         BorderBrush="{ThemeResource YanshuaiBorderBrush}">
                                     <Grid>
@@ -358,20 +396,23 @@
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-                                        <Image x:Name="PendingImageThumb"
-                                               Grid.Column="0"
-                                               Width="48" Height="48"
-                                               Stretch="UniformToFill"/>
+                                        <Border Grid.Column="0" CornerRadius="8" Width="48" Height="48">
+                                            <Image x:Name="PendingImageThumb"
+                                                   Width="48" Height="48"
+                                                   Stretch="UniformToFill"/>
+                                        </Border>
                                         <TextBlock Grid.Column="1"
                                                    Text="已附加图片"
-                                                   FontSize="12" Opacity="0.6"
+                                                   FontSize="12" Opacity="{StaticResource OpacitySubtle}"
+                                                   Foreground="{ThemeResource YanshuaiMutedTextBrush}"
                                                    VerticalAlignment="Center"
                                                    Margin="10,0"/>
                                         <Button Grid.Column="2"
                                                 Click="ClearImageBtn_Click"
-                                                Background="Transparent" BorderThickness="0"
-                                                Width="36" Height="36" Padding="0">
-                                            <FontIcon Glyph="&#xE711;" FontSize="14" Opacity="0.6"/>
+                                                Style="{StaticResource IconButtonStyle}"
+                                                Width="36" Height="36"
+                                                ToolTipService.ToolTip="移除图片">
+                                            <FontIcon Glyph="&#xE711;" FontSize="14" Opacity="{StaticResource OpacityMuted}"/>
                                         </Button>
                                     </Grid>
                                 </Border>
@@ -382,50 +423,57 @@
                                         Background="{ThemeResource YanshuaiPanelBrush}"
                                         BorderBrush="{ThemeResource YanshuaiBorderBrush}"
                                         BorderThickness="0,0,0,1"
-                                        CornerRadius="17,17,0,0">
-                                    <Grid Height="36" Margin="4,0">
+                                        CornerRadius="19,19,0,0">
+                                    <Grid Height="38" Margin="4,0">
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
                                             <!-- 全屏输入 -->
                                             <Button Click="FullscreenInputBtn_Click"
-                                                    Background="Transparent" BorderThickness="0"
-                                                    Width="40" Height="36" Padding="0"
+                                                    Style="{StaticResource IconButtonStyle}"
+                                                    Width="40" Height="36"
                                                     ToolTipService.ToolTip="全屏输入">
-                                                <FontIcon x:Name="FullscreenInputIcon" Glyph="&#xE740;" FontSize="15" Opacity="0.6"
-                                                          Foreground="{ThemeResource ApplicationForegroundThemeBrush}"/>
+                                                <FontIcon x:Name="FullscreenInputIcon" Glyph="&#xE740;" FontSize="15"
+                                                          Opacity="{StaticResource ToolbarIconOpacity}"
+                                                          Foreground="{ThemeResource YanshuaiTextBrush}"/>
                                             </Button>
                                         </StackPanel>
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                                             <!-- 插入括号 -->
                                             <Button Click="InsertBracketBtn_Click"
-                                                    Background="Transparent" BorderThickness="0"
-                                                    Width="40" Height="36" Padding="0"
+                                                    Style="{StaticResource IconButtonStyle}"
+                                                    Width="40" Height="36"
                                                     ToolTipService.ToolTip="插入括号（动作/心理）">
-                                                <TextBlock Text="（）" FontSize="13" Opacity="0.6" VerticalAlignment="Center"/>
+                                                <TextBlock Text="（）" FontSize="13"
+                                                           Opacity="{StaticResource ToolbarIconOpacity}"
+                                                           Foreground="{ThemeResource YanshuaiTextBrush}"
+                                                           VerticalAlignment="Center"/>
                                             </Button>
                                             <!-- 插入引号 -->
                                             <Button Click="InsertQuoteBtn_Click"
-                                                    Background="Transparent" BorderThickness="0"
-                                                    Width="40" Height="36" Padding="0"
+                                                    Style="{StaticResource IconButtonStyle}"
+                                                    Width="40" Height="36"
                                                     ToolTipService.ToolTip="插入引号（对话）">
-                                                <TextBlock Text="「」" FontSize="13" Opacity="0.6" VerticalAlignment="Center"/>
+                                                <TextBlock Text="「」" FontSize="13"
+                                                           Opacity="{StaticResource ToolbarIconOpacity}"
+                                                           Foreground="{ThemeResource YanshuaiTextBrush}"
+                                                           VerticalAlignment="Center"/>
                                             </Button>
                                         </StackPanel>
                                     </Grid>
                                 </Border>
 
-                                <!-- API 信息 + 好感度 -->
-                                <Grid Grid.Row="2" Grid.ColumnSpan="3" Margin="12,2,12,4">
+                                <!-- API 信息 + 好感度（关系条） -->
+                                <Grid Grid.Row="2" Grid.ColumnSpan="3" Margin="14,3,14,4">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
                                     <TextBlock x:Name="ApiInfoLabel" Grid.Column="0"
-                                               FontSize="11" Opacity="0.5"
+                                               FontSize="11" Opacity="{StaticResource OpacitySubtle}"
                                                Foreground="{ThemeResource YanshuaiMutedTextBrush}"
                                                Text="API: 未配置" VerticalAlignment="Center"/>
                                     <TextBlock x:Name="FavorabilityLabel" Grid.Column="2"
-                                               FontSize="11" Opacity="0.6"
+                                               FontSize="11"
                                                Foreground="{ThemeResource YanshuaiAccentBrush}"
                                                VerticalAlignment="Center"
                                                Visibility="Collapsed"/>
@@ -435,11 +483,13 @@
                                 <Button x:Name="SuggestBtn"
                                         Grid.Row="3" Grid.Column="0"
                                         Click="SuggestBtn_Click"
-                                        Background="Transparent" BorderThickness="0"
-                                        Width="42" MinHeight="42"
+                                        Style="{StaticResource IconButtonStyle}"
+                                        Width="42" Height="42"
                                         Margin="8,7,0,8"
-                                        VerticalAlignment="Bottom">
-                                    <FontIcon Glyph="&#xE794;" FontSize="18" Opacity="0.6"
+                                        VerticalAlignment="Bottom"
+                                        ToolTipService.ToolTip="推荐回复">
+                                    <FontIcon Glyph="&#xE794;" FontSize="18"
+                                              Opacity="{StaticResource ToolbarIconOpacity}"
                                               Foreground="{ThemeResource YanshuaiTextBrush}"/>
                                 </Button>
 
@@ -448,7 +498,7 @@
                                         Background="{ThemeResource YanshuaiPanelBrush}"
                                         BorderBrush="{ThemeResource YanshuaiBorderBrush}"
                                         BorderThickness="1"
-                                        CornerRadius="12">
+                                        CornerRadius="14">
                                     <TextBox x:Name="InputTextBox"
                                              PlaceholderText="说点什么…"
                                              BorderThickness="0"
@@ -459,8 +509,10 @@
                                              VerticalContentAlignment="Center"
                                              MinHeight="42"
                                              MaxHeight="160"
-                                             Padding="10,6"
+                                             Padding="12,8"
                                              Margin="0"
+                                             IsSpellCheckEnabled="True"
+                                             IsTextPredictionEnabled="True"
                                              KeyDown="InputTextBox_KeyDown"/>
                                 </Border>
 
@@ -469,11 +521,11 @@
                                         Margin="0,7,10,8"
                                         VerticalAlignment="Bottom"
                                         Background="{ThemeResource YanshuaiAccentBrush}"
-                                        CornerRadius="12">
+                                        CornerRadius="14">
                                     <Button x:Name="SubmitButton"
                                             Click="SubmitButton_Click"
                                             Background="Transparent"
-                                            Foreground="White"
+                                            Foreground="{ThemeResource YanshuaiOnAccentBrush}"
                                             BorderThickness="0"
                                             Padding="0"
                                             HorizontalAlignment="Stretch"
@@ -497,7 +549,7 @@
                     Background="{ThemeResource YanshuaiSurfaceBrush}"
                     BorderBrush="{ThemeResource YanshuaiBorderBrush}"
                     BorderThickness="0,1,0,0"
-                    CornerRadius="16,16,0,0"
+                    CornerRadius="18,18,0,0"
                     VerticalAlignment="Bottom"
                     MaxHeight="260"
                     Padding="0,12,0,12">
@@ -505,13 +557,13 @@
                     <StackPanel Orientation="Horizontal" Margin="16,0,16,8">
                         <Button x:Name="OverlayAttachBtn"
                                 Click="AttachImageBtn_Click"
-                                Background="Transparent" BorderThickness="0"
-                                Padding="8,6"
+                                Style="{StaticResource GhostButtonStyle}"
+                                Padding="10,7"
                                 ToolTipService.ToolTip="附加图片">
                             <StackPanel Orientation="Horizontal">
-                                <FontIcon Glyph="&#xEB9F;" FontSize="16" Opacity="0.7"
+                                <FontIcon Glyph="&#xEB9F;" FontSize="16" Opacity="{StaticResource OpacityMuted}"
                                           Foreground="{ThemeResource YanshuaiTextBrush}"/>
-                                <TextBlock Text="图片" FontSize="13" Opacity="0.7"
+                                <TextBlock Text="图片" FontSize="13" Opacity="{StaticResource OpacityMuted}"
                                            Margin="6,0,0,0"
                                            Foreground="{ThemeResource YanshuaiTextBrush}"/>
                             </StackPanel>
@@ -522,7 +574,7 @@
                                 Margin="16,4,16,8" Visibility="Collapsed">
                         <ProgressRing x:Name="SuggestProgressRing" IsActive="False"
                                       Width="16" Height="16" Margin="0,0,8,0"/>
-                        <TextBlock x:Name="SuggestLoadingText" FontSize="13" Opacity="0.6"
+                        <TextBlock x:Name="SuggestLoadingText" FontSize="13" Opacity="{StaticResource OpacitySubtle}"
                                    Foreground="{ThemeResource YanshuaiMutedTextBrush}"
                                    VerticalAlignment="Center"/>
                     </StackPanel>

@@ -198,7 +198,7 @@ namespace yanshuai
 
         /// <summary>云端重排 RAG：嵌入粗排 → DeepSeek/OpenAI 精排</summary>
         public async System.Threading.Tasks.Task<List<string>> SearchMemoriesCloudAsync(
-            string query, ApiProfile profile, int topK = 5)
+            string query, ApiProfile profile, int topK = 5, System.Threading.CancellationToken ct = default)
         {
             var embedder = AppState.Embedder;
             if (embedder != null)
@@ -231,14 +231,14 @@ namespace yanshuai
                             .ToList();
                     }
                 }
-                catch { }
+                catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"[RAG] cloud embed recall failed: {ex.Message}"); }
             }
 
             if (candidates.Count == 0) return SearchMemories(query, topK);
             var texts = candidates.Select(c => c.Text).ToList();
 
             // Stage 2: 云端精排
-            var ranked = await RagRetriever.RerankWithApiAsync(query, texts, profile, topK);
+            var ranked = await RagRetriever.RerankWithApiAsync(query, texts, profile, topK, ct);
 
             if (ranked != null && ranked.Count > 0)
                 return ranked.Select(i => texts[i]).ToList();
@@ -279,7 +279,7 @@ namespace yanshuai
                                                .Take(recallN).ToList();
                     }
                 }
-                catch { /* 降级 */ }
+                catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"[RAG] local embed recall failed: {ex.Message}"); /* 降级关键词 */ }
             }
 
             // 降级：关键词预召回（用去重后的文本列表）
@@ -402,8 +402,13 @@ namespace yanshuai
             // 限制记忆数量
             if (SharedMemories.Count > Settings.MaxMemories)
             {
+                // 新近度加权：新创建的记忆（24小时内 +0.5，7天内 +0.25）获得优待，避免新近总结出的 0.6/0.7 记忆在满载时立即被裁掉
                 SharedMemories = SharedMemories
-                    .OrderByDescending(m => m.Importance)
+                    .OrderByDescending(m => {
+                        double ageInDays = (DateTime.Now - m.CreatedAt).TotalDays;
+                        double recencyBonus = ageInDays <= 1.0 ? 0.5 : (ageInDays <= 7.0 ? 0.25 : 0.0);
+                        return m.Importance + recencyBonus;
+                    })
                     .Take(Settings.MaxMemories)
                     .ToList();
             }

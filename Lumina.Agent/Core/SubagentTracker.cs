@@ -63,6 +63,10 @@ namespace yanshuai
     /// <summary>子代理全局跟踪器</summary>
     public static class SubagentTracker
     {
+        // Records 绑定到 XAML ListView（UI 集合），子代理在后台线程执行，
+        // 因此对集合的增删及对 SubagentRecord.Status/Result 的写入（会触发
+        // CollectionChanged / PropertyChanged）必须 marshal 回 UI 线程，
+        // 否则会抛跨线程 COMException / InvalidOperationException。
         public static ObservableCollection<SubagentRecord> Records { get; } = new ObservableCollection<SubagentRecord>();
         private static readonly object _lock = new object();
 
@@ -75,39 +79,65 @@ namespace yanshuai
             get { lock (_lock) return Records.Count; }
         }
 
+        // 把动作调度到 UI 线程；若无 UI 线程（理论上不会发生）则原地执行以保证状态不丢失。
+        private static void RunOnUi(Windows.UI.Core.DispatchedHandler action)
+        {
+            try
+            {
+                var win = Windows.ApplicationModel.Core.CoreApplication.MainView?.CoreWindow;
+                var disp = win?.Dispatcher;
+                if (disp != null && !disp.HasThreadAccess)
+                {
+                    var _ = disp.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, action);
+                    return;
+                }
+            }
+            catch { }
+            action();
+        }
+
         /// <summary>启动一个子代理（返回其记录对象，供调用方更新）</summary>
         public static SubagentRecord Start(string task)
         {
             var record = new SubagentRecord { Task = task, Status = "running" };
-            lock (_lock)
+            RunOnUi(() =>
             {
-                Records.Add(record);
-                // 最多保留 50 条
-                while (Records.Count > 50)
-                    Records.RemoveAt(0);
-            }
+                lock (_lock)
+                {
+                    Records.Add(record);
+                    // 最多保留 50 条
+                    while (Records.Count > 50)
+                        Records.RemoveAt(0);
+                }
+            });
             return record;
         }
 
         /// <summary>标记完成</summary>
         public static void Complete(SubagentRecord record, string result)
         {
-            record.Result = result;
-            record.Status = "done";
-            record.FinishedAt = DateTime.Now;
+            RunOnUi(() =>
+            {
+                record.Result = result;
+                record.Status = "done";
+                record.FinishedAt = DateTime.Now;
+            });
         }
 
         /// <summary>标记失败</summary>
         public static void Fail(SubagentRecord record, string error)
         {
-            record.Result = error;
-            record.Status = "error";
-            record.FinishedAt = DateTime.Now;
+            RunOnUi(() =>
+            {
+                record.Result = error;
+                record.Status = "error";
+                record.FinishedAt = DateTime.Now;
+            });
         }
 
         public static void Clear()
         {
-            lock (_lock) Records.Clear();
+            RunOnUi(() => { lock (_lock) Records.Clear(); });
         }
     }
 }

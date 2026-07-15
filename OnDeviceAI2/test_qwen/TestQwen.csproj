@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>TestQwen</AssemblyName>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- 复用引擎源码（单一来源，UWP 工程后续也引用同一批文件） -->
+    <Compile Include="..\Qwen\QwenMath.cs" Link="Qwen\QwenMath.cs" />
+    <Compile Include="..\Qwen\RefTensorFile.cs" Link="Qwen\RefTensorFile.cs" />
+    <Compile Include="..\Qwen\DeltaNet.cs" Link="Qwen\DeltaNet.cs" />
+    <Compile Include="..\Qwen\FullAttention.cs" Link="Qwen\FullAttention.cs" />
+    <Compile Include="..\Qwen\SwiGluMlp.cs" Link="Qwen\SwiGluMlp.cs" />
+    <Compile Include="..\Qwen\MatW.cs" Link="Qwen\MatW.cs" />
+    <Compile Include="..\Qwen\QwenModel.cs" Link="Qwen\QwenModel.cs" />
+    <Compile Include="..\Qwen\QwenRunner.cs" Link="Qwen\QwenRunner.cs" />
+    <Compile Include="..\Qwen\BpeDecoder.cs" Link="Qwen\BpeDecoder.cs" />
+    <Compile Include="..\Qwen\BpeTokenizer.cs" Link="Qwen\BpeTokenizer.cs" />
+  </ItemGroup>
+
+</Project>

@@ -75,6 +75,7 @@ namespace yanshuai
         private string _pendingImageBase64 = null;
         private string _pendingImageMimeType = null;
         private System.Threading.CancellationTokenSource _streamCts = null;
+        private System.Threading.CancellationTokenSource _pageCts = null;
         private List<string> _suggestedReplies = new List<string>();
         private DispatcherTimer _memoryTimer;
         // 聊天列表改为虚拟化 ListView 后，其内部 ScrollViewer 在 Loaded 时获取，

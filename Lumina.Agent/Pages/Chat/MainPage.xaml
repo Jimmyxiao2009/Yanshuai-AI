@@ -508,7 +508,18 @@
                                                                            Visibility="{Binding ToolVisibility}"
                                                                            TextWrapping="Wrap"
                                                                            FontSize="11" Opacity="0.7"
-                                                                           Margin="0,2,0,0"/>
+                                                                           Margin="0,2,0,0">
+                                                                    <ToolTipService.ToolTip>
+                                                                        <ToolTip Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}">
+                                                                            <StackPanel MaxWidth="450">
+                                                                                <TextBlock Text="参数:" FontWeight="Bold" FontSize="11" Margin="0,0,0,2"/>
+                                                                                <TextBlock Text="{Binding Args}" TextWrapping="Wrap" FontFamily="Consolas" FontSize="10" Opacity="0.8" Margin="0,0,0,6"/>
+                                                                                <TextBlock Text="原始输出:" FontWeight="Bold" FontSize="11" Margin="0,0,0,2"/>
+                                                                                <TextBlock Text="{Binding Result}" TextWrapping="Wrap" FontFamily="Consolas" FontSize="10" Opacity="0.8"/>
+                                                                            </StackPanel>
+                                                                        </ToolTip>
+                                                                    </ToolTipService.ToolTip>
+                                                                </TextBlock>
                                                             </StackPanel>
                                                         </StackPanel>
                                                     </Border>
@@ -1021,6 +1032,8 @@
                                      MinHeight="42"
                                      MaxHeight="160"
                                      Margin="4,6,6,6"
+                                     IsSpellCheckEnabled="True"
+                                     IsTextPredictionEnabled="True"
                                      KeyDown="InputTextBox_KeyDown"/>
 
                             <Button x:Name="SubmitButton"

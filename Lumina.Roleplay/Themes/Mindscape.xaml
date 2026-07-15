@@ -1,0 +1,106 @@
+<!--
+    Mindscape.xaml — 心象（全新设计语言 · 默认主题）
+    中性"晨雾/夜墨"底色，让每个角色的"心象色"成为画面里唯一的彩色焦点。
+    色彩 token / 字体 / 透明度在此定义；控件样式由 Themes/Base/Controls.xaml 统一提供。
+    运行时：App.xaml.cs 在切换当前角色时，把从立绘提取的主色写入 YanshuaiAccentBrush
+    （复用 CustomAccentHex 覆盖路径），并刷新 YanshuaiAccentWashBrush 做整屏微染。
+-->
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ResourceDictionary.ThemeDictionaries>
+        <!-- ═══ Light（晨雾） ═══ -->
+        <ResourceDictionary x:Key="Light">
+            <SolidColorBrush x:Key="YanshuaiPageBrush"        Color="#E9E8E5"/>
+            <SolidColorBrush x:Key="YanshuaiChromeBrush"      Color="#232529"/>
+            <SolidColorBrush x:Key="YanshuaiAccentBrush"      Color="#5E5DB6"/>
+            <SolidColorBrush x:Key="YanshuaiPaneHeaderBrush"  Color="#2C2F35"/>
+            <SolidColorBrush x:Key="YanshuaiSurfaceBrush"     Color="#F4F3F0"/>
+            <SolidColorBrush x:Key="YanshuaiPanelBrush"       Color="#FCFBF9"/>
+            <SolidColorBrush x:Key="YanshuaiSubtlePanelBrush" Color="#ECEBE7"/>
+            <SolidColorBrush x:Key="YanshuaiBorderBrush"      Color="#D6D5D0"/>
+            <SolidColorBrush x:Key="YanshuaiTextBrush"        Color="#25272B"/>
+            <SolidColorBrush x:Key="YanshuaiMutedTextBrush"   Color="#73757B"/>
+            <SolidColorBrush x:Key="YanshuaiShadowBrush"      Color="#1F000000"/>
+            <SolidColorBrush x:Key="YanshuaiUserBubbleBrush"  Color="#5E5DB6"/>
+            <SolidColorBrush x:Key="YanshuaiAiBubbleBrush"    Color="#FCFBF9"/>
+            <SolidColorBrush x:Key="YanshuaiOnAccentBrush"      Color="#FFFFFF"/>
+            <SolidColorBrush x:Key="YanshuaiAccentHoverBrush"   Color="#225E5DB6"/>
+            <SolidColorBrush x:Key="YanshuaiAccentPressedBrush" Color="#3A5E5DB6"/>
+            <!-- 招牌：心象微染 + 记忆线 -->
+            <SolidColorBrush x:Key="YanshuaiAccentWashBrush"  Color="#125E5DB6"/>
+            <SolidColorBrush x:Key="YanshuaiMemoryLineBrush"  Color="#555E5DB6"/>
+        </ResourceDictionary>
+        <!-- ═══ Dark（夜墨） ═══ -->
+        <ResourceDictionary x:Key="Dark">
+            <SolidColorBrush x:Key="YanshuaiPageBrush"        Color="#15161A"/>
+            <SolidColorBrush x:Key="YanshuaiChromeBrush"      Color="#0E0F12"/>
+            <SolidColorBrush x:Key="YanshuaiAccentBrush"      Color="#9B9AE8"/>
+            <SolidColorBrush x:Key="YanshuaiPaneHeaderBrush"  Color="#1C1E23"/>
+            <SolidColorBrush x:Key="YanshuaiSurfaceBrush"     Color="#20222A"/>
+            <SolidColorBrush x:Key="YanshuaiPanelBrush"       Color="#262931"/>
+            <SolidColorBrush x:Key="YanshuaiSubtlePanelBrush" Color="#1C1E25"/>
+            <SolidColorBrush x:Key="YanshuaiBorderBrush"      Color="#34363E"/>
+            <SolidColorBrush x:Key="YanshuaiTextBrush"        Color="#ECEBE8"/>
+            <SolidColorBrush x:Key="YanshuaiMutedTextBrush"   Color="#9A9CA4"/>
+            <SolidColorBrush x:Key="YanshuaiShadowBrush"      Color="#55000000"/>
+            <SolidColorBrush x:Key="YanshuaiUserBubbleBrush"  Color="#9B9AE8"/>
+            <SolidColorBrush x:Key="YanshuaiAiBubbleBrush"    Color="#262931"/>
+            <SolidColorBrush x:Key="YanshuaiOnAccentBrush"      Color="#15161A"/>
+            <SolidColorBrush x:Key="YanshuaiAccentHoverBrush"   Color="#229B9AE8"/>
+            <SolidColorBrush x:Key="YanshuaiAccentPressedBrush" Color="#3A9B9AE8"/>
+            <!-- 招牌：心象微染 + 记忆线 -->
+            <SolidColorBrush x:Key="YanshuaiAccentWashBrush"  Color="#1A9B9AE8"/>
+            <SolidColorBrush x:Key="YanshuaiMemoryLineBrush"  Color="#669B9AE8"/>
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+
+    <!-- ═══ 控件圆角（心象＝柔和现代） ═══ -->
+    <CornerRadius x:Key="YanshuaiControlCornerRadius">8</CornerRadius>
+
+    <!-- ═══════ 颜色（兼容 legacy 键） ═══════ -->
+    <Color x:Key="ThemeAccentColor">#5E5DB6</Color>
+    <Color x:Key="ThemeAccentColorDark">#46458C</Color>
+    <Color x:Key="ThemeAccentColorLight">#9B9AE8</Color>
+
+    <SolidColorBrush x:Key="ThemeAccentBrush"      Color="#5E5DB6"/>
+    <SolidColorBrush x:Key="ThemeAccentBrushDark"  Color="#46458C"/>
+    <SolidColorBrush x:Key="ThemeAccentBrushLight" Color="#9B9AE8"/>
+
+    <!-- 导航栏 -->
+    <Color x:Key="NavHeaderColor">#232529</Color>
+    <Color x:Key="NavHeaderGradientEnd">#2C2F35</Color>
+    <Color x:Key="NavBackground">#15161A</Color>
+
+    <!-- 对话气泡 -->
+    <Color x:Key="UserBubbleColor">#5E5DB6</Color>
+    <Color x:Key="UserBubbleFgColor">#FFFFFF</Color>
+    <Color x:Key="AiBubbleColor">#FCFBF9</Color>
+    <Color x:Key="AiBubbleFgColor">#25272B</Color>
+    <Color x:Key="ReasoningBgColor">#145E5DB6</Color>
+
+    <!-- 输入区 -->
+    <Color x:Key="InputBoxBgColor">#F4F3F0</Color>
+    <Color x:Key="InputBoxBorderColor">#33232529</Color>
+    <SolidColorBrush x:Key="InputBoxBg"     Color="#F4F3F0"/>
+    <SolidColorBrush x:Key="InputBoxBorder" Color="#33232529"/>
+
+    <!-- 标题/品牌 -->
+    <SolidColorBrush x:Key="BrandTitleBrush"    Color="#5E5DB6"/>
+    <SolidColorBrush x:Key="BrandSubtitleBrush" Color="#73757B"/>
+
+    <!-- ═══════ 字体 ═══════
+         站酷小薇（标题/角色名）· Noto Sans SC（界面正文）· Cormorant（拉丁点缀）。
+         聊天话语正文用文楷 YanshuaiVoiceFont（定义于 Base/Typography.xaml，全主题共用）。 -->
+    <FontFamily x:Key="YanshuaiTitleFont">ms-appx:///Assets/Fonts/ZCOOLXiaoWei-Regular.ttf#ZCOOL XiaoWei</FontFamily>
+    <FontFamily x:Key="YanshuaiBodyFont">ms-appx:///Assets/Fonts/NotoSansSC-Regular.ttf#Noto Sans SC Thin</FontFamily>
+    <FontFamily x:Key="YanshuaiEnglishFont">ms-appx:///Assets/Fonts/Cormorant-Regular.ttf#Cormorant Light</FontFamily>
+    <FontFamily x:Key="YanshuaiEnglishItalicFont">ms-appx:///Assets/Fonts/Cormorant-Italic.ttf#Cormorant Light</FontFamily>
+
+    <!-- ═══════ 透明度常量 ═══════ -->
+    <x:Double x:Key="NavIconOpacity">0.88</x:Double>
+    <x:Double x:Key="ToolbarIconOpacity">0.70</x:Double>
+    <x:Double x:Key="ActionIconOpacity">0.60</x:Double>
+
+</ResourceDictionary>

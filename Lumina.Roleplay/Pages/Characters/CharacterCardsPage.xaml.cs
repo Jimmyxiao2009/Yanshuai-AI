@@ -320,10 +320,26 @@ namespace yanshuai
             var selected = GetSelectedCards();
             if (selected.Count == 0) return;
 
+            // 保护激活角色卡
+            foreach (var card in selected)
+            {
+                if (card.Id == DataManager.Data.SelectedCharacterCardId)
+                {
+                    var warningDialog = new ContentDialog
+                    {
+                        Title = AppSettings.S("无法删除", "Cannot Delete"),
+                        Content = AppSettings.S("不能删除当前正在聊天的激活角色卡。", "Cannot delete the currently active chatting character card."),
+                        CloseButtonText = AppSettings.S("确定", "OK")
+                    };
+                    await warningDialog.ShowAsync().AsTask();
+                    return;
+                }
+            }
+
             var dialog = new ContentDialog
             {
                 Title = AppSettings.S("确认删除", "Confirm Delete"),
-                Content = string.Format(AppSettings.S("确定要删除 {0} 个角色卡吗？", "Delete {0} character cards?"), selected.Count),
+                Content = string.Format(AppSettings.S("确定要删除 {0} 个角色卡吗？这会同时清理其对话与记忆池且不可撤销。", "Delete {0} character cards? This will also clean their conversations and memory pools, and cannot be undone."), selected.Count),
                 PrimaryButtonText = AppSettings.S("删除", "Delete"),
                 SecondaryButtonText = AppSettings.S("取消", "Cancel")
             };
@@ -331,6 +347,26 @@ namespace yanshuai
             if (result != ContentDialogResult.Primary) return;
 
             var ids = new HashSet<string>(selected.Select(c => c.Id));
+
+            // 清理池、关联对话及缓存
+            foreach (var card in selected)
+            {
+                DialoguePoolManager.RemovePool(card.Id);
+
+                var relatedConvs = DataManager.Data.Conversations
+                    .Where(conv => conv.CharacterCardId == card.Id)
+                    .ToList();
+                foreach (var conv in relatedConvs)
+                {
+                    DataManager.Data.Conversations.Remove(conv);
+                    DialoguePoolManager.RemoveConversationEverywhere(conv);
+                    if (DataManager.Data.LastActiveConversationId == conv.Id)
+                    {
+                        DataManager.Data.LastActiveConversationId = "";
+                    }
+                }
+            }
+
             DataManager.Data.CharacterCards.RemoveAll(c => ids.Contains(c.Id));
             await DataManager.SaveAsync();
 

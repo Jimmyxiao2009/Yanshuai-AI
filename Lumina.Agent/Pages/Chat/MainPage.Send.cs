@@ -61,7 +61,7 @@ namespace yanshuai
                     {
                         var _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal,
                             () => aiBubble.SearchStatusText = msg);
-                    });
+                    }, ct: _streamCts.Token);
                 if (result.Compacted)
                 {
                     await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
@@ -73,18 +73,28 @@ namespace yanshuai
                         aiBubble.SearchStatusText = "");
                 }
             }
-            catch { }
+            catch (Exception cex)
+            {
+                // 压缩失败时仍按原样发送（保持原行为），但给出可见提示并记录诊断，避免静默吞错
+                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                    aiBubble.SearchStatusText = "上下文压缩失败，按原样发送");
+                try { ApiLogger.Log(profile.ProviderType, profile.Model, "context-compaction", cex.Message, true); } catch { }
+            }
 
             // ── RAG 检索（如果启用）──────────────────────────────────────
             if (AppSettings.RagEnabled)
             {
                 try
                 {
-                    string ragContext = await RagRetriever.BuildRagContextAsync(userMsg.Content, profile, _conv.Id);
+                    string ragContext = await RagRetriever.BuildRagContextAsync(userMsg.Content, profile, _conv.Id, _streamCts.Token);
                     if (!string.IsNullOrEmpty(ragContext))
                         apiMessages.Add(new ApiRequestMessage { Role = "system", Content = ragContext });
                 }
-                catch { }
+                catch (Exception rex)
+                {
+                    // RAG 检索失败不阻断发送，但记录诊断
+                    try { ApiLogger.Log(profile.ProviderType, profile.Model, "rag-retrieval", rex.Message, true); } catch { }
+                }
             }
 
             // ── 发送消息窗口：auto-compact 后跳过 SummarizedUpTo 之前的消息 ──
@@ -96,38 +106,50 @@ namespace yanshuai
             }
             // 已压缩过的消息不再发送（摘要已在 system prompt 中）
             var windowMsgs = _conv.Messages.Skip(skipIdx).ToList();
-            foreach (var m in windowMsgs)
+            try
             {
-                // 按需从外置 ImageStore 读取（仅本次请求期间存在，发送后随 apiMessages 释放）
-                var images = m.HasImages ? await m.GetAllImagesAsync() : new List<ImageEntry>();
-                if (images.Count > 1)
+                foreach (var m in windowMsgs)
                 {
-                    apiMessages.Add(new ApiRequestMessage
+                    // 按需从外置 ImageStore 读取（仅本次请求期间存在，发送后随 apiMessages 释放）
+                    var images = m.HasImages ? await m.GetAllImagesAsync() : new List<ImageEntry>();
+                    if (images.Count > 1)
                     {
-                        Role          = m.Role.Equals("user", StringComparison.OrdinalIgnoreCase) ? "user" : "assistant",
-                        Content       = m.Content,
-                        ImageBase64   = images[0].Base64,
-                        ImageMimeType = images[0].Mime,
-                    });
-                    for (int ii = 1; ii < images.Count; ii++)
                         apiMessages.Add(new ApiRequestMessage
                         {
-                            Role          = "user",
-                            Content       = "",
-                            ImageBase64   = images[ii].Base64,
-                            ImageMimeType = images[ii].Mime,
+                            Role          = m.Role.Equals("user", StringComparison.OrdinalIgnoreCase) ? "user" : "assistant",
+                            Content       = m.Content,
+                            ImageBase64   = images[0].Base64,
+                            ImageMimeType = images[0].Mime,
                         });
-                }
-                else
-                {
-                    apiMessages.Add(new ApiRequestMessage
+                        for (int ii = 1; ii < images.Count; ii++)
+                            apiMessages.Add(new ApiRequestMessage
+                            {
+                                Role          = "user",
+                                Content       = "",
+                                ImageBase64   = images[ii].Base64,
+                                ImageMimeType = images[ii].Mime,
+                            });
+                    }
+                    else
                     {
-                        Role          = m.Role.Equals("user", StringComparison.OrdinalIgnoreCase) ? "user" : "assistant",
-                        Content       = m.Content,
-                        ImageBase64   = images.Count == 1 ? images[0].Base64 : null,
-                        ImageMimeType = images.Count == 1 ? images[0].Mime   : null,
-                    });
+                        apiMessages.Add(new ApiRequestMessage
+                        {
+                            Role          = m.Role.Equals("user", StringComparison.OrdinalIgnoreCase) ? "user" : "assistant",
+                            Content       = m.Content,
+                            ImageBase64   = images.Count == 1 ? images[0].Base64 : null,
+                            ImageMimeType = images.Count == 1 ? images[0].Mime   : null,
+                        });
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                _isSending = false;
+                if (SubmitIcon != null) SubmitIcon.Glyph = "";
+                SubmitButton.IsEnabled = true;
+                _bubbles.Remove(aiBubble);
+                AddSystemBubble("⚠ 无法加载附加的图片资源，发送已中止：" + ex.Message);
+                return;
             }
             string memoryBlock = BuildMemoryBlock();
             if (!string.IsNullOrEmpty(memoryBlock))
@@ -143,15 +165,21 @@ namespace yanshuai
             AppState.RegisterTask(conv.Id, null); // 占位，真正的 task 稍后赋值
 
             // 实时同步内容到 AppState，页面不在时也能累积
-            aiBubble.PropertyChanged += (s, ev) =>
+            // 用具名 handler 以便消息完成后取消订阅，避免每次发送都泄漏一个闭包，
+            // 把旧 aiBubble 及其渲染图保活、并在消息已完成后仍向 AppState 写入陈旧内容。
+            PropertyChangedEventHandler contentSyncHandler = (s, ev) =>
             {
                 if (ev.PropertyName == nameof(ChatBubble.Content) ||
                     ev.PropertyName == nameof(ChatBubble.ReasoningContent))
                     AppState.UpdateContent(conv.Id, aiBubble.Content, aiBubble.ReasoningContent);
             };
+            aiBubble.PropertyChanged += contentSyncHandler;
 
             var sendTask = Task.Run(async () =>
             {
+                // 用量信息保持为本任务局部变量，避免多个并发/重叠的发送任务相互覆盖
+                // 共享的页面级 _lastUsage 字段（会污染各自的 token 记账）。
+                ApiUsageInfo localUsage = null;
                 try
                 {
                     if (webEnabled)
@@ -211,7 +239,7 @@ namespace yanshuai
                                 usage = await HandleStreamingResponse(resp, aiBubble, cts.Token);
                             else
                                 usage = await HandleRegularResponse(resp, aiBubble);
-                            _lastUsage = usage;
+                            localUsage = usage;
                             ApiLogger.Log(profile.ProviderType, profile.Model, requestJson, aiBubble.Content, !resp.IsSuccessStatusCode);
                         }
                     }
@@ -237,6 +265,28 @@ namespace yanshuai
                     finalSteps     = aiBubble.ExportThinkSteps();
                 });
 
+                // 取消内容同步订阅：消息已定稿，后续不应再向 AppState 写入，也避免闭包泄漏
+                aiBubble.PropertyChanged -= contentSyncHandler;
+
+                // 如果被用户中途取消，且最终内容和推理均为空，则清理临时气泡，不将空消息加入对话历史落盘 (P2-6)
+                if (cts.Token.IsCancellationRequested &&
+                    string.IsNullOrEmpty(finalAiContent) &&
+                    string.IsNullOrEmpty(finalReasoning) &&
+                    (finalSteps == null || finalSteps.Count == 0))
+                {
+                    await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                    {
+                        _bubbles.Remove(aiBubble);
+                        if (SubmitIcon != null) SubmitIcon.Glyph = "";
+                        SubmitButton.IsEnabled = true;
+                        _isSending = false;
+                        cts.Dispose();
+                        _streamCts = null;
+                    });
+                    AppState.CompleteTask(conv.Id);
+                    return;
+                }
+
                 var aiMsg = new ConversationMessage
                 {
                     Role             = "assistant",
@@ -254,11 +304,11 @@ namespace yanshuai
 
                 // ── Token 累计（优先使用 API 上报值，否则本地估算）──────────
                 int estInput = 0, estOutput = 0, cachedTokens = 0;
-                if (_lastUsage != null)
+                if (localUsage != null)
                 {
-                    estInput     = _lastUsage.PromptTokens   != 0 ? _lastUsage.PromptTokens   : _lastUsage.InputTokens;
-                    estOutput    = _lastUsage.CompletionTokens!= 0 ? _lastUsage.CompletionTokens : _lastUsage.OutputTokens;
-                    cachedTokens = _lastUsage.CacheReadInputTokens;
+                    estInput     = localUsage.PromptTokens   != 0 ? localUsage.PromptTokens   : localUsage.InputTokens;
+                    estOutput    = localUsage.CompletionTokens!= 0 ? localUsage.CompletionTokens : localUsage.OutputTokens;
+                    cachedTokens = localUsage.CacheReadInputTokens;
                 }
                 if (estInput  == 0) estInput  = ContextCompressor.EstimateTokens(userMsg.Content);
                 if (estOutput == 0) estOutput = ContextCompressor.EstimateTokens(finalAiContent);
@@ -266,7 +316,6 @@ namespace yanshuai
                 aiMsg.TokensOutput = estOutput;
                 aiMsg.CachedTokens = cachedTokens;
                 conv.TotalTokensUsed += estInput + estOutput;
-                _lastUsage = null;
 
                 // ── 自动记忆提取（每 5 轮触发一次）──────────────────────────
                 if (conv.Messages.Count(m => m.Role == "user") % 5 == 0)
@@ -306,17 +355,22 @@ namespace yanshuai
                 await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                 {
                     cts.Dispose();
-                    if (conv.MemoryEnabled && conv.ExchangesSinceLastSummary >= conv.MemorySummaryInterval)
+                    if (_streamCts == cts) _streamCts = null;
+
+                    if (conv.Id == _conv?.Id)
                     {
-                        conv.ExchangesSinceLastSummary = 0;
-                        _ = RunMemorySummaryAsync();
+                        if (AppSettings.MemoryEnabled && conv.ExchangesSinceLastSummary >= AppSettings.MemorySummaryInterval)
+                        {
+                            conv.ExchangesSinceLastSummary = 0;
+                            _ = RunMemorySummaryAsync();
+                        }
+                        if (SubmitIcon != null) SubmitIcon.Glyph = "";
+                        ScrollToBottom();
+                        PlaySound();
+                        UpdateTokenDisplay();
+                        _isSending = false;
+                        SubmitButton.IsEnabled = true;
                     }
-                    if (SubmitIcon != null) SubmitIcon.Glyph = "";
-                    ScrollToBottom();
-                    PlaySound();
-                    UpdateTokenDisplay();
-                    _isSending = false;
-                    SubmitButton.IsEnabled = true;
                 });
             });
 
@@ -400,18 +454,18 @@ namespace yanshuai
             };
 
             // 工具步骤进度回调：追加到 ThinkChain
-            ToolProgressCallback progCb = (phase, toolName, detail) =>
+            ToolProgressCallback progCb = (phase, toolName, detail, args, resultText) =>
             {
                 var _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                 {
                     if (phase == "thinking")
-                        aiBubble.AddOrUpdateToolStep("💭", toolName, detail);
+                        aiBubble.AddOrUpdateToolStep("💭", toolName, detail, args, resultText);
                     else if (phase == "calling")
-                        aiBubble.AddOrUpdateToolStep("⏳", toolName, detail);
+                        aiBubble.AddOrUpdateToolStep("⏳", toolName, detail, args, resultText);
                     else if (phase == "result")
-                        aiBubble.AddOrUpdateToolStep("✅", toolName, detail);
+                        aiBubble.AddOrUpdateToolStep("✅", toolName, detail, args, resultText);
                     else if (phase == "error")
-                        aiBubble.AddOrUpdateToolStep("❌", toolName, detail);
+                        aiBubble.AddOrUpdateToolStep("❌", toolName, detail, args, resultText);
 
                     int running = aiBubble.ThinkChain.Count(e => e.Kind == ThinkChainKind.Tool && e.Icon == "⏳");
                     aiBubble.SearchStatusText = running > 0 ? "⏳ 执行中 (" + running + " 个工具)…" : "";
@@ -427,18 +481,18 @@ namespace yanshuai
                 });
             };
 
-            // 思考过程实时推送回调：追加增量到 ThinkChain
-            ToolReasoningCallback reasoningCb = (reasoningToken) =>
+            // 思考过程实时推送回调：添加完整的思考步骤到 ThinkChain
+            ToolReasoningCallback reasoningCb = (reasoningText) =>
             {
                 var _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                 {
-                    aiBubble.AppendReasoningChunk(reasoningToken);
+                    aiBubble.AddReasoningStep(reasoningText);
                 });
             };
 
-            // 用 FunctionCallEngine 跑完整工具循环
+            // 用 FunctionCallEngine 跑完整工具循环（透传取消令牌，使「停止」按钮在工具轮次中生效）
             FunctionCallLoopResult result = await FunctionCallEngine.RunFunctionCallLoopAsync(
-                profile, toolMessages, _conv, permCb, folderCb, progCb, textCb, profile.VisionEnabled, reasoningCb);
+                profile, toolMessages, _conv, permCb, folderCb, progCb, textCb, profile.VisionEnabled, reasoningCb, ct);
             string content = result.Content;
             string reasoning = result.Reasoning ?? "";
             List<ApiMessageWithTools> allMessages = result.AllMessages ?? new List<ApiMessageWithTools>();

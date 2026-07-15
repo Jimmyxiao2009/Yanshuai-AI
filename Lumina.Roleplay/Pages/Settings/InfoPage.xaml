@@ -13,290 +13,362 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- 顶栏 -->
-        <Grid Grid.Row="0" Background="{ThemeResource YanshuaiPanelBrush}"
-              BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="0,0,0,1"
-              Padding="14,8">
+        <!-- 页眉：心象点 + 标题 -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="18,22,18,10">
+            <Ellipse Width="9" Height="9" Fill="{ThemeResource YanshuaiAccentBrush}"
+                     VerticalAlignment="Center" Margin="0,0,12,0"/>
             <TextBlock Text="关于"
-                       FontSize="18" FontWeight="SemiBold"
-                       VerticalAlignment="Center" Opacity="0.9"/>
-        </Grid>
+                       FontFamily="{ThemeResource YanshuaiTitleFont}"
+                       FontSize="30"
+                       VerticalAlignment="Center"
+                       Foreground="{ThemeResource YanshuaiTextBrush}"/>
+        </StackPanel>
 
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-            <StackPanel Margin="18,20,18,12">
+            <StackPanel Margin="18,8,18,24">
 
-                <!-- 标题 -->
-                <TextBlock x:Name="AppTitle" Text="言枢 AI"
-                           FontSize="36" FontWeight="Light"
-                           Margin="0,0,0,4"/>
-                <TextBlock x:Name="AppSubtitle" Text="AI 对话助手 · 适配 Windows 10 Mobile"
-                           FontSize="13" Opacity="0.55"
-                           Margin="0,0,0,28"/>
-
-                <!-- 免责声明 -->
-                <StackPanel Margin="0,0,0,8">
-                    <TextBlock x:Name="DisclaimerHeader" Text="免责声明"
-                               FontSize="12" FontWeight="SemiBold"
-                               Foreground="{ThemeResource YanshuaiAccentBrush}"
-                               CharacterSpacing="80"/>
-                    <Border BorderBrush="{ThemeResource YanshuaiAccentBrush}"
-                            BorderThickness="0,0,0,1" Margin="0,4,0,0" Opacity="0.4"/>
-                </StackPanel>
-                <TextBlock x:Name="DisclaimerContent" TextWrapping="Wrap" FontSize="14" Margin="0,0,0,22"
-                           Text="言枢 AI 所提供的对话内容由第三方大语言模型生成，不代表开发者立场。AI 的输出可能存在错误、偏差或不完整的情况，请自行判断其准确性，不应将其作为专业建议的依据。"/>
-
-                <!-- 用户协议 -->
-                <StackPanel Margin="0,0,0,8">
-                    <TextBlock x:Name="TermsHeader" Text="使用条款"
-                               FontSize="12" FontWeight="SemiBold"
-                               Foreground="{ThemeResource YanshuaiAccentBrush}"
-                               CharacterSpacing="80"/>
-                    <Border BorderBrush="{ThemeResource YanshuaiAccentBrush}"
-                            BorderThickness="0,0,0,1" Margin="0,4,0,0" Opacity="0.4"/>
-                </StackPanel>
-                <TextBlock x:Name="TermsContent" TextWrapping="Wrap" FontSize="14" Margin="0,0,0,22">
-                    <Run Text="• 本软件仅供个人学习与研究使用，禁止用于任何违反法律法规的用途。"/>
-                    <LineBreak/>
-                    <Run Text="• 用户对通过本软件发起的对话内容及其后果承担全部责任。"/>
-                    <LineBreak/>
-                    <Run Text="• 本软件不存储、不上传用户的对话内容，所有数据仅保存在本机设备上。"/>
-                    <LineBreak/>
-                    <Run Text="• API 密钥由用户自行配置和管理，开发者不对密钥泄露或滥用负责。"/>
-                </TextBlock>
-
-                <!-- 隐私说明 -->
-                <StackPanel Margin="0,0,0,8">
-                    <TextBlock x:Name="PrivacyHeader" Text="隐私说明"
-                               FontSize="12" FontWeight="SemiBold"
-                               Foreground="{ThemeResource YanshuaiAccentBrush}"
-                               CharacterSpacing="80"/>
-                    <Border BorderBrush="{ThemeResource YanshuaiAccentBrush}"
-                            BorderThickness="0,0,0,1" Margin="0,4,0,0" Opacity="0.4"/>
-                </StackPanel>
-                <TextBlock x:Name="PrivacyContent" TextWrapping="Wrap" FontSize="14" Margin="0,0,0,22"
-                           Text="本软件不收集任何用户数据，不包含任何遥测或统计功能。对话记录、API 配置等全部信息均以本地文件形式存储于设备上，不会被发送至任何服务器（API 请求除外，该请求由用户自行配置的端点处理）。"/>
-
-                <!-- 版本 -->
-                <StackPanel Margin="0,0,0,8">
-                    <TextBlock x:Name="VersionHeader" Text="版本"
-                               FontSize="12" FontWeight="SemiBold"
-                               Foreground="{ThemeResource YanshuaiAccentBrush}"
-                               CharacterSpacing="80"/>
-                    <Border BorderBrush="{ThemeResource YanshuaiAccentBrush}"
-                            BorderThickness="0,0,0,1" Margin="0,4,0,0" Opacity="0.4"/>
-                </StackPanel>
-                <TextBlock x:Name="VersionText" FontSize="14" Margin="0,0,0,4">
-                    <Run Text="言枢 AI  ·  2.0.0.0"/>
-                </TextBlock>
-                <TextBlock x:Name="TargetPlatformLabel" FontSize="12" Opacity="0.45" Margin="0,0,0,24"
-                           Text="目标平台：Windows 10 10240 (Mobile)"/>
-
-                <!-- 开发者 -->
-                <StackPanel Margin="0,0,0,8">
-                    <TextBlock x:Name="DevHeader" Text="开发者"
-                               FontSize="12" FontWeight="SemiBold"
-                               Foreground="{ThemeResource YanshuaiAccentBrush}"
-                               CharacterSpacing="80"/>
-                    <Border BorderBrush="{ThemeResource YanshuaiAccentBrush}"
-                            BorderThickness="0,0,0,1" Margin="0,4,0,0" Opacity="0.4"/>
-                </StackPanel>
-                <StackPanel Orientation="Horizontal" Margin="0,8,0,24" VerticalAlignment="Center">
-                    <Border Width="52" Height="52"
-                            BorderBrush="{ThemeResource YanshuaiAccentBrush}"
-                            BorderThickness="1.5"
-                            Margin="0,0,14,0">
-                        <Image Source="Assets/UserAvatar.jpg" Stretch="UniformToFill"/>
-                    </Border>
-                    <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="1b4e28ba-2fa1-5f3d-85e5-740e1a5a8a1f"
-                                   FontSize="13" FontWeight="SemiBold"
-                                   TextWrapping="Wrap" MaxWidth="240"/>
-                        <TextBlock x:Name="DevDesc" Text="成分复杂"
-                                   FontSize="12" Opacity="0.55" Margin="0,2,0,0"/>
-                        <TextBlock x:Name="DevMotto" Text="&quot;点击输入文本&quot;"
-                                   FontSize="11" Opacity="0.5" Margin="0,1,0,0"/>
+                <!-- ══ 应用标识卡 ══ -->
+                <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,16">
+                    <StackPanel>
+                        <TextBlock x:Name="AppTitle" Text="言枢 AI"
+                                   FontFamily="{ThemeResource YanshuaiTitleFont}"
+                                   FontSize="{StaticResource FontSizeDisplay}"
+                                   Foreground="{ThemeResource YanshuaiTextBrush}"
+                                   Margin="0,0,0,4"/>
+                        <TextBlock x:Name="AppSubtitle" Text="AI 对话助手 · 适配 Windows 10 Mobile"
+                                   Style="{StaticResource CaptionTextStyle}"/>
                     </StackPanel>
-                </StackPanel>
+                </Border>
 
-                <!-- 更新日志 -->
-                <StackPanel Margin="0,0,0,8">
-                    <TextBlock x:Name="ChangelogHeader" Text="更新日志"
-                               FontSize="12" FontWeight="SemiBold"
-                               Foreground="{ThemeResource YanshuaiAccentBrush}"
-                               CharacterSpacing="80"/>
-                    <Border BorderBrush="{ThemeResource YanshuaiAccentBrush}"
-                            BorderThickness="0,0,0,1" Margin="0,4,0,0" Opacity="0.4"/>
-                </StackPanel>
+                <!-- ══ 版本 ══ -->
+                <TextBlock x:Name="VersionHeader" Text="版本"
+                           Style="{StaticResource LabelTextStyle}"
+                           Margin="2,0,0,8"/>
+                <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,18">
+                    <StackPanel>
+                        <TextBlock x:Name="VersionText"
+                                   FontFamily="{ThemeResource YanshuaiEnglishFont}"
+                                   FontSize="{StaticResource FontSizeBodyLarge}"
+                                   Foreground="{ThemeResource YanshuaiTextBrush}">
+                            <Run Text="言枢 AI  ·  2.0.0.0"/>
+                        </TextBlock>
+                        <TextBlock x:Name="TargetPlatformLabel"
+                                   Style="{StaticResource CaptionTextStyle}"
+                                   Opacity="{StaticResource OpacityMuted}"
+                                   Margin="0,4,0,0"
+                                   Text="目标平台：Windows 10 10240 (Mobile)"/>
+                    </StackPanel>
+                </Border>
 
-                <!-- v2.0.0 -->
-                <TextBlock x:Name="V200Header" FontSize="13" FontWeight="SemiBold" Margin="0,4,0,6">
-                    <Run Text="v2.0.0"/>
-                    <Run Text="  ·  九皋"/>
-                    <Run Text="  ·  2026"/>
-                </TextBlock>
-                <TextBlock x:Name="V200Bullets" TextWrapping="Wrap" FontSize="13" Opacity="0.75" Margin="0,0,0,4">
-                    <Run Text="• ShellPage 统一导航架构：全局汉堡菜单状态保持、统一定位与返回按钮"/>
-                    <LineBreak/>
-                    <Run Text="• 品牌色系统全面启用：珊瑚橙主题（RoleplayTheme）加载生效，导航按钮获悬停/按下交互反馈"/>
-                    <LineBreak/>
-                    <Run Text="• 角色卡页面重构：按分组折叠展开、卡片内联展开显示「详细信息」「新对话」按钮、多选模式与批量删除"/>
-                    <LineBreak/>
-                    <Run Text="• 外观设置控件统一：ColorPresetPanel 组件复用，减少布局重复代码"/>
-                    <LineBreak/>
-                    <Run Text="• 汉堡菜单优化：用户头像动态展示、当前用户名称动态更新、等宽导航按钮、底部留白避免 CommandBar 遮挡"/>
-                    <LineBreak/>
-                    <Run Text="• 全局返回按钮（ShellPage 顶栏 + 各页 CommandBar 补全）"/>
-                    <LineBreak/>
-                    <Run Text="• 图标不透明度资源化统一管理"/>
-                    <LineBreak/>
-                    <Run Text="• ToggleSwitch 布局修复：移除负边距 hack"/>
-                    <LineBreak/>
-                    <Run Text="• 清理未使用存根代码（ChatMessage / ChatSession / SessionManager / StartPage / ChatHistoryPage）"/>
-                    <LineBreak/>
-                    <Run Text="• 启动行为导航适配 ShellPage 架构"/>
-                </TextBlock>
+                <!-- ══ 开发者 ══ -->
+                <TextBlock x:Name="DevHeader" Text="开发者"
+                           Style="{StaticResource LabelTextStyle}"
+                           Margin="2,0,0,8"/>
+                <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,18">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Border Width="{StaticResource AvatarSizeM}" Height="{StaticResource AvatarSizeM}"
+                                CornerRadius="{StaticResource CardCornerRadius}"
+                                BorderBrush="{ThemeResource YanshuaiAccentBrush}"
+                                BorderThickness="1.5"
+                                Margin="0,0,14,0">
+                            <Image Source="Assets/UserAvatar.jpg" Stretch="UniformToFill"/>
+                        </Border>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="1b4e28ba-2fa1-5f3d-85e5-740e1a5a8a1f"
+                                       Style="{StaticResource BodyTextStyle}"
+                                       FontWeight="SemiBold"
+                                       TextWrapping="Wrap" MaxWidth="240"/>
+                            <TextBlock x:Name="DevDesc" Text="成分复杂"
+                                       Style="{StaticResource CaptionTextStyle}"
+                                       Margin="0,2,0,0"/>
+                            <TextBlock x:Name="DevMotto" Text="&quot;点击输入文本&quot;"
+                                       Style="{StaticResource CaptionTextStyle}"
+                                       Opacity="{StaticResource OpacitySubtle}"
+                                       Margin="0,1,0,0"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
 
-                <!-- v1.5.0 -->
-                <TextBlock x:Name="V150Header" Text="v1.5.0  ·  2026" FontSize="13" FontWeight="SemiBold" Margin="0,14,0,6"/>
-                <TextBlock x:Name="V150Bullets" TextWrapping="Wrap" FontSize="13" Opacity="0.75" Margin="0,0,0,4">
-                    <Run Text="• 世界书支持树形分组，点击组头可折叠/展开"/>
-                    <LineBreak/>
-                    <Run Text="• 对话列表、角色卡、世界书多选模式全面重写：右键/长按进入，复选框样式修复"/>
-                    <LineBreak/>
-                    <Run Text="• 修复竖向图片压缩撕裂问题"/>
-                    <LineBreak/>
-                    <Run Text="• 修复删除对话后 Mobile 软键盘意外弹起"/>
-                    <LineBreak/>
-                    <Run Text="• 角色卡导入改为文件选择器，不再跳转相册"/>
-                    <LineBreak/>
-                    <Run Text="• API Key 支持长按眼睛图标预览"/>
-                </TextBlock>
+                <!-- ══ 免责声明 ══ -->
+                <TextBlock x:Name="DisclaimerHeader" Text="免责声明"
+                           Style="{StaticResource LabelTextStyle}"
+                           Margin="2,0,0,8"/>
+                <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,18">
+                    <TextBlock x:Name="DisclaimerContent" TextWrapping="Wrap"
+                               Style="{StaticResource BodyTextStyle}"
+                               Text="言枢 AI 所提供的对话内容由第三方大语言模型生成，不代表开发者立场。AI 的输出可能存在错误、偏差或不完整的情况，请自行判断其准确性，不应将其作为专业建议的依据。"/>
+                </Border>
 
-                <!-- v1.4.0 -->
-                <TextBlock x:Name="V140Header" Text="v1.4.0  ·  2026" FontSize="13" FontWeight="SemiBold" Margin="0,14,0,6"/>
-                <TextBlock x:Name="V140Bullets" TextWrapping="Wrap" FontSize="13" Opacity="0.75" Margin="0,0,0,4">
-                    <Run Text="• 思考过程标签动态化：流式推理期间显示随机动态词（Thinking / Pondering / Reflecting 等），结束后恢复为「思考过程」"/>
-                    <LineBreak/>
-                    <Run Text="• 设置页新增「回复声音」开关，可关闭 AI 回复完成提示音"/>
-                    <LineBreak/>
-                    <Run Text="• 设置页新增「默认展开思考过程」开关"/>
-                    <LineBreak/>
-                    <Run Text="• 多对话并行后台生成：切换对话时生成任务不中断，返回后自动恢复流式显示"/>
-                </TextBlock>
+                <!-- ══ 使用条款 ══ -->
+                <TextBlock x:Name="TermsHeader" Text="使用条款"
+                           Style="{StaticResource LabelTextStyle}"
+                           Margin="2,0,0,8"/>
+                <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,18">
+                    <TextBlock x:Name="TermsContent" TextWrapping="Wrap"
+                               Style="{StaticResource BodyTextStyle}"
+                               LineHeight="22">
+                        <Run Text="• 本软件仅供个人学习与研究使用，禁止用于任何违反法律法规的用途。"/>
+                        <LineBreak/>
+                        <Run Text="• 用户对通过本软件发起的对话内容及其后果承担全部责任。"/>
+                        <LineBreak/>
+                        <Run Text="• 本软件不存储、不上传用户的对话内容，所有数据仅保存在本机设备上。"/>
+                        <LineBreak/>
+                        <Run Text="• API 密钥由用户自行配置和管理，开发者不对密钥泄露或滥用负责。"/>
+                    </TextBlock>
+                </Border>
 
-                <!-- v1.3.3 -->
-                <TextBlock x:Name="V133Header" Text="v1.3.3  ·  2026" FontSize="13" FontWeight="SemiBold" Margin="0,4,0,6"/>
-                <TextBlock x:Name="V133Bullets" TextWrapping="Wrap" FontSize="13" Opacity="0.75" Margin="0,0,0,4">
-                    <Run Text="• Bug fix"/>
-                    <LineBreak/>
-                    <Run Text="• 性能优化"/>
-                    <LineBreak/>
-                    <Run Text="• 移除了 Herobrine"/>
-                </TextBlock>
+                <!-- ══ 隐私说明 ══ -->
+                <TextBlock x:Name="PrivacyHeader" Text="隐私说明"
+                           Style="{StaticResource LabelTextStyle}"
+                           Margin="2,0,0,8"/>
+                <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,18">
+                    <TextBlock x:Name="PrivacyContent" TextWrapping="Wrap"
+                               Style="{StaticResource BodyTextStyle}"
+                               Text="本软件不收集任何用户数据，不包含任何遥测或统计功能。对话记录、API 配置等全部信息均以本地文件形式存储于设备上，不会被发送至任何服务器（API 请求除外，该请求由用户自行配置的端点处理）。"/>
+                </Border>
 
-                <!-- v1.3.2 -->
-                <TextBlock x:Name="V132Header" Text="v1.3.2  ·  2026" FontSize="13" FontWeight="SemiBold" Margin="0,14,0,6"/>
-                <TextBlock x:Name="V132Bullets" TextWrapping="Wrap" FontSize="13" Opacity="0.75" Margin="0,0,0,4">
-                    <Run Text="• Bug fix"/>
-                    <LineBreak/>
-                    <Run Text="• 性能优化"/>
-                    <LineBreak/>
-                    <Run Text="• 移除了 Herobrine"/>
-                </TextBlock>
+                <!-- ══ 更新日志 ══ -->
+                <TextBlock x:Name="ChangelogHeader" Text="更新日志"
+                           Style="{StaticResource LabelTextStyle}"
+                           Margin="2,0,0,8"/>
+                <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,18">
+                    <StackPanel>
 
-                <!-- v1.3.1 -->
-                <TextBlock x:Name="V131Header" Text="v1.3.1  ·  2026" FontSize="13" FontWeight="SemiBold" Margin="0,14,0,6"/>
-                <TextBlock x:Name="V131Bullets" TextWrapping="Wrap" FontSize="13" Opacity="0.75" Margin="0,0,0,4">
-                    <Run Text="• Bug fix"/>
-                    <LineBreak/>
-                    <Run Text="• 性能优化"/>
-                    <LineBreak/>
-                    <Run Text="• 移除了 Herobrine"/>
-                </TextBlock>
+                        <!-- v2.0.0 -->
+                        <TextBlock x:Name="V200Header"
+                                   FontFamily="{ThemeResource YanshuaiTitleFont}"
+                                   FontSize="{StaticResource FontSizeBodyLarge}" FontWeight="SemiBold"
+                                   Foreground="{ThemeResource YanshuaiTextBrush}"
+                                   Margin="0,0,0,6">
+                            <Run Text="v2.0.0"/>
+                            <Run Text="  ·  九皋"/>
+                            <Run Text="  ·  2026"/>
+                        </TextBlock>
+                        <TextBlock x:Name="V200Bullets" TextWrapping="Wrap"
+                                   Style="{StaticResource BodyTextStyle}" LineHeight="22"
+                                   FontSize="{StaticResource FontSizeCaption}"
+                                   Foreground="{ThemeResource YanshuaiMutedTextBrush}" Margin="0,0,0,4">
+                            <Run Text="• ShellPage 统一导航架构：全局汉堡菜单状态保持、统一定位与返回按钮"/>
+                            <LineBreak/>
+                            <Run Text="• 品牌色系统全面启用：珊瑚橙主题（RoleplayTheme）加载生效，导航按钮获悬停/按下交互反馈"/>
+                            <LineBreak/>
+                            <Run Text="• 角色卡页面重构：按分组折叠展开、卡片内联展开显示「详细信息」「新对话」按钮、多选模式与批量删除"/>
+                            <LineBreak/>
+                            <Run Text="• 外观设置控件统一：ColorPresetPanel 组件复用，减少布局重复代码"/>
+                            <LineBreak/>
+                            <Run Text="• 汉堡菜单优化：用户头像动态展示、当前用户名称动态更新、等宽导航按钮、底部留白避免 CommandBar 遮挡"/>
+                            <LineBreak/>
+                            <Run Text="• 全局返回按钮（ShellPage 顶栏 + 各页 CommandBar 补全）"/>
+                            <LineBreak/>
+                            <Run Text="• 图标不透明度资源化统一管理"/>
+                            <LineBreak/>
+                            <Run Text="• ToggleSwitch 布局修复：移除负边距 hack"/>
+                            <LineBreak/>
+                            <Run Text="• 清理未使用存根代码（ChatMessage / ChatSession / SessionManager / StartPage / ChatHistoryPage）"/>
+                            <LineBreak/>
+                            <Run Text="• 启动行为导航适配 ShellPage 架构"/>
+                        </TextBlock>
 
-                <!-- v1.3.0 -->
-                <TextBlock x:Name="V130Header" Text="v1.3.0  ·  2026" FontSize="13" FontWeight="SemiBold" Margin="0,14,0,6"/>
-                <TextBlock x:Name="V130Bullets" TextWrapping="Wrap" FontSize="13" Opacity="0.75" Margin="0,0,0,4">
-                    <Run Text="• 对话列表 / 角色卡列表支持置顶与分组"/>
-                    <LineBreak/>
-                    <Run Text="• 右键（PC）/ 长按（手机）直接进入多选模式"/>
-                    <LineBreak/>
-                    <Run Text="• 角色卡新建/编辑改为 4 步全页面向导"/>
-                    <LineBreak/>
-                    <Run Text="• 角色卡完整支持 ST V2 扩展字段：系统提示词、历史后注入、示例对话、作者信息等"/>
-                    <LineBreak/>
-                    <Run Text="• 导入导出完整还原上述字段，PNG 卡格式兼容"/>
-                    <LineBreak/>
-                    <Run Text="• 角色卡置顶按钮加入多选操作栏"/>
-                </TextBlock>
-                <TextBlock x:Name="V120Header" Text="v1.2.0  ·  2026" FontSize="13" FontWeight="SemiBold" Margin="0,14,0,6"/>
-                <TextBlock x:Name="V120Bullets" TextWrapping="Wrap" FontSize="13" Opacity="0.75" Margin="0,0,0,4">
-                    <Run Text="• OOBE 初始引导向导（API / 角色卡 / 用户资料）"/>
-                    <LineBreak/>
-                    <Run Text="• 角色卡新建向导（3步式全页面，WP大控件）"/>
-                    <LineBreak/>
-                    <Run Text="• 角色卡支持立绘图片，可自动用作对话背景"/>
-                    <LineBreak/>
-                    <Run Text="• 导入 PNG 格式角色卡（tEXt chunk 解析）"/>
-                    <LineBreak/>
-                    <Run Text="• 多用户资料，支持切换与独立人设"/>
-                    <LineBreak/>
-                    <Run Text="• 每个 API 配置独立破墙提示词"/>
-                    <LineBreak/>
-                    <Run Text="• Enter 键行为可选（发送 / 换行）"/>
-                    <LineBreak/>
-                    <Run Text="• 新建对话向导（选 API / 角色卡 / 长记忆）"/>
-                    <LineBreak/>
-                    <Run Text="• 图片背景暗度滑块"/>
-                    <LineBreak/>
-                    <Run Text="• ZIP 全量备份 / 恢复（System.IO.Compression）"/>
-                    <LineBreak/>
-                    <Run Text="• 导入导出分散到各页面 CommandBar"/>
-                    <LineBreak/>
-                    <Run Text="• 角色卡多选导出模式"/>
-                    <LineBreak/>
-                    <Run Text="• 多模态图片上传（OpenAI image_url 格式）"/>
-                </TextBlock>
+                        <!-- v1.5.0 -->
+                        <TextBlock x:Name="V150Header" Text="v1.5.0  ·  2026"
+                                   FontFamily="{ThemeResource YanshuaiTitleFont}"
+                                   FontSize="{StaticResource FontSizeBodyLarge}" FontWeight="SemiBold"
+                                   Foreground="{ThemeResource YanshuaiTextBrush}" Margin="0,14,0,6"/>
+                        <TextBlock x:Name="V150Bullets" TextWrapping="Wrap"
+                                   Style="{StaticResource BodyTextStyle}" LineHeight="22"
+                                   FontSize="{StaticResource FontSizeCaption}"
+                                   Foreground="{ThemeResource YanshuaiMutedTextBrush}" Margin="0,0,0,4">
+                            <Run Text="• 世界书支持树形分组，点击组头可折叠/展开"/>
+                            <LineBreak/>
+                            <Run Text="• 对话列表、角色卡、世界书多选模式全面重写：右键/长按进入，复选框样式修复"/>
+                            <LineBreak/>
+                            <Run Text="• 修复竖向图片压缩撕裂问题"/>
+                            <LineBreak/>
+                            <Run Text="• 修复删除对话后 Mobile 软键盘意外弹起"/>
+                            <LineBreak/>
+                            <Run Text="• 角色卡导入改为文件选择器，不再跳转相册"/>
+                            <LineBreak/>
+                            <Run Text="• API Key 支持长按眼睛图标预览"/>
+                        </TextBlock>
 
-                <!-- v1.1.0 -->
-                <TextBlock x:Name="V110Header" Text="v1.1.0" FontSize="13" FontWeight="SemiBold" Margin="0,14,0,6"/>
-                <TextBlock x:Name="V110Bullets" TextWrapping="Wrap" FontSize="13" Opacity="0.75" Margin="0,0,0,4">
-                    <Run Text="• 原生 CommandBar 替换自制底部工具栏"/>
-                    <LineBreak/>
-                    <Run Text="• 实体返回键支持（HardwareButtons）"/>
-                    <LineBreak/>
-                    <Run Text="• 深色模式 CommandBar 跟随主题"/>
-                    <LineBreak/>
-                    <Run Text="• 启动行为选择（最近 / 新建 / 列表）"/>
-                    <LineBreak/>
-                    <Run Text="• 新对话欢迎页"/>
-                    <LineBreak/>
-                    <Run Text="• 对话预览 Markdown 符号过滤"/>
-                    <LineBreak/>
-                    <Run Text="• 消息异步分片加载（性能优化）"/>
-                    <LineBreak/>
-                    <Run Text="• 用户人设注入 System Prompt"/>
-                    <LineBreak/>
-                    <Run Text="• 世界书图标 W10M 兼容修复"/>
-                </TextBlock>
+                        <!-- v1.4.0 -->
+                        <TextBlock x:Name="V140Header" Text="v1.4.0  ·  2026"
+                                   FontFamily="{ThemeResource YanshuaiTitleFont}"
+                                   FontSize="{StaticResource FontSizeBodyLarge}" FontWeight="SemiBold"
+                                   Foreground="{ThemeResource YanshuaiTextBrush}" Margin="0,14,0,6"/>
+                        <TextBlock x:Name="V140Bullets" TextWrapping="Wrap"
+                                   Style="{StaticResource BodyTextStyle}" LineHeight="22"
+                                   FontSize="{StaticResource FontSizeCaption}"
+                                   Foreground="{ThemeResource YanshuaiMutedTextBrush}" Margin="0,0,0,4">
+                            <Run Text="• 思考过程标签动态化：流式推理期间显示随机动态词（Thinking / Pondering / Reflecting 等），结束后恢复为「思考过程」"/>
+                            <LineBreak/>
+                            <Run Text="• 设置页新增「回复声音」开关，可关闭 AI 回复完成提示音"/>
+                            <LineBreak/>
+                            <Run Text="• 设置页新增「默认展开思考过程」开关"/>
+                            <LineBreak/>
+                            <Run Text="• 多对话并行后台生成：切换对话时生成任务不中断，返回后自动恢复流式显示"/>
+                        </TextBlock>
 
-                <!-- v1.0.0 -->
-                <TextBlock x:Name="V100Header" Text="v1.0.0  ·  首发" FontSize="13" FontWeight="SemiBold" Margin="0,14,0,6"/>
-                <TextBlock x:Name="V100Bullets" TextWrapping="Wrap" FontSize="13" Opacity="0.75" Margin="0,0,0,22">
-                    <Run Text="• SplitView 汉堡导航"/>
-                    <LineBreak/>
-                    <Run Text="• 流式 AI 对话 / Markdown 渲染"/>
-                    <LineBreak/>
-                    <Run Text="• 对话分支导航"/>
-                    <LineBreak/>
-                    <Run Text="• 角色卡 / 世界书 / API 配置管理"/>
-                    <LineBreak/>
-                    <Run Text="• 长期记忆系统（自动总结 + 注入）"/>
-                    <LineBreak/>
-                    <Run Text="• SillyTavern 格式导入导出"/>
-                    <LineBreak/>
-                    <Run Text="• 对话外观个性化（背景 / 气泡颜色）"/>
-                </TextBlock>
+                        <!-- v1.3.3 -->
+                        <TextBlock x:Name="V133Header" Text="v1.3.3  ·  2026"
+                                   FontFamily="{ThemeResource YanshuaiTitleFont}"
+                                   FontSize="{StaticResource FontSizeBodyLarge}" FontWeight="SemiBold"
+                                   Foreground="{ThemeResource YanshuaiTextBrush}" Margin="0,14,0,6"/>
+                        <TextBlock x:Name="V133Bullets" TextWrapping="Wrap"
+                                   Style="{StaticResource BodyTextStyle}" LineHeight="22"
+                                   FontSize="{StaticResource FontSizeCaption}"
+                                   Foreground="{ThemeResource YanshuaiMutedTextBrush}" Margin="0,0,0,4">
+                            <Run Text="• Bug fix"/>
+                            <LineBreak/>
+                            <Run Text="• 性能优化"/>
+                            <LineBreak/>
+                            <Run Text="• 移除了 Herobrine"/>
+                        </TextBlock>
+
+                        <!-- v1.3.2 -->
+                        <TextBlock x:Name="V132Header" Text="v1.3.2  ·  2026"
+                                   FontFamily="{ThemeResource YanshuaiTitleFont}"
+                                   FontSize="{StaticResource FontSizeBodyLarge}" FontWeight="SemiBold"
+                                   Foreground="{ThemeResource YanshuaiTextBrush}" Margin="0,14,0,6"/>
+                        <TextBlock x:Name="V132Bullets" TextWrapping="Wrap"
+                                   Style="{StaticResource BodyTextStyle}" LineHeight="22"
+                                   FontSize="{StaticResource FontSizeCaption}"
+                                   Foreground="{ThemeResource YanshuaiMutedTextBrush}" Margin="0,0,0,4">
+                            <Run Text="• Bug fix"/>
+                            <LineBreak/>
+                            <Run Text="• 性能优化"/>
+                            <LineBreak/>
+                            <Run Text="• 移除了 Herobrine"/>
+                        </TextBlock>
+
+                        <!-- v1.3.1 -->
+                        <TextBlock x:Name="V131Header" Text="v1.3.1  ·  2026"
+                                   FontFamily="{ThemeResource YanshuaiTitleFont}"
+                                   FontSize="{StaticResource FontSizeBodyLarge}" FontWeight="SemiBold"
+                                   Foreground="{ThemeResource YanshuaiTextBrush}" Margin="0,14,0,6"/>
+                        <TextBlock x:Name="V131Bullets" TextWrapping="Wrap"
+                                   Style="{StaticResource BodyTextStyle}" LineHeight="22"
+                                   FontSize="{StaticResource FontSizeCaption}"
+                                   Foreground="{ThemeResource YanshuaiMutedTextBrush}" Margin="0,0,0,4">
+                            <Run Text="• Bug fix"/>
+                            <LineBreak/>
+                            <Run Text="• 性能优化"/>
+                            <LineBreak/>
+                            <Run Text="• 移除了 Herobrine"/>
+                        </TextBlock>
+
+                        <!-- v1.3.0 -->
+                        <TextBlock x:Name="V130Header" Text="v1.3.0  ·  2026"
+                                   FontFamily="{ThemeResource YanshuaiTitleFont}"
+                                   FontSize="{StaticResource FontSizeBodyLarge}" FontWeight="SemiBold"
+                                   Foreground="{ThemeResource YanshuaiTextBrush}" Margin="0,14,0,6"/>
+                        <TextBlock x:Name="V130Bullets" TextWrapping="Wrap"
+                                   Style="{StaticResource BodyTextStyle}" LineHeight="22"
+                                   FontSize="{StaticResource FontSizeCaption}"
+                                   Foreground="{ThemeResource YanshuaiMutedTextBrush}" Margin="0,0,0,4">
+                            <Run Text="• 对话列表 / 角色卡列表支持置顶与分组"/>
+                            <LineBreak/>
+                            <Run Text="• 右键（PC）/ 长按（手机）直接进入多选模式"/>
+                            <LineBreak/>
+                            <Run Text="• 角色卡新建/编辑改为 4 步全页面向导"/>
+                            <LineBreak/>
+                            <Run Text="• 角色卡完整支持 ST V2 扩展字段：系统提示词、历史后注入、示例对话、作者信息等"/>
+                            <LineBreak/>
+                            <Run Text="• 导入导出完整还原上述字段，PNG 卡格式兼容"/>
+                            <LineBreak/>
+                            <Run Text="• 角色卡置顶按钮加入多选操作栏"/>
+                        </TextBlock>
+
+                        <!-- v1.2.0 -->
+                        <TextBlock x:Name="V120Header" Text="v1.2.0  ·  2026"
+                                   FontFamily="{ThemeResource YanshuaiTitleFont}"
+                                   FontSize="{StaticResource FontSizeBodyLarge}" FontWeight="SemiBold"
+                                   Foreground="{ThemeResource YanshuaiTextBrush}" Margin="0,14,0,6"/>
+                        <TextBlock x:Name="V120Bullets" TextWrapping="Wrap"
+                                   Style="{StaticResource BodyTextStyle}" LineHeight="22"
+                                   FontSize="{StaticResource FontSizeCaption}"
+                                   Foreground="{ThemeResource YanshuaiMutedTextBrush}" Margin="0,0,0,4">
+                            <Run Text="• OOBE 初始引导向导（API / 角色卡 / 用户资料）"/>
+                            <LineBreak/>
+                            <Run Text="• 角色卡新建向导（3步式全页面，WP大控件）"/>
+                            <LineBreak/>
+                            <Run Text="• 角色卡支持立绘图片，可自动用作对话背景"/>
+                            <LineBreak/>
+                            <Run Text="• 导入 PNG 格式角色卡（tEXt chunk 解析）"/>
+                            <LineBreak/>
+                            <Run Text="• 多用户资料，支持切换与独立人设"/>
+                            <LineBreak/>
+                            <Run Text="• 每个 API 配置独立破墙提示词"/>
+                            <LineBreak/>
+                            <Run Text="• Enter 键行为可选（发送 / 换行）"/>
+                            <LineBreak/>
+                            <Run Text="• 新建对话向导（选 API / 角色卡 / 长记忆）"/>
+                            <LineBreak/>
+                            <Run Text="• 图片背景暗度滑块"/>
+                            <LineBreak/>
+                            <Run Text="• ZIP 全量备份 / 恢复（System.IO.Compression）"/>
+                            <LineBreak/>
+                            <Run Text="• 导入导出分散到各页面 CommandBar"/>
+                            <LineBreak/>
+                            <Run Text="• 角色卡多选导出模式"/>
+                            <LineBreak/>
+                            <Run Text="• 多模态图片上传（OpenAI image_url 格式）"/>
+                        </TextBlock>
+
+                        <!-- v1.1.0 -->
+                        <TextBlock x:Name="V110Header" Text="v1.1.0"
+                                   FontFamily="{ThemeResource YanshuaiTitleFont}"
+                                   FontSize="{StaticResource FontSizeBodyLarge}" FontWeight="SemiBold"
+                                   Foreground="{ThemeResource YanshuaiTextBrush}" Margin="0,14,0,6"/>
+                        <TextBlock x:Name="V110Bullets" TextWrapping="Wrap"
+                                   Style="{StaticResource BodyTextStyle}" LineHeight="22"
+                                   FontSize="{StaticResource FontSizeCaption}"
+                                   Foreground="{ThemeResource YanshuaiMutedTextBrush}" Margin="0,0,0,4">
+                            <Run Text="• 原生 CommandBar 替换自制底部工具栏"/>
+                            <LineBreak/>
+                            <Run Text="• 实体返回键支持（HardwareButtons）"/>
+                            <LineBreak/>
+                            <Run Text="• 深色模式 CommandBar 跟随主题"/>
+                            <LineBreak/>
+                            <Run Text="• 启动行为选择（最近 / 新建 / 列表）"/>
+                            <LineBreak/>
+                            <Run Text="• 新对话欢迎页"/>
+                            <LineBreak/>
+                            <Run Text="• 对话预览 Markdown 符号过滤"/>
+                            <LineBreak/>
+                            <Run Text="• 消息异步分片加载（性能优化）"/>
+                            <LineBreak/>
+                            <Run Text="• 用户人设注入 System Prompt"/>
+                            <LineBreak/>
+                            <Run Text="• 世界书图标 W10M 兼容修复"/>
+                        </TextBlock>
+
+                        <!-- v1.0.0 -->
+                        <TextBlock x:Name="V100Header" Text="v1.0.0  ·  首发"
+                                   FontFamily="{ThemeResource YanshuaiTitleFont}"
+                                   FontSize="{StaticResource FontSizeBodyLarge}" FontWeight="SemiBold"
+                                   Foreground="{ThemeResource YanshuaiTextBrush}" Margin="0,14,0,6"/>
+                        <TextBlock x:Name="V100Bullets" TextWrapping="Wrap"
+                                   Style="{StaticResource BodyTextStyle}" LineHeight="22"
+                                   FontSize="{StaticResource FontSizeCaption}"
+                                   Foreground="{ThemeResource YanshuaiMutedTextBrush}" Margin="0,0,0,0">
+                            <Run Text="• SplitView 汉堡导航"/>
+                            <LineBreak/>
+                            <Run Text="• 流式 AI 对话 / Markdown 渲染"/>
+                            <LineBreak/>
+                            <Run Text="• 对话分支导航"/>
+                            <LineBreak/>
+                            <Run Text="• 角色卡 / 世界书 / API 配置管理"/>
+                            <LineBreak/>
+                            <Run Text="• 长期记忆系统（自动总结 + 注入）"/>
+                            <LineBreak/>
+                            <Run Text="• SillyTavern 格式导入导出"/>
+                            <LineBreak/>
+                            <Run Text="• 对话外观个性化（背景 / 气泡颜色）"/>
+                        </TextBlock>
+
+                    </StackPanel>
+                </Border>
 
             </StackPanel>
         </ScrollViewer>

@@ -13,26 +13,39 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- 操作行 -->
-        <Grid Grid.Row="0" Padding="16,12">
-            <Button x:Name="NewChatBtn" Click="NewChat_Click"
+        <!-- 页眉：心象点 + 标题 + 新建对话 -->
+        <Grid Grid.Row="0" Padding="18,22,18,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                <Ellipse Width="9" Height="9" Fill="{ThemeResource YanshuaiAccentBrush}"
+                         VerticalAlignment="Center" Margin="0,0,12,0"/>
+                <TextBlock Text="对话"
+                           FontFamily="{ThemeResource YanshuaiTitleFont}"
+                           FontSize="30"
+                           VerticalAlignment="Center"
+                           Foreground="{ThemeResource YanshuaiTextBrush}"/>
+            </StackPanel>
+            <Button x:Name="NewChatBtn" Grid.Column="1" Click="NewChat_Click"
                     Style="{StaticResource PrimaryButtonStyle}"
-                    HorizontalAlignment="Left">
+                    VerticalAlignment="Center">
                 <StackPanel Orientation="Horizontal">
                     <FontIcon Glyph="&#xE710;" FontFamily="Segoe MDL2 Assets"
-                              FontSize="14" Margin="0,0,8,0"/>
+                              FontSize="{StaticResource IconSizeSmall}" Margin="0,0,8,0"/>
                     <TextBlock x:Name="NewChatLabel"/>
                 </StackPanel>
             </Button>
         </Grid>
 
-        <!-- 对话列表 -->
+        <!-- 对话列表：每行一张干净的卡片 -->
         <ListView x:Name="ConvList" Grid.Row="1"
                   ItemsSource="{Binding Items}"
                   IsItemClickEnabled="True"
                   ItemClick="Conv_ItemClick"
                   SelectionMode="None"
-                  Padding="8,0,8,16">
+                  Padding="14,0,14,16">
             <ListView.ItemContainerStyle>
                 <Style TargetType="ListViewItem">
                     <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
@@ -43,53 +56,57 @@
             </ListView.ItemContainerStyle>
             <ListView.ItemTemplate>
                 <DataTemplate>
-                    <Border Background="{ThemeResource YanshuaiPanelBrush}"
-                            BorderBrush="{ThemeResource YanshuaiBorderBrush}"
-                            BorderThickness="1"
-                            CornerRadius="{ThemeResource YanshuaiControlCornerRadius}"
-                            Margin="0,4" Padding="14,10">
+                    <Border Style="{StaticResource CardBorderStyle}"
+                            Margin="0,5" Padding="16,13">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0">
+                                <!-- 标题：标题字体 -->
                                 <StackPanel Orientation="Horizontal">
                                     <FontIcon Glyph="&#xE840;" FontFamily="Segoe MDL2 Assets"
-                                              FontSize="12" Margin="0,0,6,0"
+                                              FontSize="{StaticResource IconSizeSmall}" Margin="0,0,7,0"
                                               Foreground="{ThemeResource YanshuaiAccentBrush}"
                                               VerticalAlignment="Center"
                                               Visibility="{Binding PinIconVisibility}"/>
                                     <TextBlock Text="{Binding Title}"
-                                               FontSize="15" FontWeight="SemiBold"
+                                               FontFamily="{ThemeResource YanshuaiTitleFont}"
+                                               FontSize="{StaticResource FontSizeBodyLarge}"
                                                Foreground="{ThemeResource YanshuaiTextBrush}"
                                                TextTrimming="CharacterEllipsis"/>
                                 </StackPanel>
+                                <!-- 最近消息：弱化的说明文字 -->
                                 <TextBlock Text="{Binding LastMessagePreview}"
-                                           FontSize="13"
-                                           Foreground="{ThemeResource YanshuaiMutedTextBrush}"
+                                           Style="{StaticResource CaptionTextStyle}"
                                            TextTrimming="CharacterEllipsis"
-                                           Margin="0,4,0,0"/>
+                                           Margin="0,5,0,0"/>
                             </StackPanel>
+                            <!-- 时间戳 -->
                             <TextBlock Grid.Column="1" Text="{Binding UpdatedAtDisplay}"
-                                       FontSize="12"
-                                       Foreground="{ThemeResource YanshuaiMutedTextBrush}"
-                                       VerticalAlignment="Top" Margin="8,0,0,0"/>
+                                       Style="{StaticResource CaptionTextStyle}"
+                                       VerticalAlignment="Top" Margin="10,0,0,0"/>
                         </Grid>
                     </Border>
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>
 
-        <!-- 空状态 -->
+        <!-- 空状态：心象强调环 + 图标 + 弱化说明 -->
         <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center"
                     Visibility="{Binding EmptyVisibility}">
-            <FontIcon Glyph="&#xE8BD;" FontFamily="Segoe MDL2 Assets"
-                      FontSize="48" Opacity="0.3"
-                      HorizontalAlignment="Center"
-                      Foreground="{ThemeResource YanshuaiMutedTextBrush}"/>
-            <TextBlock x:Name="EmptyLabel" Margin="0,12,0,0"
-                       FontSize="14" Opacity="0.6"
+            <Border Width="84" Height="84" CornerRadius="42" HorizontalAlignment="Center"
+                    Background="{ThemeResource YanshuaiAccentWashBrush}"
+                    BorderBrush="{ThemeResource YanshuaiAccentBrush}" BorderThickness="1">
+                <FontIcon Glyph="&#xE8BD;" FontFamily="Segoe MDL2 Assets"
+                          FontSize="32"
+                          Foreground="{ThemeResource YanshuaiAccentBrush}"
+                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            <TextBlock x:Name="EmptyLabel" Margin="0,16,0,0"
+                       FontSize="{StaticResource FontSizeBody}"
+                       Opacity="{StaticResource OpacitySubtle}"
                        HorizontalAlignment="Center"
                        Foreground="{ThemeResource YanshuaiMutedTextBrush}"/>
         </StackPanel>

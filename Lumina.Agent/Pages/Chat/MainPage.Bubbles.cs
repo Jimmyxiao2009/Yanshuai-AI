@@ -131,6 +131,7 @@ namespace yanshuai
         // Delete this message and everything after it
         private void DeleteMsg_Click(object sender, RoutedEventArgs e)
         {
+            if (_isSending) return;
             try
             {
                 if (!((sender as Button)?.Tag is ChatBubble b)) return;
@@ -147,8 +148,12 @@ namespace yanshuai
                 if (bIdx >= 0)
                     while (_bubbles.Count > bIdx) _bubbles.RemoveAt(_bubbles.Count - 1);
                 _ = DataManager.SaveAsync();
+                UpdateTokenDisplay();
             }
-            catch { }
+            catch (Exception ex)
+            {
+                AddSystemBubble("⚠ 删除消息失败: " + ex.Message);
+            }
         }
 
         // Edit user message → creates a new branch
@@ -193,20 +198,18 @@ namespace yanshuai
 
                 var snapshot = new ConversationBranch
                 {
-                    Messages = _conv.Messages.Skip(anchorIdx).Select(m2 => new ConversationMessage
-                    {
-                        Id = m2.Id, Role = m2.Role, Content = m2.Content,
-                        ReasoningContent = m2.ReasoningContent, ThinkSteps = m2.ThinkSteps,
-                        Timestamp = m2.Timestamp
-                    }).ToList()
+                    Messages = _conv.Messages.Skip(anchorIdx).Select(m2 => m2.Clone()).ToList()
                 };
                 if (bp.ActiveIndex < bp.Branches.Count)
                     bp.Branches[bp.ActiveIndex] = snapshot;
                 else
                     bp.Branches.Add(snapshot);
 
-                // New branch with the edited message
-                var newMsg = new ConversationMessage { Role = "user", Content = newText, Timestamp = DateTime.Now };
+                // New branch with the edited message (cloning original to preserve attachments/images)
+                var newMsg = msg.Clone();
+                newMsg.Id = Guid.NewGuid().ToString();
+                newMsg.Content = newText;
+                newMsg.Timestamp = DateTime.Now;
                 bp.Branches.Add(new ConversationBranch { Messages = new List<ConversationMessage> { newMsg } });
                 bp.ActiveIndex = bp.Branches.Count - 1;
 
@@ -235,6 +238,7 @@ namespace yanshuai
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine("EditMsg_Click error: " + ex.Message);
+                AddSystemBubble("⚠ 编辑消息失败: " + ex.Message);
             }
         }
 
@@ -300,12 +304,12 @@ namespace yanshuai
                     using (var resp = await _http.SendAsync(req, HttpCompletionOption.ResponseHeadersRead))
                     {
                         string ct = resp.Content.Headers.ContentType?.MediaType ?? "";
-                        ApiUsageInfo usage;
+                        // 「继续」路径不做 token 记账，故不写共享的 _lastUsage 字段，
+                        // 避免与并发的主发送任务相互覆盖用量数据（见 MainPage.Send.cs）。
                         if (ct.Contains("event-stream") || ct.Contains("stream"))
-                            usage = await HandleStreamingResponse(resp, aiBubble, _streamCts.Token);
+                            await HandleStreamingResponse(resp, aiBubble, _streamCts.Token);
                         else
-                            usage = await HandleRegularResponse(resp, aiBubble);
-                        _lastUsage = usage;
+                            await HandleRegularResponse(resp, aiBubble);
                         ApiLogger.Log(profile.ProviderType, profile.Model, requestJson, aiBubble.Content, !resp.IsSuccessStatusCode);
                     }
                 }
@@ -333,6 +337,7 @@ namespace yanshuai
                 await DataManager.SaveAsync();
                 ScrollToBottom();
                 PlaySound();
+                UpdateTokenDisplay();
                 _isSending = false;
                 SubmitButton.IsEnabled = true;
             }
@@ -342,6 +347,7 @@ namespace yanshuai
                 _isSending = false;
                 if (SubmitIcon != null) SubmitIcon.Glyph = "\uE74A";
                 SubmitButton.IsEnabled = true;
+                AddSystemBubble("⚠ 继续输入失败: " + ex.Message);
             }
         }
 
@@ -380,6 +386,7 @@ namespace yanshuai
                 _isSending = false;
                 SubmitButton.IsEnabled = true;
                 if (SubmitIcon != null) SubmitIcon.Glyph = "\uE74A";
+                AddSystemBubble("⚠ 重新生成失败: " + ex.Message);
             }
         }
 
@@ -406,42 +413,47 @@ namespace yanshuai
 
         private void SwitchBranch(ChatBubble anchorBubble, int targetIndex)
         {
-            var bp = anchorBubble?.BranchData;
-            if (bp == null || targetIndex < 0 || targetIndex >= bp.Count) return;
-
-            // Use the stored index — no message-ID search, so it works after edits
-            int anchorIdx = bp.AnchorIndex;
-            if (anchorIdx < 0 || anchorIdx > _conv.Messages.Count) return;
-
-            // Save current tail into current branch slot
-            if (bp.ActiveIndex >= 0 && bp.ActiveIndex < bp.Branches.Count)
+            if (_isSending) return;
+            try
             {
-                bp.Branches[bp.ActiveIndex] = new ConversationBranch
+                var bp = anchorBubble?.BranchData;
+                if (bp == null || targetIndex < 0 || targetIndex >= bp.Count) return;
+
+                // Use the stored index — no message-ID search, so it works after edits
+                int anchorIdx = bp.AnchorIndex;
+                if (anchorIdx < 0 || anchorIdx > _conv.Messages.Count) return;
+
+                // Save current tail into current branch slot
+                if (bp.ActiveIndex >= 0 && bp.ActiveIndex < bp.Branches.Count)
                 {
-                    Messages = _conv.Messages.Skip(anchorIdx).Select(m => new ConversationMessage
+                    bp.Branches[bp.ActiveIndex] = new ConversationBranch
                     {
-                        Id = m.Id, Role = m.Role, Content = m.Content,
-                        ReasoningContent = m.ReasoningContent, ThinkSteps = m.ThinkSteps,
-                        Timestamp = m.Timestamp
-                    }).ToList()
-                };
+                        Messages = _conv.Messages.Skip(anchorIdx).Select(m => m.Clone()).ToList()
+                    };
+                }
+
+                // Restore target branch
+                var target = bp.Branches[targetIndex];
+                _conv.Messages.RemoveRange(anchorIdx, _conv.Messages.Count - anchorIdx);
+                foreach (var m in target.Messages) _conv.Messages.Add(m);
+                bp.ActiveIndex = targetIndex;
+
+                // Rebuild bubbles from anchorIdx onwards
+                // BuildBubble will auto-attach BranchData by AnchorIndex
+                while (_bubbles.Count > anchorIdx) _bubbles.RemoveAt(_bubbles.Count - 1);
+                int rebuildIdx = anchorIdx;
+                foreach (var m in _conv.Messages.Skip(anchorIdx))
+                    _bubbles.Add(BuildBubble(m, rebuildIdx++));
+
+                _ = DataManager.SaveAsync();
+                ScrollToBottom();
+                UpdateTokenDisplay();
             }
-
-            // Restore target branch
-            var target = bp.Branches[targetIndex];
-            _conv.Messages.RemoveRange(anchorIdx, _conv.Messages.Count - anchorIdx);
-            foreach (var m in target.Messages) _conv.Messages.Add(m);
-            bp.ActiveIndex = targetIndex;
-
-            // Rebuild bubbles from anchorIdx onwards
-            // BuildBubble will auto-attach BranchData by AnchorIndex
-            while (_bubbles.Count > anchorIdx) _bubbles.RemoveAt(_bubbles.Count - 1);
-            int rebuildIdx = anchorIdx;
-            foreach (var m in _conv.Messages.Skip(anchorIdx))
-                _bubbles.Add(BuildBubble(m, rebuildIdx++));
-
-            _ = DataManager.SaveAsync();
-            ScrollToBottom();
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("SwitchBranch error: " + ex.Message);
+                AddSystemBubble("⚠ 切换分支失败: " + ex.Message);
+            }
         }
 
         // ── Shared send helper (used by Edit + Regenerate) ────────────────────

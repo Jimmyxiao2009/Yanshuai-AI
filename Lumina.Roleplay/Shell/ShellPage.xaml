@@ -36,25 +36,29 @@
                    DisplayMode="Overlay"
                    IsPaneOpen="False"
                    PanePlacement="Left"
-                   OpenPaneLength="260">
+                   OpenPaneLength="272">
 
             <!-- ══ 侧栏（数据绑定，取代硬编码导航按钮） ══ -->
             <SplitView.Pane>
                 <Grid Background="{ThemeResource YanshuaiChromeBrush}">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="51"/>
+                        <RowDefinition Height="56"/>
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <!-- 头部 -->
-                    <Grid Grid.Row="0" Background="{ThemeResource YanshuaiPaneHeaderBrush}">
-                        <TextBlock Text="{Binding Header}"
-                                   Foreground="White"
-                                   FontSize="18"
-                                   FontWeight="Light"
-                                   VerticalAlignment="Center"
-                                   Margin="18,0"/>
+                    <!-- 头部：心象点 + 当前区标题 -->
+                    <Grid Grid.Row="0">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="18,0">
+                            <Ellipse Width="9" Height="9" Fill="{ThemeResource YanshuaiAccentBrush}"
+                                     VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            <TextBlock Text="{Binding Header}"
+                                       FontFamily="{ThemeResource YanshuaiTitleFont}"
+                                       Foreground="White"
+                                       FontSize="19"
+                                       VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis"/>
+                        </StackPanel>
                     </Grid>
 
                     <!-- 主导航 + 当前角色对话 -->
@@ -64,18 +68,24 @@
                         <ItemsControl ItemsSource="{Binding PrimaryItems}" Margin="0,4">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Grid>
-                                        <Rectangle Width="3" HorizontalAlignment="Left"
+                                    <Grid Margin="8,1">
+                                        <!-- 选中态：心象微染圆角行 -->
+                                        <Border Background="{ThemeResource YanshuaiAccentWashBrush}"
+                                                CornerRadius="{ThemeResource YanshuaiControlCornerRadius}"
+                                                Visibility="{Binding SelectionBarVisibility}"/>
+                                        <!-- 选中态：圆头心象色短轨 -->
+                                        <Rectangle Width="3" Height="20" RadiusX="1.5" RadiusY="1.5"
+                                                   HorizontalAlignment="Left" Margin="0,0,0,0"
                                                    Fill="{ThemeResource YanshuaiAccentBrush}"
                                                    Visibility="{Binding SelectionBarVisibility}"/>
                                         <Button Style="{StaticResource NavButtonStyle}"
                                                 Tag="{Binding}" Click="NavItem_Click">
                                             <StackPanel Orientation="Horizontal">
-                                                <FontIcon Glyph="{Binding Glyph}" FontSize="18" Width="28"
+                                                <FontIcon Glyph="{Binding Glyph}" FontSize="17" Width="26"
                                                           Foreground="White" Opacity="{ThemeResource NavIconOpacity}"/>
                                                 <TextBlock Text="{Binding Label}" Foreground="White"
                                                            Opacity="{ThemeResource NavIconOpacity}"
-                                                           VerticalAlignment="Center" FontSize="15" Margin="14,0,0,0"/>
+                                                           VerticalAlignment="Center" FontSize="15" Margin="12,0,0,0"/>
                                             </StackPanel>
                                         </Button>
                                     </Grid>
@@ -84,30 +94,35 @@
                         </ItemsControl>
 
                         <!-- 当前角色的对话，按对话池分类 -->
-                        <StackPanel Visibility="{Binding CurrentCharacterVisibility}" Margin="0,4,0,8">
-                            <Border BorderBrush="{ThemeResource YanshuaiBorderBrush}"
-                                    BorderThickness="0,1,0,0" Opacity="0.3" Margin="14,4"/>
+                        <StackPanel Visibility="{Binding CurrentCharacterVisibility}" Margin="0,8,0,8">
+                            <Border BorderBrush="White" BorderThickness="0,1,0,0" Opacity="0.10" Margin="18,4"/>
                             <TextBlock Text="{Binding CurrentCharacterHeader}"
-                                       Foreground="White" Opacity="0.5" FontSize="12"
-                                       TextTrimming="CharacterEllipsis" Margin="18,4,12,4"/>
+                                       FontFamily="{ThemeResource YanshuaiTitleFont}"
+                                       Foreground="White" Opacity="0.62" FontSize="13"
+                                       TextTrimming="CharacterEllipsis" Margin="20,4,14,6"/>
                             <ItemsControl ItemsSource="{Binding CurrentCharacterPools}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <StackPanel Margin="0,2,0,2">
+                                        <StackPanel Margin="0,2,0,4">
                                             <TextBlock Text="{Binding PoolName}"
-                                                       Foreground="White" Opacity="0.4" FontSize="11"
-                                                       Margin="20,2,12,2" TextTrimming="CharacterEllipsis"/>
+                                                       Foreground="White" Opacity="0.40" FontSize="11"
+                                                       CharacterSpacing="40"
+                                                       Margin="22,2,14,2" TextTrimming="CharacterEllipsis"/>
                                             <ItemsControl ItemsSource="{Binding Conversations}">
                                                 <ItemsControl.ItemTemplate>
                                                     <DataTemplate>
                                                         <Button Tag="{Binding}" Click="ConvItem_Click"
                                                                 Style="{StaticResource NavButtonStyle}"
-                                                                Height="38">
-                                                            <TextBlock Text="{Binding Title}"
-                                                                       Foreground="White" Opacity="0.78"
-                                                                       FontSize="13"
-                                                                       TextTrimming="CharacterEllipsis"
-                                                                       Margin="14,0,0,0"/>
+                                                                Height="38" Margin="8,0">
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <Border Width="4" Height="4" CornerRadius="2"
+                                                                        Background="White" Opacity="0.35"
+                                                                        VerticalAlignment="Center" Margin="6,0,10,0"/>
+                                                                <TextBlock Text="{Binding Title}"
+                                                                           Foreground="White" Opacity="0.78"
+                                                                           FontSize="13"
+                                                                           TextTrimming="CharacterEllipsis"/>
+                                                            </StackPanel>
                                                         </Button>
                                                     </DataTemplate>
                                                 </ItemsControl.ItemTemplate>
@@ -122,23 +137,26 @@
 
                     <!-- 底部导航 -->
                     <StackPanel Grid.Row="2" Margin="0,0,0,8">
-                        <Border BorderBrush="{ThemeResource YanshuaiBorderBrush}"
-                                BorderThickness="0,1,0,0" Opacity="0.4"/>
+                        <Border BorderBrush="White" BorderThickness="0,1,0,0" Opacity="0.10" Margin="8,0,8,4"/>
                         <ItemsControl ItemsSource="{Binding BottomItems}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Grid>
-                                        <Rectangle Width="3" HorizontalAlignment="Left"
+                                    <Grid Margin="8,1">
+                                        <Border Background="{ThemeResource YanshuaiAccentWashBrush}"
+                                                CornerRadius="{ThemeResource YanshuaiControlCornerRadius}"
+                                                Visibility="{Binding SelectionBarVisibility}"/>
+                                        <Rectangle Width="3" Height="20" RadiusX="1.5" RadiusY="1.5"
+                                                   HorizontalAlignment="Left"
                                                    Fill="{ThemeResource YanshuaiAccentBrush}"
                                                    Visibility="{Binding SelectionBarVisibility}"/>
                                         <Button Style="{StaticResource NavButtonStyle}"
                                                 Tag="{Binding}" Click="NavItem_Click">
                                             <StackPanel Orientation="Horizontal">
-                                                <FontIcon Glyph="{Binding Glyph}" FontSize="18" Width="28"
+                                                <FontIcon Glyph="{Binding Glyph}" FontSize="17" Width="26"
                                                           Foreground="White" Opacity="{ThemeResource NavIconOpacity}"/>
                                                 <TextBlock Text="{Binding Label}" Foreground="White"
                                                            Opacity="{ThemeResource NavIconOpacity}"
-                                                           VerticalAlignment="Center" FontSize="15" Margin="14,0,0,0"/>
+                                                           VerticalAlignment="Center" FontSize="15" Margin="12,0,0,0"/>
                                             </StackPanel>
                                         </Button>
                                     </Grid>
@@ -153,7 +171,7 @@
             <SplitView.Content>
                 <Grid>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="51"/>
+                        <RowDefinition Height="56"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
@@ -167,7 +185,7 @@
                         <Button x:Name="HamburgerButton" Grid.Column="0"
                                 Click="Hamburger_Click"
                                 Background="Transparent" BorderThickness="0"
-                                Width="52" Height="51" Padding="0">
+                                Width="52" Height="56" Padding="0">
                             <FontIcon Glyph="&#xE700;" FontSize="18" Foreground="White"/>
                         </Button>
 

@@ -109,9 +109,12 @@ namespace yanshuai
                     {
                         var line = await reader.ReadLineAsync();
                         if (line == null) break;
-                        if (line.StartsWith("data: "))
+                        // SSE 规范：data: 后的单个空格可选，部分网关发 data:{...}（无空格）
+                        if (line.StartsWith("data:"))
                         {
-                            var data = line.Substring(6).Trim();
+                            var data = line.Substring(5);
+                            if (data.StartsWith(" ")) data = data.Substring(1);
+                            data = data.Trim();
                             if (data == "[DONE]") break;
                             try
                             {
@@ -128,11 +131,16 @@ namespace yanshuai
                                         onLatentUpdate?.Invoke(chunk.LatentStateJson);
                                         latentState = chunk.LatentStateJson;
                                     }
-                                    // 末帧带 usage 块：仅在收到更大值时覆盖
-                                    if (chunk.PromptTokens     > promptTokens)     promptTokens     = chunk.PromptTokens;
-                                    if (chunk.CompletionTokens > completionTokens) completionTokens = chunk.CompletionTokens;
-                                    if (chunk.CachedTokens     > cachedTokens)     cachedTokens     = chunk.CachedTokens;
-                                    if (chunk.TotalTokens      > totalTokens)      totalTokens      = chunk.TotalTokens;
+                                    // usage 通常只在末帧（或 include_usage 的最终块）上报一次，
+                                    // 不是逐帧累加值；取 max 会被中间的偏大/部分值卡住。
+                                    // 改为「任一字段有上报即整体覆盖」，与 MainPage.Response.cs 的「末值生效」一致。
+                                    if (chunk.TotalTokens > 0 || chunk.PromptTokens > 0 || chunk.CompletionTokens > 0)
+                                    {
+                                        promptTokens     = chunk.PromptTokens;
+                                        completionTokens = chunk.CompletionTokens;
+                                        cachedTokens     = chunk.CachedTokens;
+                                        totalTokens      = chunk.TotalTokens;
+                                    }
                                 }
                             }
                             catch { /* skip malformed chunks */ }

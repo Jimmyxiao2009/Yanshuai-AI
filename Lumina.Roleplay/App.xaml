@@ -6,24 +6,31 @@
     <Application.Resources>
         <ResourceDictionary>
             <!--
-                默认主题：墨韵书卷（InkScroll）
+                默认主题：心象（Mindscape）— 全新设计语言
                 运行时切换：App.xaml.cs 在启动时根据 AppSettings.ThemeName
-                替换此 MergedDictionary 来加载 Celadon/MidnightVermilion
+                替换此 MergedDictionary 来加载 Mindscape/InkScroll/Celadon/…
                 每个主题自带 Light/Dark 颜色表 + 字体 + 按钮样式
             -->
             <ResourceDictionary.MergedDictionaries>
                 <!-- [0] 当前主题（App.xaml.cs ApplyTheme 在启动时换成所选主题）。
                      [1..] 设计系统 base（固定，不随主题切换）：token + 排版 + 控件样式，
                      base 样式经 ThemeResource 引用主题颜色/字体，自动适配每套主题。 -->
-                <ResourceDictionary Source="Themes/InkScroll.xaml"/>
+                <ResourceDictionary Source="Themes/Mindscape.xaml"/>
                 <ResourceDictionary Source="Themes/Base/Tokens.xaml"/>
                 <ResourceDictionary Source="Themes/Base/Typography.xaml"/>
                 <ResourceDictionary Source="Themes/Base/Controls.xaml"/>
             </ResourceDictionary.MergedDictionaries>
 
-            <CornerRadius x:Key="ControlCornerRadius">6</CornerRadius>
-            <CornerRadius x:Key="OverlayCornerRadius">10</CornerRadius>
-            <CornerRadius x:Key="TextControlCornerRadius">6</CornerRadius>
+            <CornerRadius x:Key="ControlCornerRadius">8</CornerRadius>
+            <CornerRadius x:Key="OverlayCornerRadius">12</CornerRadius>
+            <CornerRadius x:Key="TextControlCornerRadius">8</CornerRadius>
+
+            <!-- 心象招牌画刷的全局兜底：保证任何主题下 {ThemeResource} 都能解析。
+                 Mindscape 主题在其 ThemeDictionaries 里另有定义；非 Mindscape 的旧主题
+                 缺这两个键，靠此兜底避免 XamlParseException。聊天屏的心象微染仍由
+                 ApplyMindscapeTint 在运行时按当前角色覆盖 MindscapeWash.Background。 -->
+            <SolidColorBrush x:Key="YanshuaiAccentWashBrush" Color="#125E5DB6"/>
+            <SolidColorBrush x:Key="YanshuaiMemoryLineBrush" Color="#555E5DB6"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

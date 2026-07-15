@@ -42,6 +42,7 @@ namespace yanshuai
 
         // ExtractGeminiText 仍委托 CardCompleter（其 ExtractJsonString 行为与 Agent 不同，保留原状）
         private static string ExtractGeminiText(string json) => CardCompleter.ExtractGeminiText(json);
+        private static string ExtractClaudeText(string json) => ChatJson.ExtractClaudeText(json);
         // EscapeJson / BuildRequestJson 已下沉到 Lumina.Core/AI/ChatJson.cs（两项目共用）
         private static string EscapeJson(string s) => ChatJson.EscapeJson(s);
 
@@ -82,16 +83,8 @@ namespace yanshuai
             // Claude 格式: content[0].text
             if (isClaude)
             {
-                try
-                {
-                    using (var ms = new MemoryStream(Encoding.UTF8.GetBytes(body)))
-                    {
-                        var resp = (ClaudeResponseMessage)new DataContractJsonSerializer(typeof(ClaudeResponseMessage)).ReadObject(ms);
-                        if (resp?.Content?.Count > 0 && !string.IsNullOrEmpty(resp.Content[0].Text))
-                            return resp.Content[0].Text;
-                    }
-                }
-                catch { }
+                string claudeContent = ExtractClaudeText(body);
+                if (!string.IsNullOrEmpty(claudeContent)) return claudeContent;
             }
 
             // Gemini 格式

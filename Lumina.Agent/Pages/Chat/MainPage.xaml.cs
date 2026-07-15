@@ -45,9 +45,9 @@ namespace yanshuai
         private string _pendingImageMimeType { get => _pendingImagesMimeType.Count > 0 ? _pendingImagesMimeType[0] : null; }
         private string _pendingFileName      = null; // 保留供单文件兼容
         private System.Threading.CancellationTokenSource _streamCts = null;
+        private System.Threading.CancellationTokenSource _pageCts = null;
         private ChatBubble _expandedBubble = null;
-        // 最近一次 API 调用的 usage 块（主入口 + 续写入口共用）
-        private ApiUsageInfo _lastUsage = null;
+        // 用量信息已改为各发送任务的局部变量（避免并发发送相互覆盖），不再使用共享字段。
         private DispatcherTimer _subagentTimer = null;
 
         // ListView 内部 ScrollViewer（虚拟化启用后用它做滚动到底/上滚分页）

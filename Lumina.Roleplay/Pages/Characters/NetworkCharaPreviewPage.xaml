@@ -12,110 +12,129 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- ═══ 顶栏 ═══ -->
-        <Grid Grid.Row="0" Background="{ThemeResource YanshuaiPanelBrush}"
-              BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="0,0,0,1">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-
-            <TextBlock Grid.Column="1" Text="预览角色卡" FontSize="18" FontWeight="SemiBold"
-                       VerticalAlignment="Center" Opacity="0.9"/>
+        <!-- ═══ 顶栏：心象点 + 标题（站酷小薇） ═══ -->
+        <Grid Grid.Row="0" Background="{ThemeResource YanshuaiChromeBrush}"
+              Padding="16,12">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <Ellipse Width="9" Height="9" Fill="{ThemeResource YanshuaiAccentBrush}"
+                         VerticalAlignment="Center" Margin="0,0,12,0"/>
+                <TextBlock Text="预览角色卡"
+                           FontFamily="{ThemeResource YanshuaiTitleFont}" FontSize="22"
+                           VerticalAlignment="Center"
+                           Foreground="{ThemeResource YanshuaiTextBrush}"/>
+            </StackPanel>
         </Grid>
 
         <!-- ═══ 内容区 ═══ -->
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-            <StackPanel Margin="18,16,18,32">
+            <StackPanel Margin="18,18,18,32">
 
-                <!-- 头像 + 名称 -->
+                <!-- 头像 + 名称（主角区） -->
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,24">
-                    <Border x:Name="AvatarBorder" Width="80" Height="80" CornerRadius="40"
-                            Background="{ThemeResource YanshuaiSubtlePanelBrush}"
+                    <Border x:Name="AvatarBorder" Width="84" Height="84" CornerRadius="42"
+                            Background="{ThemeResource YanshuaiAccentWashBrush}"
                             BorderBrush="{ThemeResource YanshuaiAccentBrush}"
-                            BorderThickness="2" Margin="0,0,18,0">
-                        <TextBlock x:Name="AvatarPlaceholder" Text="?" FontSize="32" Opacity="0.3"
+                            BorderThickness="1.5" Margin="0,0,18,0">
+                        <TextBlock x:Name="AvatarPlaceholder" Text="?" FontSize="32"
+                                   Foreground="{ThemeResource YanshuaiAccentBrush}"
+                                   Opacity="{StaticResource OpacityFaint}"
                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                     <StackPanel VerticalAlignment="Center">
-                        <TextBlock x:Name="NameText" FontSize="22" FontWeight="SemiBold" Opacity="0.95"/>
-                        <TextBlock x:Name="CreatorText" FontSize="12" Opacity="0.4" Margin="0,4,0,0"/>
+                        <TextBlock x:Name="NameText"
+                                   FontFamily="{ThemeResource YanshuaiTitleFont}"
+                                   FontSize="28"
+                                   Foreground="{ThemeResource YanshuaiTextBrush}"/>
+                        <TextBlock x:Name="CreatorText"
+                                   Style="{StaticResource CaptionTextStyle}"
+                                   Margin="0,4,0,0"/>
                     </StackPanel>
                 </StackPanel>
 
                 <!-- 标签 -->
-                <TextBlock x:Name="TagsLabel" Text="标签" FontSize="13" FontWeight="SemiBold" Opacity="0.6" Margin="0,0,0,4"/>
-                <TextBox x:Name="TagsBox" PlaceholderText="逗号分隔" FontSize="14" Padding="10,8" Margin="0,0,0,16"/>
+                <TextBlock x:Name="TagsLabel" Text="标签"
+                           Style="{StaticResource LabelTextStyle}" Margin="0,0,0,6"/>
+                <TextBox x:Name="TagsBox" PlaceholderText="逗号分隔"
+                         FontSize="{StaticResource FontSizeBody}" Padding="10,8" Margin="0,0,0,16"/>
 
                 <!-- 开场白 -->
-                <TextBlock x:Name="FirstMsgLabel" Text="开场白" FontSize="13" FontWeight="SemiBold" Opacity="0.6" Margin="0,0,0,4"/>
+                <TextBlock x:Name="FirstMsgLabel" Text="开场白"
+                           Style="{StaticResource LabelTextStyle}" Margin="0,0,0,6"/>
                 <TextBox x:Name="FirstMsgBox" AcceptsReturn="True" TextWrapping="Wrap"
-                         FontSize="14" Padding="10,8" Height="80" Margin="0,0,0,16"/>
+                         FontFamily="{ThemeResource YanshuaiVoiceFont}"
+                         FontSize="{StaticResource FontSizeBody}" Padding="10,8" Height="80" Margin="0,0,0,16"/>
 
                 <!-- 描述 -->
-                <TextBlock x:Name="DescLabel" Text="角色描述" FontSize="13" FontWeight="SemiBold" Opacity="0.6" Margin="0,0,0,4"/>
+                <TextBlock x:Name="DescLabel" Text="角色描述"
+                           Style="{StaticResource LabelTextStyle}" Margin="0,0,0,6"/>
                 <TextBox x:Name="DescBox" AcceptsReturn="True" TextWrapping="Wrap"
-                         FontSize="14" Padding="10,8" Height="80" Margin="0,0,0,16"/>
+                         FontSize="{StaticResource FontSizeBody}" Padding="10,8" Height="80" Margin="0,0,0,16"/>
 
                 <!-- 性格 -->
-                <TextBlock x:Name="PersonalityLabel" Text="性格特征" FontSize="13" FontWeight="SemiBold" Opacity="0.6" Margin="0,0,0,4"/>
+                <TextBlock x:Name="PersonalityLabel" Text="性格特征"
+                           Style="{StaticResource LabelTextStyle}" Margin="0,0,0,6"/>
                 <TextBox x:Name="PersonalityBox" AcceptsReturn="True" TextWrapping="Wrap"
-                         FontSize="14" Padding="10,8" Height="80" Margin="0,0,0,16"/>
+                         FontSize="{StaticResource FontSizeBody}" Padding="10,8" Height="80" Margin="0,0,0,16"/>
 
                 <!-- 场景 -->
-                <TextBlock x:Name="ScenarioLabel" Text="情境设定" FontSize="13" FontWeight="SemiBold" Opacity="0.6" Margin="0,0,0,4"/>
+                <TextBlock x:Name="ScenarioLabel" Text="情境设定"
+                           Style="{StaticResource LabelTextStyle}" Margin="0,0,0,6"/>
                 <TextBox x:Name="ScenarioBox" AcceptsReturn="True" TextWrapping="Wrap"
-                         FontSize="14" Padding="10,8" Height="60" Margin="0,0,0,16"/>
+                         FontSize="{StaticResource FontSizeBody}" Padding="10,8" Height="60" Margin="0,0,0,16"/>
 
                 <!-- 系统提示词 -->
-                <TextBlock x:Name="SysPromptLabel" Text="系统提示词" FontSize="13" FontWeight="SemiBold" Opacity="0.6" Margin="0,0,0,4"/>
+                <TextBlock x:Name="SysPromptLabel" Text="系统提示词"
+                           Style="{StaticResource LabelTextStyle}" Margin="0,0,0,6"/>
                 <TextBox x:Name="SysPromptBox" AcceptsReturn="True" TextWrapping="Wrap"
-                         FontSize="14" Padding="10,8" Height="80" Margin="0,0,0,16"/>
+                         FontSize="{StaticResource FontSizeBody}" Padding="10,8" Height="80" Margin="0,0,0,16"/>
 
                 <!-- 分组选择 -->
-                <TextBlock x:Name="GroupLabel" Text="分配到分组" FontSize="13" FontWeight="SemiBold" Opacity="0.6" Margin="0,0,0,4"/>
+                <TextBlock x:Name="GroupLabel" Text="分配到分组"
+                           Style="{StaticResource LabelTextStyle}" Margin="0,0,0,6"/>
                 <ComboBox x:Name="GroupCombo" HorizontalAlignment="Stretch" Margin="0,0,0,8"/>
 
             </StackPanel>
         </ScrollViewer>
 
         <!-- ═══ 底部操作栏 ═══ -->
-        <Grid Grid.Row="2" Background="{ThemeResource YanshuaiSurfaceBrush}"
+        <Grid Grid.Row="2" Background="{ThemeResource YanshuaiChromeBrush}"
               BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="0,1,0,0"
-              Padding="14,8,14,14">
+              Padding="14,10,14,14">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <!-- 自定义指令行 -->
-            <Grid Grid.Row="0" Margin="0,0,0,8">
+            <Grid Grid.Row="0" Margin="0,0,0,10">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <TextBox x:Name="InstructionBox" Grid.Column="0"
                          PlaceholderText="输入指令调整角色设定…"
-                         FontSize="13" Padding="8,6" Margin="0,0,6,0"/>
+                         FontSize="{StaticResource FontSizeCaption}" Padding="10,7" Margin="0,0,8,0"/>
                 <Button x:Name="AIInstructBtn" Grid.Column="1"
-                        Content="按指令重生成" FontSize="12"
-                        Padding="10,6" BorderThickness="0"
-                        Background="{ThemeResource YanshuaiAccentBrush}"
-                        Foreground="White"
+                        Content="按指令重生成"
+                        Style="{StaticResource SecondaryButtonStyle}"
+                        FontSize="{StaticResource FontSizeCaption}"
+                        Padding="12,7"
                         Click="AIInstructBtn_Click"/>
             </Grid>
 
             <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Stretch">
-                <Button x:Name="AIBtn" Content="AI 补全" FontSize="14"
-                        Padding="14,10" BorderThickness="0"
-                        Background="{ThemeResource YanshuaiAccentBrush}"
-                        Foreground="White"
+                <Button x:Name="AIBtn" Content="AI 补全"
+                        Style="{StaticResource SecondaryButtonStyle}"
                         HorizontalAlignment="Left"
                         Click="AIBtn_Click"/>
-                <TextBlock x:Name="StatusText" FontSize="12" Opacity="0.5"
+                <TextBlock x:Name="StatusText"
+                           FontSize="{StaticResource FontSizeCaption}"
+                           Foreground="{ThemeResource YanshuaiMutedTextBrush}"
+                           Opacity="{StaticResource OpacitySubtle}"
                            VerticalAlignment="Center" Margin="12,0,0,0"/>
-                <Button x:Name="ImportBtn" Content="导入" FontSize="14"
-                        Padding="24,10" BorderThickness="0"
+                <Button x:Name="ImportBtn" Content="导入"
+                        Style="{StaticResource PrimaryButtonStyle}"
+                        Padding="28,10"
                         HorizontalAlignment="Right"
                         Click="ImportBtn_Click"/>
             </StackPanel>

@@ -12,32 +12,50 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- 顶栏 -->
-        <Grid Grid.Row="0" Background="{ThemeResource YanshuaiPanelBrush}"
-              BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="0,0,0,1"
-              Padding="14,8">
-            <StackPanel VerticalAlignment="Center">
+        <!-- 顶栏：心象点 + 标题（站酷小薇） + 步骤指示器 -->
+        <StackPanel Grid.Row="0" Background="{ThemeResource YanshuaiChromeBrush}"
+                    Padding="{StaticResource PagePadding}">
+            <StackPanel Orientation="Horizontal">
+                <Ellipse Width="9" Height="9" Fill="{ThemeResource YanshuaiAccentBrush}"
+                         VerticalAlignment="Center" Margin="0,0,12,0"/>
                 <TextBlock x:Name="PageTitle" Text="新建角色卡"
-                           FontSize="18" FontWeight="SemiBold" Opacity="0.9"/>
-                <TextBlock x:Name="StepText" Text="第 1 步 / 共 4 步  ·  头像与名称"
-                           FontSize="12" Opacity="0.5"/>
+                           FontFamily="{ThemeResource YanshuaiTitleFont}" FontSize="30"
+                           VerticalAlignment="Center"
+                           Foreground="{ThemeResource YanshuaiTextBrush}"/>
             </StackPanel>
-        </Grid>
+
+            <!-- 步骤进度条（4 段，当前/已完成段为心象色；纯装饰，无 x:Name/事件） -->
+            <StackPanel Orientation="Horizontal" Margin="0,14,0,2">
+                <Rectangle Width="40" Height="3" RadiusX="1.5" RadiusY="1.5"
+                           Fill="{ThemeResource YanshuaiAccentBrush}" Margin="0,0,6,0"/>
+                <Rectangle Width="40" Height="3" RadiusX="1.5" RadiusY="1.5"
+                           Fill="{ThemeResource YanshuaiBorderBrush}" Margin="0,0,6,0"/>
+                <Rectangle Width="40" Height="3" RadiusX="1.5" RadiusY="1.5"
+                           Fill="{ThemeResource YanshuaiBorderBrush}" Margin="0,0,6,0"/>
+                <Rectangle Width="40" Height="3" RadiusX="1.5" RadiusY="1.5"
+                           Fill="{ThemeResource YanshuaiBorderBrush}"/>
+            </StackPanel>
+            <TextBlock x:Name="StepText" Text="第 1 步 / 共 4 步  ·  头像与名称"
+                       Style="{StaticResource CaptionTextStyle}" Margin="0,8,0,0"/>
+        </StackPanel>
 
         <ScrollViewer Grid.Row="1">
-            <StackPanel Margin="18,18,18,36">
+            <StackPanel Margin="{StaticResource PagePadding}" Padding="0,4,0,40">
 
                 <!-- 头像区 -->
-                <TextBlock x:Name="AvatarLabel" Text="头像" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                <TextBlock x:Name="AvatarLabel" Text="头像"
+                           Style="{StaticResource LabelTextStyle}" Margin="0,0,0,12"/>
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,32">
                     <Border x:Name="AvatarBorder"
                             Width="90" Height="90" CornerRadius="45"
-                            Background="{ThemeResource YanshuaiSubtlePanelBrush}"
+                            Background="{ThemeResource YanshuaiAccentWashBrush}"
                             BorderBrush="{ThemeResource YanshuaiAccentBrush}"
                             BorderThickness="2" Margin="0,0,20,0">
                         <Grid>
                             <FontIcon x:Name="AvatarPlaceholder"
-                                      Glyph="&#xE77B;" FontSize="40" Opacity="0.55"/>
+                                      Glyph="&#xE77B;" FontSize="40"
+                                      Foreground="{ThemeResource YanshuaiAccentBrush}"
+                                      Opacity="{StaticResource OpacitySubtle}"/>
                             <Image x:Name="AvatarImage"
                                    Stretch="UniformToFill" Visibility="Collapsed"/>
                         </Grid>
@@ -45,46 +63,52 @@
                     <StackPanel VerticalAlignment="Center">
                         <Button x:Name="PickAvatarBtn" Content="选择头像图片"
                                 Click="PickAvatarBtn_Click"
-                                Padding="20,12" Margin="0,0,0,10"
-                                FontSize="15"/>
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                Margin="0,0,0,10"/>
                         <Button x:Name="ClearAvatarBtn" Content="清除"
                                 Click="ClearAvatarBtn_Click"
-                                Padding="20,10" FontSize="14"
-                                Foreground="Red" Background="Transparent"/>
+                                Style="{StaticResource GhostButtonStyle}"
+                                HorizontalAlignment="Left"/>
                     </StackPanel>
                 </StackPanel>
 
                 <!-- 名称 -->
-                <TextBlock x:Name="NameLabel" Text="角色名称" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                <TextBlock x:Name="NameLabel" Text="角色名称"
+                           Style="{StaticResource LabelTextStyle}" Margin="0,0,0,8"/>
                 <TextBox x:Name="NameBox"
                          PlaceholderText="输入角色名称…"
-                         FontSize="16"
+                         FontSize="{StaticResource FontSizeBodyLarge}"
                          Padding="12,14"
                          Margin="0,0,0,8"/>
 
                 <!-- 立绘 -->
-                <TextBlock x:Name="IllustLabel" Text="立绘图片（可选）" FontSize="16" FontWeight="SemiBold" Margin="0,24,0,8"/>
+                <TextBlock x:Name="IllustLabel" Text="立绘图片（可选）"
+                           Style="{StaticResource LabelTextStyle}" Margin="0,24,0,6"/>
                 <TextBlock x:Name="IllustHint" Text="用于对话背景，建议竖版图片"
-                           FontSize="13" Opacity="0.5" Margin="0,0,0,12"/>
+                           Style="{StaticResource CaptionTextStyle}" Margin="0,0,0,12"/>
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                     <Border x:Name="IllustBorder"
                             Width="70" Height="100" Margin="0,0,16,0"
+                            CornerRadius="{ThemeResource YanshuaiControlCornerRadius}"
                             Background="{ThemeResource YanshuaiSubtlePanelBrush}"
                             BorderBrush="{ThemeResource YanshuaiBorderBrush}"
                             BorderThickness="1">
                         <Grid>
                             <FontIcon x:Name="IllustPlaceholder"
-                                      Glyph="&#xEB9F;" FontSize="28" Opacity="0.3"/>
+                                      Glyph="&#xEB9F;" FontSize="28"
+                                      Foreground="{ThemeResource YanshuaiMutedTextBrush}"
+                                      Opacity="{StaticResource OpacityFaint}"/>
                             <Image x:Name="IllustImage"
                                    Stretch="UniformToFill" Visibility="Collapsed"/>
                         </Grid>
                     </Border>
                     <StackPanel VerticalAlignment="Center">
                         <Button x:Name="PickIllustBtn" Content="选择立绘" Click="PickIllustBtn_Click"
-                                Padding="20,12" Margin="0,0,0,10" FontSize="15"/>
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                Margin="0,0,0,10"/>
                         <Button x:Name="ClearIllustBtn" Content="清除" Click="ClearIllustBtn_Click"
-                                Padding="20,10" FontSize="14"
-                                Foreground="Red" Background="Transparent"/>
+                                Style="{StaticResource GhostButtonStyle}"
+                                HorizontalAlignment="Left"/>
                     </StackPanel>
                 </StackPanel>
 

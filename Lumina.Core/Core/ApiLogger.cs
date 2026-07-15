@@ -105,6 +105,56 @@ namespace yanshuai
             }
         }
 
+        /// <summary>
+        /// 异步加载持久化日志。UI 路径应优先 await 本方法再读取 <see cref="Entries"/>，
+        /// 避免在 UI 线程上对 WinRT 异步做 Task.Wait（sync-over-async 死锁/超时丢日志）。
+        /// </summary>
+        public static async System.Threading.Tasks.Task EnsureLoadedAsync()
+        {
+            if (_loaded) return;
+            string text = null;
+            try
+            {
+                var folder = ApplicationData.Current.LocalFolder;
+                var item = await folder.TryGetItemAsync(FileName);
+                if (item is StorageFile file)
+                    text = await FileIO.ReadTextAsync(file);
+            }
+            catch { }
+            ApplyLoadedText(text);
+        }
+
+        /// <summary>把读到的 JSON 文本并入内存条目并置位 _loaded（双重检查，幂等）。</summary>
+        private static void ApplyLoadedText(string text)
+        {
+            lock (_loadLock)
+            {
+                if (_loaded) return;   // 双重检查：避免两个线程都进入加载导致条目重复
+                try
+                {
+                    if (!string.IsNullOrWhiteSpace(text))
+                    {
+                        using (var ms = new System.IO.MemoryStream(Encoding.UTF8.GetBytes(text)))
+                        {
+                            var ser = new DataContractJsonSerializer(typeof(ApiLogStore));
+                            var store = (ApiLogStore)ser.ReadObject(ms);
+                            if (store?.Entries != null)
+                            {
+                                lock (_lock)
+                                {
+                                    // 不 Clear：保留加载期间并发 Log 进来的新条目（在前），
+                                    // 把持久化的旧条目接到其后，避免初始化竞态丢失日志。
+                                    _entries.AddRange(store.Entries);
+                                }
+                            }
+                        }
+                    }
+                }
+                catch { }
+                _loaded = true;   // 仅在整个加载流程结束后置位
+            }
+        }
+
         private static void EnsureLoaded()
         {
             if (_loaded) return;
@@ -170,7 +220,7 @@ namespace yanshuai
 
         public static void Log(string provider, string model, string requestJson, string responseBody, bool isError = false)
         {
-            EnsureLoaded();
+            _ = EnsureLoadedAsync();   // 不阻塞调用线程；旧条目加载完成后会接到新条目之后
             var entry = new ApiLogEntry
             {
                 Timestamp    = DateTime.Now,
@@ -187,7 +237,7 @@ namespace yanshuai
         public static void LogToolCalls(string model, List<ToolCallLogEntry> calls)
         {
             if (calls == null || calls.Count == 0) return;
-            EnsureLoaded();
+            _ = EnsureLoadedAsync();   // 不阻塞调用线程
             bool hasError = calls.Any(c => c.Phase == "error");
             var entry = new ApiLogEntry
             {

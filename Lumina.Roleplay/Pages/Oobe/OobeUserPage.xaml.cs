@@ -71,6 +71,25 @@ namespace yanshuai
             var up = DataManager.Data.UserProfile;
             up.Name        = NameBox.Text.Trim();
             up.Description = DescBox.Text.Trim();
+
+            // 确保同步写入 UserProfiles 列表并设为激活状态，当次立即生效 (P1-22)
+            if (DataManager.Data.UserProfiles == null)
+                DataManager.Data.UserProfiles = new List<UserProfile>();
+            
+            var existing = DataManager.Data.UserProfiles.Find(u => u.Id == up.Id);
+            if (existing == null)
+            {
+                DataManager.Data.UserProfiles.Add(up);
+            }
+            else
+            {
+                existing.Name = up.Name;
+                existing.Description = up.Description;
+                existing.AvatarBase64 = up.AvatarBase64;
+                existing.AvatarMimeType = up.AvatarMimeType;
+            }
+            DataManager.Data.ActiveUserProfileId = up.Id;
+
             await DataManager.SaveAsync();
             Frame.Navigate(typeof(OobePrefsPage));
         }

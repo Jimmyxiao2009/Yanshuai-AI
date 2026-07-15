@@ -17,15 +17,20 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- 顶栏 -->
+        <!-- 顶栏：心象点 + 标题字体 -->
         <Grid Grid.Row="0" Background="{ThemeResource YanshuaiPanelBrush}"
               BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="0,0,0,1"
-              Padding="14,8">
-            <StackPanel VerticalAlignment="Center">
-                <TextBlock x:Name="PageTitle" Text="外观"
-                           FontSize="18" FontWeight="SemiBold" Opacity="0.9"/>
-                <TextBlock x:Name="PageStepHint" Text="步骤 1 / 8  ·  可跳过"
-                           FontSize="12" Opacity="0.5"/>
+              Padding="18,12">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <Ellipse Width="9" Height="9" Fill="{ThemeResource YanshuaiAccentBrush}"
+                         VerticalAlignment="Top" Margin="0,7,12,0"/>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock x:Name="PageTitle" Text="外观"
+                               FontFamily="{ThemeResource YanshuaiTitleFont}"
+                               FontSize="{StaticResource FontSizeSubtitle}"/>
+                    <TextBlock x:Name="PageStepHint" Text="步骤 1 / 8  ·  可跳过"
+                               Style="{StaticResource CaptionTextStyle}"/>
+                </StackPanel>
             </StackPanel>
         </Grid>
 
@@ -40,8 +45,8 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                        <TextBlock x:Name="DarkModeLabel" Text="深色模式" FontSize="15"/>
-                        <TextBlock x:Name="DarkModeDesc" Text="切换深色/浅色界面" FontSize="12" Opacity="0.5" Margin="0,2,0,0"/>
+                        <TextBlock x:Name="DarkModeLabel" Text="深色模式" Style="{StaticResource BodyTextStyle}" FontSize="{StaticResource FontSizeBodyLarge}"/>
+                        <TextBlock x:Name="DarkModeDesc" Text="切换深色/浅色界面" Style="{StaticResource CaptionTextStyle}" Margin="0,2,0,0"/>
                     </StackPanel>
                     <ToggleSwitch x:Name="DarkModeToggle" Grid.Column="1"
                                   HorizontalAlignment="Right" Toggled="DarkModeToggle_Toggled"/>
@@ -55,8 +60,8 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                        <TextBlock x:Name="LangLabel" Text="语言 / Language" FontSize="15"/>
-                        <TextBlock x:Name="LangDesc" Text="切换界面语言" FontSize="12" Opacity="0.5" Margin="0,2,0,0"/>
+                        <TextBlock x:Name="LangLabel" Text="语言 / Language" Style="{StaticResource BodyTextStyle}" FontSize="{StaticResource FontSizeBodyLarge}"/>
+                        <TextBlock x:Name="LangDesc" Text="切换界面语言" Style="{StaticResource CaptionTextStyle}" Margin="0,2,0,0"/>
                     </StackPanel>
                     <ComboBox x:Name="LangPicker" Grid.Column="1"
                               MinWidth="140" SelectionChanged="LangPicker_SelectionChanged"/>
@@ -64,7 +69,10 @@
                 <Border BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="0,0,0,1" Margin="0,8,0,0"/>
 
                 <!-- Theme selection -->
-                <TextBlock x:Name="ThemeLabel" Text="主题" FontSize="16" FontWeight="SemiBold"
+                <TextBlock x:Name="ThemeLabel" Text="主题"
+                           FontFamily="{ThemeResource YanshuaiTitleFont}"
+                           FontSize="{StaticResource FontSizeSubtitle}"
+                           Foreground="{ThemeResource YanshuaiTextBrush}"
                            Margin="0,20,0,12"/>
                 <ScrollViewer HorizontalScrollMode="Auto" VerticalScrollMode="Disabled" Height="110"
                               Margin="0,0,0,16">
@@ -132,12 +140,12 @@
                     </StackPanel>
                 </ScrollViewer>
 
-                <TextBlock x:Name="ThemeSelectedLabel" FontSize="13" Opacity="0.5" Margin="0,0,0,8"/>
+                <TextBlock x:Name="ThemeSelectedLabel" Style="{StaticResource CaptionTextStyle}" Margin="0,0,0,8"/>
 
                 <!-- Custom accent -->
                 <StackPanel x:Name="CustomAccentPanel" Visibility="Collapsed" Margin="0,0,0,16">
                     <Border BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="0,0,0,1" Margin="0,0,0,12"/>
-                    <TextBlock x:Name="AccentLabel" Text="自定义主色" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                    <TextBlock x:Name="AccentLabel" Text="自定义主色" Style="{StaticResource LabelTextStyle}" Margin="0,0,0,8"/>
                     <ItemsControl x:Name="AccentSwatchList">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
@@ -153,12 +161,17 @@
                         </Grid.ColumnDefinitions>
                         <TextBox x:Name="AccentHexBox" Grid.Column="0" PlaceholderText="#RRGGBB"/>
                         <Button Grid.Column="2" x:Name="ApplyAccentBtn" Content="应用"
+                                Style="{StaticResource PrimaryButtonStyle}"
                                 Padding="14,8" Click="ApplyAccentBtn_Click"/>
                     </Grid>
                 </StackPanel>
 
                 <!-- Chinese font -->
-                <TextBlock x:Name="CnFontLabel" Text="中文字体" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                <TextBlock x:Name="CnFontLabel" Text="中文字体"
+                           FontFamily="{ThemeResource YanshuaiTitleFont}"
+                           FontSize="{StaticResource FontSizeSubtitle}"
+                           Foreground="{ThemeResource YanshuaiTextBrush}"
+                           Margin="0,0,0,8"/>
                 <ComboBox x:Name="ChineseFontPicker" Margin="0,0,0,20"
                           SelectionChanged="ChineseFontPicker_SelectionChanged">
                     <x:String>跟随主题</x:String>
@@ -171,7 +184,11 @@
                 </ComboBox>
 
                 <!-- English font -->
-                <TextBlock x:Name="EnFontLabel" Text="英文字体" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                <TextBlock x:Name="EnFontLabel" Text="英文字体"
+                           FontFamily="{ThemeResource YanshuaiTitleFont}"
+                           FontSize="{StaticResource FontSizeSubtitle}"
+                           Foreground="{ThemeResource YanshuaiTextBrush}"
+                           Margin="0,0,0,8"/>
                 <ComboBox x:Name="EnglishFontPicker" Margin="0,0,0,8"
                           SelectionChanged="EnglishFontPicker_SelectionChanged">
                     <x:String>跟随主题</x:String>
@@ -188,15 +205,15 @@
             <AppBarButton x:Name="NextBtn" Icon="Forward" Label="下一步" Click="NextBtn_Click"/>
             <CommandBar.Content>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0">
-                    <Ellipse Fill="{ThemeResource YanshuaiAccentBrush}" Width="10" Height="10" Margin="3,0"/>
-                    <Ellipse Width="10" Height="10" Margin="3,0" Fill="Gray" Opacity="0.4"/>
-                    <Ellipse Width="10" Height="10" Margin="3,0" Fill="Gray" Opacity="0.4"/>
-                    <Ellipse Width="10" Height="10" Margin="3,0" Fill="Gray" Opacity="0.4"/>
-                    <Ellipse Width="10" Height="10" Margin="3,0" Fill="Gray" Opacity="0.4"/>
-                    <Ellipse Width="10" Height="10" Margin="3,0" Fill="Gray" Opacity="0.4"/>
-                    <Ellipse Width="10" Height="10" Margin="3,0" Fill="Gray" Opacity="0.4"/>
-                    <Ellipse Width="10" Height="10" Margin="3,0" Fill="Gray" Opacity="0.4"/>
-                    <TextBlock x:Name="StepLabel" Text="1/8" FontSize="11" Opacity="0.4" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                    <Ellipse Fill="{ThemeResource YanshuaiAccentBrush}" Width="7" Height="7" Margin="3,0"/>
+                    <Ellipse Width="7" Height="7" Margin="3,0" Fill="{ThemeResource YanshuaiMutedTextBrush}" Opacity="{StaticResource OpacityFaint}"/>
+                    <Ellipse Width="7" Height="7" Margin="3,0" Fill="{ThemeResource YanshuaiMutedTextBrush}" Opacity="{StaticResource OpacityFaint}"/>
+                    <Ellipse Width="7" Height="7" Margin="3,0" Fill="{ThemeResource YanshuaiMutedTextBrush}" Opacity="{StaticResource OpacityFaint}"/>
+                    <Ellipse Width="7" Height="7" Margin="3,0" Fill="{ThemeResource YanshuaiMutedTextBrush}" Opacity="{StaticResource OpacityFaint}"/>
+                    <Ellipse Width="7" Height="7" Margin="3,0" Fill="{ThemeResource YanshuaiMutedTextBrush}" Opacity="{StaticResource OpacityFaint}"/>
+                    <Ellipse Width="7" Height="7" Margin="3,0" Fill="{ThemeResource YanshuaiMutedTextBrush}" Opacity="{StaticResource OpacityFaint}"/>
+                    <Ellipse Width="7" Height="7" Margin="3,0" Fill="{ThemeResource YanshuaiMutedTextBrush}" Opacity="{StaticResource OpacityFaint}"/>
+                    <TextBlock x:Name="StepLabel" Text="1/8" Style="{StaticResource CaptionTextStyle}" FontSize="11" Margin="8,0,0,0" VerticalAlignment="Center"/>
                 </StackPanel>
             </CommandBar.Content>
         </CommandBar>

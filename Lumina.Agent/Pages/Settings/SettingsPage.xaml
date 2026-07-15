@@ -312,6 +312,46 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="14,8,14,16">
 
+                        <!-- 长记忆生成(全局;从对话设置迁入) -->
+                        <TextBlock x:Name="MemSettingTitle" Text="长记忆"
+                                   FontSize="12" FontWeight="SemiBold"
+                                   Foreground="{ThemeResource SystemAccentColor}"
+                                   CharacterSpacing="80" Margin="0,0,0,6"/>
+                        <Border BorderBrush="{ThemeResource SystemAccentColor}"
+                                BorderThickness="0,0,0,1" Opacity="0.35" Margin="0,0,0,10"/>
+
+                        <Grid Margin="0,0,0,12" Padding="0,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                <TextBlock x:Name="MemEnabledTitle" Text="启用长记忆" FontSize="15"/>
+                                <TextBlock x:Name="MemEnabledDesc" Text="AI 自动总结对话并跨对话注入记忆"
+                                           FontSize="12" Opacity="0.55" Margin="0,2,0,0"/>
+                            </StackPanel>
+                            <ToggleSwitch x:Name="MemEnabledToggle" Grid.Column="1"
+                                          VerticalAlignment="Center"
+                                          Toggled="MemEnabledToggle_Toggled"
+                                          Margin="0,0,-90,0"/>
+                        </Grid>
+
+                        <TextBlock x:Name="MemApiTitle" Text="总结使用的 API"
+                                   FontSize="13" Opacity="0.6" Margin="0,4,0,6"/>
+                        <ComboBox x:Name="MemApiPicker" HorizontalAlignment="Stretch"
+                                  Margin="0,0,0,12"
+                                  SelectionChanged="MemApiPicker_SelectionChanged"/>
+
+                        <TextBlock x:Name="MemSumLabel" Text="每 10 轮总结一次"
+                                   FontSize="13" Margin="0,4,0,4"/>
+                        <Slider x:Name="MemSumSlider" Minimum="2" Maximum="50" StepFrequency="1"
+                                ValueChanged="MemSumSlider_ValueChanged" Margin="0,0,0,12"/>
+
+                        <TextBlock x:Name="MemInjLabel" Text="每 1 轮注入一次记忆"
+                                   FontSize="13" Margin="0,4,0,4"/>
+                        <Slider x:Name="MemInjSlider" Minimum="1" Maximum="20" StepFrequency="1"
+                                ValueChanged="MemInjSlider_ValueChanged" Margin="0,0,0,20"/>
+
                         <!-- RAG 引擎设置 -->
                         <TextBlock x:Name="RagSettingTitle" Text="RAG 离线索引"
                                    FontSize="12" FontWeight="SemiBold"

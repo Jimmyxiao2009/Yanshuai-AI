@@ -8,30 +8,37 @@
     mc:Ignorable="d">
 
     <Grid Background="{ThemeResource YanshuaiPageBrush}">
-        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-            <TextBlock FontSize="38"
-                       Foreground="{ThemeResource YanshuaiTextBrush}"
-                       HorizontalAlignment="Center"
-                       FontWeight="SemiBold">
-                Welcome to
-            </TextBlock>
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
+                    MaxWidth="380" Margin="{StaticResource PagePadding}">
+
+            <!-- 心象点 + 引语 -->
+            <Ellipse Width="9" Height="9" Fill="{ThemeResource YanshuaiAccentBrush}"
+                     HorizontalAlignment="Center" Margin="0,0,0,28"/>
+
+            <TextBlock Text="Welcome to"
+                       FontFamily="{ThemeResource YanshuaiEnglishFont}"
+                       FontSize="{StaticResource FontSizeSubtitle}"
+                       Foreground="{ThemeResource YanshuaiMutedTextBrush}"
+                       HorizontalAlignment="Center"/>
+
+            <!-- 品牌名：标题字体 -->
             <TextBlock x:Name="AppTitleText"
-                       FontSize="48"
+                       Text="言枢 AI"
+                       FontFamily="{ThemeResource YanshuaiTitleFont}"
+                       FontSize="{StaticResource FontSizeDisplay}"
                        Foreground="{ThemeResource YanshuaiAccentBrush}"
                        HorizontalAlignment="Center"
-                       FontWeight="SemiBold"
-                       Text="言枢 AI"
-                       Margin="0,8,0,40"/>
+                       Margin="0,6,0,48"/>
+
+            <!-- 主操作 -->
             <Button x:Name="StartButton"
-                    Content="Start Chat"
+                    Content="开始对话"
                     Click="StartButton_Click"
+                    Style="{StaticResource PrimaryButtonStyle}"
                     HorizontalAlignment="Center"
-                    Width="250" Height="60"
-                    FontSize="20"
-                    BorderBrush="{ThemeResource YanshuaiAccentBrush}"
-                    BorderThickness="2"
-                    Background="Transparent"
-                    Foreground="{ThemeResource YanshuaiTextBrush}"/>
+                    MinWidth="200"
+                    Padding="28,14"
+                    FontSize="{StaticResource FontSizeBodyLarge}"/>
         </StackPanel>
     </Grid>
 </Page>

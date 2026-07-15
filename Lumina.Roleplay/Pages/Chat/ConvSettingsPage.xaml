@@ -12,189 +12,209 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- 顶栏 -->
-        <Grid Grid.Row="0" Background="{ThemeResource YanshuaiPanelBrush}"
-              BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="0,0,0,1"
-              Padding="14,8">
+        <!-- 页眉：心象点 + 标题 -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="18,22,18,12">
+            <Ellipse Width="9" Height="9" Fill="{ThemeResource YanshuaiAccentBrush}"
+                     VerticalAlignment="Center" Margin="0,0,12,0"/>
             <TextBlock Text="对话设置"
-                       FontSize="18" FontWeight="SemiBold"
-                       VerticalAlignment="Center" Opacity="0.9"/>
-        </Grid>
+                       FontFamily="{ThemeResource YanshuaiTitleFont}"
+                       FontSize="30"
+                       VerticalAlignment="Center"
+                       Foreground="{ThemeResource YanshuaiTextBrush}"/>
+        </StackPanel>
 
-        <ScrollViewer Grid.Row="1">
-            <StackPanel>
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="18,0,18,30">
 
-                <!-- API Profile -->
-                <StackPanel Margin="18,0,18,10">
-                    <TextBlock Text="API 配置" FontSize="12" FontWeight="SemiBold"
-                               Foreground="{ThemeResource YanshuaiAccentBrush}" CharacterSpacing="80"/>
-                    <Border BorderBrush="{ThemeResource YanshuaiAccentBrush}"
-                            BorderThickness="0,0,0,1" Margin="0,3,0,0" Opacity="0.4"/>
-                </StackPanel>
-                <ComboBox x:Name="ApiProfilePicker" HorizontalAlignment="Stretch"
-                          SelectionChanged="ApiProfilePicker_SelectionChanged"
-                          Margin="18,0,18,24"/>
-
-                <!-- Rename -->
-                <StackPanel Margin="18,0,18,10">
-                    <TextBlock Text="对话名称" FontSize="12" FontWeight="SemiBold"
-                               Foreground="{ThemeResource YanshuaiAccentBrush}" CharacterSpacing="80"/>
-                    <Border BorderBrush="{ThemeResource YanshuaiAccentBrush}"
-                            BorderThickness="0,0,0,1" Margin="0,3,0,0" Opacity="0.4"/>
-                </StackPanel>
-                <Grid Margin="18,0,18,24">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBox x:Name="TitleBox" Grid.Column="0" Margin="0,0,8,0" Height="40"/>
-                    <Button Grid.Column="1" Content="重命名"
-                            Click="RenameBtn_Click" Height="40" Padding="14,0"/>
-                </Grid>
-
-                <!-- Context Window -->
-                <StackPanel Margin="18,0,18,10">
-                    <TextBlock Text="上下文窗口" FontSize="12" FontWeight="SemiBold"
-                               Foreground="{ThemeResource YanshuaiAccentBrush}" CharacterSpacing="80"/>
-                    <Border BorderBrush="{ThemeResource YanshuaiAccentBrush}"
-                            BorderThickness="0,0,0,1" Margin="0,3,0,0" Opacity="0.4"/>
-                </StackPanel>
-                <Grid Margin="18,0,18,6">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <Slider x:Name="ContextWindowSlider" Grid.Column="0"
-                            Minimum="0" Maximum="100" StepFrequency="5"
-                            ValueChanged="ContextWindowSlider_ValueChanged"
-                            VerticalAlignment="Center"/>
-                    <TextBlock x:Name="ContextWindowLabel" Grid.Column="1"
-                               Width="52" TextAlignment="Right"
-                               VerticalAlignment="Center" FontSize="14"
-                               Margin="10,0,0,0"/>
-                </Grid>
-                <TextBlock Text="0 = 不限（发送全部消息）。长记忆开启时建议设 20～40。"
-                           FontSize="11" Opacity="0.5" TextWrapping="Wrap"
-                           Margin="18,0,18,24"/>
-
-                <!-- Long Memory (per-conversation) -->
-                <StackPanel Margin="18,0,18,10">
-                    <TextBlock Text="长记忆" FontSize="12" FontWeight="SemiBold"
-                               Foreground="{ThemeResource YanshuaiAccentBrush}" CharacterSpacing="80"/>
-                    <Border BorderBrush="{ThemeResource YanshuaiAccentBrush}"
-                            BorderThickness="0,0,0,1" Margin="0,3,0,0" Opacity="0.4"/>
-                </StackPanel>
-                <TextBlock Text="每隔 X 轮对话 AI 自动总结记忆，每隔 Y 轮将记忆注入上下文"
-                           TextWrapping="Wrap" Opacity="0.55" FontSize="13"
-                           Margin="18,0,18,12"/>
-
-                <Grid Margin="18,0,18,10"
-                      BorderBrush="{ThemeResource YanshuaiBorderBrush}"
-                      BorderThickness="0,0,0,1" Padding="12,12">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                        <TextBlock Text="启用长记忆" FontSize="15"/>
-                        <TextBlock Text="仅对此对话生效" FontSize="12" Opacity="0.55" Margin="0,2,0,0"/>
+                <!-- ══ API 配置 ══ -->
+                <TextBlock Text="API 配置" Style="{StaticResource LabelTextStyle}"
+                           Margin="2,4,0,8"/>
+                <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,24">
+                    <StackPanel>
+                        <TextBlock Text="API 配置" Style="{StaticResource BodyTextStyle}"/>
+                        <TextBlock Text="选择此对话使用的接口配置"
+                                   Style="{StaticResource CaptionTextStyle}"
+                                   Margin="0,2,0,10" TextWrapping="Wrap"/>
+                        <ComboBox x:Name="ApiProfilePicker" HorizontalAlignment="Stretch"
+                                  SelectionChanged="ApiProfilePicker_SelectionChanged"/>
                     </StackPanel>
-                    <ToggleSwitch x:Name="MemEnabledToggle" Grid.Column="1"
-                                  VerticalAlignment="Center"
-                                  Toggled="MemEnabledToggle_Toggled"/>
-                </Grid>
+                </Border>
 
-                <Grid Margin="18,0,18,10"
-                      BorderBrush="{ThemeResource YanshuaiBorderBrush}"
-                      BorderThickness="0,0,0,1" Padding="12,12">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                        <TextBlock Text="RAG 调试模式" FontSize="15"/>
-                        <TextBlock Text="发送消息时显示检索耗时、命中数和上下文长度"
-                                   FontSize="12" Opacity="0.55" Margin="0,2,0,0"
-                                   TextWrapping="Wrap"/>
+                <!-- ══ 对话名称 ══ -->
+                <TextBlock Text="对话名称" Style="{StaticResource LabelTextStyle}"
+                           Margin="2,0,0,8"/>
+                <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,24">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="TitleBox" Grid.Column="0" Margin="0,0,8,0" Height="40"/>
+                        <Button Grid.Column="1" Content="重命名"
+                                Click="RenameBtn_Click"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                Height="40" Padding="16,0"/>
+                    </Grid>
+                </Border>
+
+                <!-- ══ 上下文窗口 ══ -->
+                <TextBlock Text="上下文窗口" Style="{StaticResource LabelTextStyle}"
+                           Margin="2,0,0,8"/>
+                <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,24">
+                    <StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Slider x:Name="ContextWindowSlider" Grid.Column="0"
+                                    Minimum="0" Maximum="100" StepFrequency="5"
+                                    ValueChanged="ContextWindowSlider_ValueChanged"
+                                    VerticalAlignment="Center"/>
+                            <TextBlock x:Name="ContextWindowLabel" Grid.Column="1"
+                                       Width="52" TextAlignment="Right"
+                                       VerticalAlignment="Center"
+                                       FontSize="{StaticResource FontSizeBody}"
+                                       Foreground="{ThemeResource YanshuaiTextBrush}"
+                                       Margin="10,0,0,0"/>
+                        </Grid>
+                        <TextBlock Text="0 = 不限（发送全部消息）。长记忆开启时建议设 20～40。"
+                                   Style="{StaticResource CaptionTextStyle}"
+                                   TextWrapping="Wrap" Margin="0,8,0,0"/>
                     </StackPanel>
-                    <ToggleSwitch x:Name="RagDebugToggle" Grid.Column="1"
-                                  VerticalAlignment="Center"
-                                  Toggled="RagDebugToggle_Toggled"/>
-                </Grid>
+                </Border>
 
-                <TextBlock Text="总结使用的 API" FontSize="13" Opacity="0.6" Margin="18,16,18,8"/>
-                <ComboBox x:Name="MemApiPicker" HorizontalAlignment="Stretch"
-                          SelectionChanged="MemApiPicker_SelectionChanged"
-                          Margin="18,0,18,16"/>
+                <!-- ══ 长记忆 ══ -->
+                <TextBlock Text="长记忆" Style="{StaticResource LabelTextStyle}"
+                           Margin="2,0,0,8"/>
+                <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,24">
+                    <StackPanel>
+                        <TextBlock Text="每隔 X 轮对话 AI 自动总结记忆，每隔 Y 轮将记忆注入上下文"
+                                   Style="{StaticResource CaptionTextStyle}"
+                                   TextWrapping="Wrap" Margin="0,0,0,4"/>
 
-                <TextBlock x:Name="MemSumLabel" Text="每 10 轮总结一次"
-                           FontSize="13" Margin="18,0,18,6"/>
-                <Slider x:Name="MemSumSlider" Minimum="2" Maximum="50" StepFrequency="1"
-                        ValueChanged="MemSumSlider_ValueChanged" Margin="18,0,18,16"/>
+                        <!-- 设置行：标签 + 说明 + 右侧开关（Grid 列定义，告别负边距 hack） -->
+                        <Grid Margin="0,12,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,12,0">
+                                <TextBlock Text="启用长记忆" Style="{StaticResource BodyTextStyle}"/>
+                                <TextBlock Text="仅对此对话生效"
+                                           Style="{StaticResource CaptionTextStyle}" Margin="0,2,0,0"/>
+                            </StackPanel>
+                            <ToggleSwitch x:Name="MemEnabledToggle" Grid.Column="1"
+                                          MinWidth="0"
+                                          VerticalAlignment="Center" HorizontalAlignment="Right"
+                                          Toggled="MemEnabledToggle_Toggled"/>
+                        </Grid>
 
-                <TextBlock x:Name="MemInjLabel" Text="每 1 轮注入一次记忆"
-                           FontSize="13" Margin="18,0,18,6"/>
-                <Slider x:Name="MemInjSlider" Minimum="1" Maximum="20" StepFrequency="1"
-                        ValueChanged="MemInjSlider_ValueChanged" Margin="18,0,18,24"/>
+                        <Border BorderBrush="{ThemeResource YanshuaiBorderBrush}"
+                                BorderThickness="0,1,0,0" Margin="0,12,0,12"/>
 
-                <Button x:Name="ManualSummaryBtn"
-                        Content="立即总结并写入 RAG"
-                        Click="ManualSummaryBtn_Click"
-                        HorizontalAlignment="Left"
-                        Padding="16,9"
-                        Margin="18,0,18,8"/>
-                <TextBlock x:Name="MemoryDebugStatus"
-                           FontSize="12"
-                           Opacity="0.6"
-                           TextWrapping="Wrap"
-                           Margin="18,0,18,24"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,12,0">
+                                <TextBlock Text="RAG 调试模式" Style="{StaticResource BodyTextStyle}"/>
+                                <TextBlock Text="发送消息时显示检索耗时、命中数和上下文长度"
+                                           Style="{StaticResource CaptionTextStyle}"
+                                           TextWrapping="Wrap" Margin="0,2,0,0"/>
+                            </StackPanel>
+                            <ToggleSwitch x:Name="RagDebugToggle" Grid.Column="1"
+                                          MinWidth="0"
+                                          VerticalAlignment="Center" HorizontalAlignment="Right"
+                                          Toggled="RagDebugToggle_Toggled"/>
+                        </Grid>
 
-                <!-- Memory list -->
-                <StackPanel Margin="18,0,18,10">
-                    <TextBlock Text="长期记忆内容" FontSize="12" FontWeight="SemiBold"
-                               Foreground="{ThemeResource YanshuaiAccentBrush}" CharacterSpacing="80"/>
-                    <Border BorderBrush="{ThemeResource YanshuaiAccentBrush}"
-                            BorderThickness="0,0,0,1" Margin="0,3,0,0" Opacity="0.4"/>
-                </StackPanel>
-                <TextBlock Text="由 AI 自动生成，完成一轮总结后在此显示"
-                           FontSize="12" Opacity="0.5" Margin="18,0,18,10" TextWrapping="Wrap"/>
+                        <Border BorderBrush="{ThemeResource YanshuaiBorderBrush}"
+                                BorderThickness="0,1,0,0" Margin="0,12,0,12"/>
 
-                <ListView x:Name="MemoryList" SelectionMode="None"
-                          Background="Transparent" BorderThickness="0" Margin="0,0,0,8">
-                    <ListView.ItemContainerStyle>
-                        <Style TargetType="ListViewItem">
-                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                            <Setter Property="Padding" Value="0"/>
-                            <Setter Property="MinHeight" Value="0"/>
-                        </Style>
-                    </ListView.ItemContainerStyle>
-                    <ListView.ItemTemplate>
-                        <DataTemplate>
-                            <Border BorderBrush="{ThemeResource YanshuaiBorderBrush}"
-                                    BorderThickness="0,0,0,1" Padding="18,10">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="{Binding}"
-                                               TextWrapping="Wrap" FontSize="14"
-                                               VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                    <Button Grid.Column="1" Tag="{Binding}"
-                                            Click="DeleteMemoryItem_Click"
-                                            Background="Transparent" BorderThickness="0"
-                                            Width="36" Height="36" Padding="0">
-                                        <FontIcon Glyph="&#xE74D;" FontSize="14" Opacity="0.5"/>
-                                    </Button>
-                                </Grid>
-                            </Border>
-                        </DataTemplate>
-                    </ListView.ItemTemplate>
-                </ListView>
+                        <TextBlock Text="总结使用的 API"
+                                   Style="{StaticResource BodyTextStyle}" Margin="0,0,0,6"/>
+                        <ComboBox x:Name="MemApiPicker" HorizontalAlignment="Stretch"
+                                  SelectionChanged="MemApiPicker_SelectionChanged"
+                                  Margin="0,0,0,16"/>
+
+                        <TextBlock x:Name="MemSumLabel" Text="每 10 轮总结一次"
+                                   Style="{StaticResource BodyTextStyle}" Margin="0,0,0,6"/>
+                        <Slider x:Name="MemSumSlider" Minimum="2" Maximum="50" StepFrequency="1"
+                                ValueChanged="MemSumSlider_ValueChanged" Margin="0,0,0,16"/>
+
+                        <TextBlock x:Name="MemInjLabel" Text="每 1 轮注入一次记忆"
+                                   Style="{StaticResource BodyTextStyle}" Margin="0,0,0,6"/>
+                        <Slider x:Name="MemInjSlider" Minimum="1" Maximum="20" StepFrequency="1"
+                                ValueChanged="MemInjSlider_ValueChanged" Margin="0,0,0,16"/>
+
+                        <Button x:Name="ManualSummaryBtn"
+                                Content="立即总结并写入 RAG"
+                                Click="ManualSummaryBtn_Click"
+                                Style="{StaticResource AccentOutlineButtonStyle}"
+                                HorizontalAlignment="Left"/>
+                        <TextBlock x:Name="MemoryDebugStatus"
+                                   Style="{StaticResource CaptionTextStyle}"
+                                   TextWrapping="Wrap"
+                                   Margin="0,8,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- ══ 长期记忆内容 ══ -->
+                <TextBlock Text="长期记忆内容" Style="{StaticResource LabelTextStyle}"
+                           Margin="2,0,0,8"/>
+                <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,16" Padding="16,8">
+                    <StackPanel>
+                        <TextBlock Text="由 AI 自动生成，完成一轮总结后在此显示"
+                                   Style="{StaticResource CaptionTextStyle}"
+                                   Margin="0,6,0,4" TextWrapping="Wrap"/>
+
+                        <ListView x:Name="MemoryList" SelectionMode="None"
+                                  Background="Transparent" BorderThickness="0"
+                                  Margin="-16,0,-16,0">
+                            <ListView.ItemContainerStyle>
+                                <Style TargetType="ListViewItem">
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                    <Setter Property="Padding" Value="0"/>
+                                    <Setter Property="MinHeight" Value="0"/>
+                                </Style>
+                            </ListView.ItemContainerStyle>
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <Border BorderBrush="{ThemeResource YanshuaiBorderBrush}"
+                                            BorderThickness="0,0,0,1" Padding="16,12">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="{Binding}"
+                                                       TextWrapping="Wrap"
+                                                       FontFamily="{ThemeResource YanshuaiBodyFont}"
+                                                       FontSize="{StaticResource FontSizeBody}"
+                                                       Foreground="{ThemeResource YanshuaiTextBrush}"
+                                                       VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                            <Button Grid.Column="1" Tag="{Binding}"
+                                                    Click="DeleteMemoryItem_Click"
+                                                    Style="{StaticResource IconButtonStyle}"
+                                                    Width="36" Height="36"
+                                                    FontFamily="{ThemeResource YanshuaiBodyFont}">
+                                                <FontIcon Glyph="&#xE74D;" FontFamily="Segoe MDL2 Assets"
+                                                          FontSize="{StaticResource IconSizeSmall}"/>
+                                            </Button>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </StackPanel>
+                </Border>
 
                 <Button Content="清除全部记忆" Click="ClearMemoryBtn_Click"
                         Foreground="Red" Background="Transparent"
-                        HorizontalAlignment="Left" Padding="16,9" Margin="18,4,0,30"/>
+                        Style="{StaticResource GhostButtonStyle}"
+                        HorizontalAlignment="Left" Margin="2,0,0,0"/>
 
             </StackPanel>
         </ScrollViewer>

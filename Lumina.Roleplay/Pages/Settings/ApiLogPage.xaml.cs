@@ -14,10 +14,12 @@ namespace yanshuai
 
         public ApiLogPage() { InitializeComponent(); }
 
-        protected override void OnNavigatedTo(NavigationEventArgs e)
+        protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
             AppSettings.ApplyTheme(RootGrid, this);
+            // 先异步把持久化日志读进内存，避免在 UI 线程上做 Task.Wait 的 sync-over-async
+            await ApiLogger.EnsureLoadedAsync();
             Reload();
         }
 

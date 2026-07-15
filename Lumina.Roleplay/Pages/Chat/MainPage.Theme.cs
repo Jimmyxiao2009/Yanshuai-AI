@@ -102,6 +102,9 @@ namespace yanshuai
             if (_conv == null) return;
             var app = _conv.Appearance ?? new ConvAppearance();
 
+            // 心象微染：按当前角色给聊天屏着色
+            ApplyMindscapeTint();
+
             // 如果开启了角色卡立绘背景，且对话背景未手动设置，自动用角色卡立绘
             if (AppSettings.UseCharaIllustrationAsBg && app.BackgroundType == "none")
             {
@@ -152,8 +155,8 @@ namespace yanshuai
                     break;
 
                 default:
-                    ChatBgSolid.Background = new SolidColorBrush(DefaultChatBackgroundColor());
-                    ChatBgSolid.Visibility = Visibility.Visible;
+                    // 心象：默认不铺不透明底色，让 MindscapeWash 透出中性页面底色形成整屏微染
+                    ChatBgSolid.Visibility = Visibility.Collapsed;
                     ChatBgImage.Visibility = Visibility.Collapsed;
                     ChatBgDimOverlay.Visibility = Visibility.Collapsed;
                     break;

@@ -35,10 +35,13 @@ namespace yanshuai
             if (pool.Profile.CoreTraits != null)
             {
                 pool.Profile.CoreTraits.RemoveAll(t =>
-                    string.IsNullOrWhiteSpace(t) ||
-                    t.StartsWith("名字:") || t.StartsWith("名字：") ||
-                    t.StartsWith("描述:") || t.StartsWith("描述：") ||
-                    t.StartsWith("性格:") || t.StartsWith("性格："));
+                {
+                    if (string.IsNullOrWhiteSpace(t)) return true;
+                    var trimmed = t.Trim();
+                    return trimmed == "名字:" || trimmed == "名字：" ||
+                           trimmed == "描述:" || trimmed == "描述：" ||
+                           trimmed == "性格:" || trimmed == "性格：";
+                });
             }
             var up = DataManager.GetActiveUserProfile();
             if (string.IsNullOrEmpty(pool.Profile.UserPortrait) && pool.UserProfileId == (up?.Id ?? ""))

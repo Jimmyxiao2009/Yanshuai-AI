@@ -57,7 +57,7 @@ namespace yanshuai
                 });
 
             // Dynamic context → prepend to last user message (keeps static prompt cacheable)
-            await PrefetchCloudRagAsync(userMsg.Content);
+            await PrefetchCloudRagAsync(userMsg.Content, _streamCts.Token);
             string dynCtx = BuildDynamicContext(userMsg.Content);
             if (AppSettings.RagDebugEnabled && !string.IsNullOrEmpty(_ragDebugText))
             {
@@ -146,6 +146,24 @@ namespace yanshuai
                     finalReasoning = aiBubble.ReasoningContent;
                 });
 
+                // 如果被用户中途取消，且最终内容和推理均为空，则清理临时气泡，不将空消息加入对话历史落盘 (P2-6)
+                if (cts.Token.IsCancellationRequested &&
+                    string.IsNullOrEmpty(finalAiContent) &&
+                    string.IsNullOrEmpty(finalReasoning))
+                {
+                    await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                    {
+                        _bubbles.Remove(aiBubble);
+                        if (SubmitIcon != null) SubmitIcon.Glyph = "";
+                        SubmitButton.IsEnabled = true;
+                        _isSending = false;
+                        cts.Dispose();
+                        _streamCts = null;
+                    });
+                    AppState.CompleteTask(conv.Id);
+                    return;
+                }
+
                 var aiMsg = new ConversationMessage
                 {
                     Role             = "assistant",
@@ -153,12 +171,16 @@ namespace yanshuai
                     ReasoningContent = finalReasoning,
                     Timestamp        = DateTime.Now,
                 };
+                // conv.Messages 与计数器的最终变更全部放到 UI 线程，与 SubmitButton_Click /
+                // 分支切换等其它 Messages 读写保持单线程，避免 List<T> 并发损坏/InvalidOperationException。
                 await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-                    aiBubble.MessageId = aiMsg.Id);
-                conv.Messages.Add(aiMsg);
-                conv.UpdatedAt = DateTime.Now;
-                conv.ExchangesSinceLastSummary++;
-                conv.ExchangesSinceLastInject++;
+                {
+                    aiBubble.MessageId = aiMsg.Id;
+                    conv.Messages.Add(aiMsg);
+                    conv.UpdatedAt = DateTime.Now;
+                    conv.ExchangesSinceLastSummary++;
+                    conv.ExchangesSinceLastInject++;
+                });
 
                 await DataManager.SaveAsync();
                 AppState.CompleteTask(conv.Id);
@@ -167,19 +189,23 @@ namespace yanshuai
                 await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                 {
                     cts.Dispose();
-                    _streamCts = null;
-                    if (conv.MemoryEnabled && conv.ExchangesSinceLastSummary >= conv.MemorySummaryInterval)
+                    if (_streamCts == cts) _streamCts = null;
+
+                    if (conv.Id == _conv?.Id)
                     {
-                        conv.ExchangesSinceLastSummary = 0;
-                        _ = RunMemorySummaryAsync();
-                        _ = RunDeepMemoryExtractionAsync();
+                        if (conv.MemoryEnabled && conv.ExchangesSinceLastSummary >= conv.MemorySummaryInterval)
+                        {
+                            conv.ExchangesSinceLastSummary = 0;
+                            _ = RunMemorySummaryAsync();
+                            _ = RunDeepMemoryExtractionAsync();
+                        }
+                        if (SubmitIcon != null) SubmitIcon.Glyph = "";
+                        if (SubmitBtnBorder != null) SubmitBtnBorder.Background = (Brush)Application.Current.Resources["YanshuaiAccentBrush"];
+                        ScrollToBottom();
+                        PlaySound();
+                        _isSending = false;
+                        SubmitButton.IsEnabled = true;
                     }
-                    if (SubmitIcon != null) SubmitIcon.Glyph = "";
-                    if (SubmitBtnBorder != null) SubmitBtnBorder.Background = (Brush)Application.Current.Resources["YanshuaiAccentBrush"];
-                    ScrollToBottom();
-                    PlaySound();
-                    _isSending = false;
-                    SubmitButton.IsEnabled = true;
                 });
             });
 

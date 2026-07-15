@@ -447,6 +447,13 @@ namespace yanshuai
                 string convsJson   = ToJson(data.Conversations   ?? new List<Conversation>());
                 string apiJson     = ToJson(data.ApiProfiles     ?? new List<ApiProfile>());
                 string profileJson = ToJson(data.UserProfile     ?? new UserProfile());
+                string profilesJson = ToJson(data.UserProfiles   ?? new List<UserProfile>());
+                string projectsJson = ToJson(data.Projects       ?? new List<Project>());
+                string memoriesJson = ToJson(data.GlobalMemories   ?? new List<MemoryItem>());
+                string resultsJson = ToJson(data.EvaluationResults ?? new List<EvaluationResult>());
+                string experimentsJson = ToJson(data.EvaluationExperiments ?? new List<EvaluationExperiment>());
+                string mcpJson     = ToJson(data.McpServers     ?? new List<McpServer>());
+                string skillsJson  = ToJson(data.Skills         ?? new List<Skill>());
 
                 var searchSettings = new SearchSettingsExport
                 {
@@ -456,6 +463,16 @@ namespace yanshuai
                     ResultDepth   = AppSettings.SearchResultDepth,
                 };
                 string searchJson  = ToJson(searchSettings);
+
+                var config = new AgentConfigExport
+                {
+                    SelectedApiProfileId = data.SelectedApiProfileId,
+                    LastActiveConversationId = data.LastActiveConversationId,
+                    DefaultApiProfileId = data.DefaultApiProfileId,
+                    ActiveUserProfileId = data.ActiveUserProfileId,
+                    ActiveProjectId = data.ActiveProjectId
+                };
+                string configJson = ToJson(config);
 
                 using (var stream = await zipFile.OpenStreamForWriteAsync())
                 using (var archive = new ZipArchive(stream, ZipArchiveMode.Create))
@@ -469,7 +486,15 @@ namespace yanshuai
                     AddEntry("conversations.json",   convsJson);
                     AddEntry("api_profiles.json",    apiJson);
                     AddEntry("user_profile.json",    profileJson);
+                    AddEntry("user_profiles.json",   profilesJson);
                     AddEntry("search_settings.json", searchJson);
+                    AddEntry("projects.json",        projectsJson);
+                    AddEntry("global_memories.json", memoriesJson);
+                    AddEntry("eval_results.json",    resultsJson);
+                    AddEntry("eval_experiments.json", experimentsJson);
+                    AddEntry("mcp_servers.json",     mcpJson);
+                    AddEntry("skills.json",          skillsJson);
+                    AddEntry("config.json",          configJson);
                 }
                 return true;
             }
@@ -480,6 +505,15 @@ namespace yanshuai
         {
             try
             {
+                // 二次确认，防止清空数据
+                var dialog = new Windows.UI.Popups.MessageDialog("确定要从备份恢复吗？这会清空并覆盖您当前的所有数据，且不可撤销。", "确认恢复");
+                dialog.Commands.Add(new Windows.UI.Popups.UICommand("确定") { Id = 0 });
+                dialog.Commands.Add(new Windows.UI.Popups.UICommand("取消") { Id = 1 });
+                dialog.DefaultCommandIndex = 1;
+                dialog.CancelCommandIndex = 1;
+                var confirmResult = await dialog.ShowAsync();
+                if ((int)confirmResult.Id != 0) return false;
+
                 using (var stream = await zipFile.OpenStreamForReadAsync())
                 using (var archive = new ZipArchive(stream, ZipArchiveMode.Read))
                 {
@@ -494,27 +528,83 @@ namespace yanshuai
                     var convsJson   = Read("conversations.json");
                     var apiJson     = Read("api_profiles.json");
                     var profileJson = Read("user_profile.json");
+                    var profilesJson = Read("user_profiles.json");
                     var searchJson  = Read("search_settings.json");
+                    var projectsJson = Read("projects.json");
+                    var memoriesJson = Read("global_memories.json");
+                    var resultsJson = Read("eval_results.json");
+                    var experimentsJson = Read("eval_experiments.json");
+                    var mcpJson     = Read("mcp_servers.json");
+                    var skillsJson  = Read("skills.json");
+                    var configJson   = Read("config.json");
 
-                    if (convsJson  != null) DataManager.Data.Conversations    = FromJson<List<Conversation>>(convsJson);
-                    if (apiJson    != null) DataManager.Data.ApiProfiles      = FromJson<List<ApiProfile>>(apiJson);
-                    if (profileJson!= null) DataManager.Data.UserProfile      = FromJson<UserProfile>(profileJson);
-                    if (searchJson != null)
+                    List<Conversation> tempConvs       = null;
+                    List<ApiProfile> tempApi           = null;
+                    UserProfile tempProfile             = null;
+                    List<UserProfile> tempProfiles      = null;
+                    SearchSettingsExport tempSearch    = null;
+                    List<Project> tempProjects          = null;
+                    List<MemoryItem> tempMemories      = null;
+                    List<EvaluationResult> tempResults = null;
+                    List<EvaluationExperiment> tempExps = null;
+                    List<McpServer> tempMcp            = null;
+                    List<Skill> tempSkills             = null;
+                    AgentConfigExport tempConfig       = null;
+
+                    if (convsJson != null)       tempConvs    = FromJson<List<Conversation>>(convsJson);
+                    if (apiJson != null)         tempApi      = FromJson<List<ApiProfile>>(apiJson);
+                    if (profileJson != null)     tempProfile  = FromJson<UserProfile>(profileJson);
+                    if (profilesJson != null)    tempProfiles = FromJson<List<UserProfile>>(profilesJson);
+                    if (searchJson != null)      tempSearch   = FromJson<SearchSettingsExport>(searchJson);
+                    if (projectsJson != null)    tempProjects = FromJson<List<Project>>(projectsJson);
+                    if (memoriesJson != null)    tempMemories = FromJson<List<MemoryItem>>(memoriesJson);
+                    if (resultsJson != null)     tempResults  = FromJson<List<EvaluationResult>>(resultsJson);
+                    if (experimentsJson != null) tempExps     = FromJson<List<EvaluationExperiment>>(experimentsJson);
+                    if (mcpJson != null)         tempMcp      = FromJson<List<McpServer>>(mcpJson);
+                    if (skillsJson != null)      tempSkills   = FromJson<List<Skill>>(skillsJson);
+                    if (configJson != null)      tempConfig   = FromJson<AgentConfigExport>(configJson);
+
+                    // 事务性安全赋值
+                    if (tempConvs != null)       DataManager.Data.Conversations = tempConvs;
+                    if (tempApi != null)         DataManager.Data.ApiProfiles   = tempApi;
+                    if (tempProfile != null)     DataManager.Data.UserProfile   = tempProfile;
+                    if (tempProfiles != null)    DataManager.Data.UserProfiles  = tempProfiles;
+                    if (tempProjects != null)    DataManager.Data.Projects      = tempProjects;
+                    if (tempMemories != null)    DataManager.Data.GlobalMemories = tempMemories;
+                    if (tempResults != null)     DataManager.Data.EvaluationResults = tempResults;
+                    if (tempExps != null)        DataManager.Data.EvaluationExperiments = tempExps;
+                    if (tempMcp != null)         DataManager.Data.McpServers    = tempMcp;
+                    if (tempSkills != null)      DataManager.Data.Skills        = tempSkills;
+
+                    if (tempSearch != null)
                     {
-                        var ss = FromJson<SearchSettingsExport>(searchJson);
-                        if (ss != null)
-                        {
-                            AppSettings.SearchProvider   = ss.Provider;
-                            AppSettings.SearchApiKey     = ss.ApiKey    ?? "";
-                            AppSettings.SearchBaseUrl    = ss.BaseUrl   ?? "";
-                            AppSettings.SearchResultDepth = ss.ResultDepth;
-                        }
+                        AppSettings.SearchProvider   = tempSearch.Provider;
+                        AppSettings.SearchApiKey     = tempSearch.ApiKey    ?? "";
+                        AppSettings.SearchBaseUrl    = tempSearch.BaseUrl   ?? "";
+                        AppSettings.SearchResultDepth = tempSearch.ResultDepth;
+                    }
+
+                    if (tempConfig != null)
+                    {
+                        DataManager.Data.SelectedApiProfileId = tempConfig.SelectedApiProfileId;
+                        DataManager.Data.LastActiveConversationId = tempConfig.LastActiveConversationId;
+                        DataManager.Data.DefaultApiProfileId = tempConfig.DefaultApiProfileId;
+                        DataManager.Data.ActiveUserProfileId = tempConfig.ActiveUserProfileId;
+                        DataManager.Data.ActiveProjectId = tempConfig.ActiveProjectId;
                     }
                 }
                 await DataManager.SaveAsync();
+                
+                // 重新加载记忆库
+                await MemoryStore.LoadAsync();
+
                 return true;
             }
-            catch { return false; }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[ZIP Restore] Failed: {ex.Message}");
+                return false;
+            }
         }
 
         private async void ExportZip_Click(object sender, RoutedEventArgs e)
@@ -539,5 +629,15 @@ namespace yanshuai
             if (Frame.CanGoBack) Frame.GoBack();
             else Frame.Navigate(typeof(MainPage));
         }
+    }
+
+    [DataContract]
+    public class AgentConfigExport
+    {
+        [DataMember] public string SelectedApiProfileId { get; set; }
+        [DataMember] public string LastActiveConversationId { get; set; }
+        [DataMember] public string DefaultApiProfileId { get; set; }
+        [DataMember] public string ActiveUserProfileId { get; set; }
+        [DataMember] public string ActiveProjectId { get; set; }
     }
 }

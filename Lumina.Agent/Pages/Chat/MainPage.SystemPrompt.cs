@@ -30,7 +30,7 @@ namespace yanshuai
 
         private string BuildMemoryBlock()
         {
-            if (!_conv.MemoryEnabled) return null;
+            if (!AppSettings.MemoryEnabled) return null;
             var allMemories = new List<MemoryItem>();
 
             // 1. 全局共享记忆
@@ -53,7 +53,7 @@ namespace yanshuai
             }
 
             if (allMemories.Count == 0) return null;
-            if (_conv.ExchangesSinceLastInject < _conv.MemoryInjectInterval) return null;
+            if (_conv.ExchangesSinceLastInject < AppSettings.MemoryInjectInterval) return null;
             _conv.ExchangesSinceLastInject = 0;
 
             allMemories.Sort((a, b) => b.Importance.CompareTo(a.Importance));
@@ -76,14 +76,14 @@ namespace yanshuai
 
         private async Task RunMemorySummaryAsync()
         {
-            var memApiId = _conv.MemoryApiProfileId;
+            var memApiId = AppSettings.MemoryApiProfileId;
             var memProfile = string.IsNullOrEmpty(memApiId)
                 ? DataManager.GetProfileForConversation(_conv)
                 : DataManager.Data.ApiProfiles.Find(p => p.Id == memApiId);
             if (memProfile == null) return;
 
             // Collect the messages to summarise
-            int count = _conv.MemorySummaryInterval * 2; // exchanges × 2 messages
+            int count = AppSettings.MemorySummaryInterval * 2; // exchanges × 2 messages
             var recent = _conv.Messages
                 .Skip(Math.Max(0, _conv.Messages.Count - count))
                 .Where(m => m.Role == "user" || m.Role == "assistant")
@@ -274,6 +274,7 @@ namespace yanshuai
                 sb.AppendLine("## 行为准则");
                 sb.AppendLine();
                 sb.AppendLine("- 回复语言跟随用户输入语言。");
+                sb.AppendLine("- 【思考与推理语言】你在回复用户之前，请务必使用中文进行思考和推理（即在思考输出 <think> 或 reasoning_content 中，必须完全使用中文编写）。");
                 sb.AppendLine("- 上下文中已有搜索结果或文件内容时，优先使用这些信息，不重复搜索已知内容。");
                 sb.AppendLine("- 写文件、执行命令等不可逆操作前，在 Thought 中说明操作内容和影响范围，通过权限确认回调等待用户确认后再执行（Full Trust 模式除外）。");
                 sb.AppendLine("- 回答完整，不主动截断；如内容较长，完整输出后再询问用户是否需要展开说明。");

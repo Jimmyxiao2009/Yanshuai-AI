@@ -363,18 +363,15 @@ namespace yanshuai
 
         private void AddReadonlyCard(Panel parent, string text)
         {
+            // 心象：记忆内容卡片用 CardBorderStyle，正文用 VoiceTextStyle（文楷）
             parent.Children.Add(new Border
             {
-                CornerRadius = new CornerRadius(4),
-                Padding = new Thickness(10, 8, 10, 8),
-                Margin = new Thickness(0, 2, 0, 2),
-                Background = new SolidColorBrush(AppSettings.IsDark
-                    ? Color.FromArgb(22, 255, 255, 255)
-                    : Color.FromArgb(12, 0, 0, 0)),
+                Style = (Style)Application.Current.Resources["CardBorderStyle"],
+                Margin = new Thickness(0, 2, 0, 8),
                 Child = new TextBlock
                 {
+                    Style = (Style)Application.Current.Resources["VoiceTextStyle"],
                     Text = text,
-                    FontSize = 13,
                     TextWrapping = TextWrapping.Wrap
                 }
             });
@@ -436,18 +433,15 @@ namespace yanshuai
 
             foreach (var r in results)
             {
+                // 心象：RAG 命中记忆卡片用 CardBorderStyle，正文用 VoiceTextStyle（文楷）
                 resultPanel.Children.Add(new Border
                 {
-                    CornerRadius = new CornerRadius(4),
-                    Padding = new Thickness(10, 8, 10, 8),
-                    Margin = new Thickness(0, 2, 0, 2),
-                    Background = new SolidColorBrush(AppSettings.IsDark
-                        ? Color.FromArgb(26, 255, 255, 255)
-                        : Color.FromArgb(14, 0, 0, 0)),
+                    Style = (Style)Application.Current.Resources["CardBorderStyle"],
+                    Margin = new Thickness(0, 2, 0, 8),
                     Child = new TextBlock
                     {
+                        Style = (Style)Application.Current.Resources["VoiceTextStyle"],
                         Text = r,
-                        FontSize = 13,
                         TextWrapping = TextWrapping.Wrap
                     }
                 });
@@ -532,14 +526,11 @@ namespace yanshuai
 
         private Border AddEditableItem(Panel parent, string text, Action editAction)
         {
+            // 心象：可编辑记忆条目用 CardBorderStyle，正文用 VoiceTextStyle（文楷）
             var item = new Border
             {
-                CornerRadius = new CornerRadius(6),
-                Padding = new Thickness(10, 8, 10, 8),
-                Margin = new Thickness(0, 2, 0, 2),
-                Background = new SolidColorBrush(AppSettings.IsDark
-                    ? Color.FromArgb(18, 255, 255, 255)
-                    : Color.FromArgb(10, 0, 0, 0)),
+                Style = (Style)Application.Current.Resources["CardBorderStyle"],
+                Margin = new Thickness(0, 2, 0, 8),
                 Tag = editAction
             };
             item.Tapped += (s, ev) => editAction();
@@ -550,8 +541,8 @@ namespace yanshuai
 
             g.Children.Add(new TextBlock
             {
+                Style = (Style)Application.Current.Resources["VoiceTextStyle"],
                 Text = string.IsNullOrEmpty(text) ? AppSettings.S("(空)", "(empty)") : text,
-                FontSize = 13,
                 TextWrapping = TextWrapping.Wrap,
                 Opacity = string.IsNullOrEmpty(text) ? 0.3 : 0.8,
                 TextTrimming = Windows.UI.Xaml.TextTrimming.CharacterEllipsis,

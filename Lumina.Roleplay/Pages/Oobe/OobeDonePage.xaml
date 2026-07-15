@@ -14,17 +14,25 @@
 
         <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
-                        Margin="32,40,32,24" MaxWidth="400">
+                        Margin="32,48,32,24" MaxWidth="400">
 
-                <FontIcon Glyph="&#xE930;" FontSize="64" Opacity="0.4"
-                          HorizontalAlignment="Center" Margin="0,0,0,16"/>
+                <!-- 心象环：完成的仪式感 -->
+                <Border Width="84" Height="84" CornerRadius="42"
+                        Background="{ThemeResource YanshuaiAccentWashBrush}"
+                        BorderBrush="{ThemeResource YanshuaiAccentBrush}"
+                        BorderThickness="1"
+                        HorizontalAlignment="Center" Margin="0,0,0,24">
+                    <FontIcon Glyph="&#xE930;" FontSize="34"
+                              Foreground="{ThemeResource YanshuaiAccentBrush}"/>
+                </Border>
 
                 <TextBlock x:Name="DoneTitle" Text="设置完成"
-                           FontSize="28" FontWeight="Light"
+                           FontFamily="{ThemeResource YanshuaiTitleFont}"
+                           FontSize="{StaticResource FontSizeHeader}"
+                           Foreground="{ThemeResource YanshuaiTextBrush}"
                            HorizontalAlignment="Center" Margin="0,0,0,24"/>
 
-                <Border Background="{ThemeResource YanshuaiSubtlePanelBrush}"
-                        CornerRadius="8" Padding="16,12">
+                <Border Style="{StaticResource CardBorderStyle}">
                     <StackPanel x:Name="SummaryPanel">
                         <!-- Dynamically populated -->
                     </StackPanel>
@@ -32,7 +40,8 @@
 
                 <TextBlock x:Name="HintText"
                            Text="随时可以在设置里修改这些配置。"
-                           FontSize="13" Opacity="0.4" TextAlignment="Center"
+                           Style="{StaticResource CaptionTextStyle}"
+                           TextAlignment="Center"
                            TextWrapping="Wrap" Margin="0,20,0,0"/>
 
             </StackPanel>

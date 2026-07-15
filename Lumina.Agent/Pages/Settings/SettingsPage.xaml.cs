@@ -68,6 +68,18 @@ namespace yanshuai
             RagTopKLabel.Text   = AppSettings.S($"{AppSettings.RagTopK} 条", $"{AppSettings.RagTopK} items");
             RagThreshLabel.Text = $"{AppSettings.RagSimilarityThreshold:F2}";
             UpdateRagStatus();
+
+            // ── 长记忆（全局，取代旧的每会话设置） ────────────────────
+            MemEnabledToggle.IsOn = AppSettings.MemoryEnabled;
+            var memProfiles = DataManager.Data.ApiProfiles;
+            MemApiPicker.ItemsSource = memProfiles;
+            MemApiPicker.SelectedItem = string.IsNullOrEmpty(AppSettings.MemoryApiProfileId)
+                ? null
+                : memProfiles.Find(p => p.Id == AppSettings.MemoryApiProfileId);
+            MemSumSlider.Value = AppSettings.MemorySummaryInterval;
+            MemInjSlider.Value = AppSettings.MemoryInjectInterval;
+            UpdateMemSliderLabels();
+
             RefreshMemoryLists();
 
             // ── 破墙 ──────────────────────────────────────────────────
@@ -118,6 +130,11 @@ namespace yanshuai
             NewCtxTitle.Text         = AppSettings.S("新对话附加上下文", "New conversation context");
             NewCtxDesc.Text          = AppSettings.S("新建对话时自动附上最近对话的消息作为初始上下文（0=禁用）",
                                                     "Attach recent conversation messages as initial context (0=off)");
+            MemSettingTitle.Text     = AppSettings.S("长记忆", "Long-term memory");
+            MemEnabledTitle.Text     = AppSettings.S("启用长记忆", "Enable long-term memory");
+            MemEnabledDesc.Text      = AppSettings.S("AI 自动总结对话并跨对话注入记忆",
+                                                    "AI auto-summarizes and injects memory across conversations");
+            MemApiTitle.Text         = AppSettings.S("总结使用的 API", "API used for summarization");
             RagEnabledTitle.Text     = AppSettings.S("启用离线嵌入引擎", "Enable offline embedding engine");
             RagSettingTitle.Text     = AppSettings.S("RAG 离线索引", "RAG offline index");
             RagEntriesTitle.Text     = AppSettings.S("RAG 已索引条目", "RAG indexed entries");
@@ -309,6 +326,44 @@ namespace yanshuai
             {
                 RagModelStatus.Text = AppSettings.S("离线 RAG 已禁用", "Offline RAG disabled");
             }
+        }
+
+        // ── 长记忆（全局设置） ─────────────────────────────────────────
+
+        private void MemEnabledToggle_Toggled(object sender, RoutedEventArgs e)
+        {
+            if (_loading) return;
+            AppSettings.MemoryEnabled = MemEnabledToggle.IsOn;
+        }
+
+        private void MemApiPicker_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (_loading) return;
+            AppSettings.MemoryApiProfileId = (MemApiPicker.SelectedItem as ApiProfile)?.Id ?? "";
+        }
+
+        private void MemSumSlider_ValueChanged(object sender, Windows.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
+        {
+            if (_loading) return;
+            AppSettings.MemorySummaryInterval = (int)MemSumSlider.Value;
+            UpdateMemSliderLabels();
+        }
+
+        private void MemInjSlider_ValueChanged(object sender, Windows.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
+        {
+            if (_loading) return;
+            AppSettings.MemoryInjectInterval = (int)MemInjSlider.Value;
+            UpdateMemSliderLabels();
+        }
+
+        private void UpdateMemSliderLabels()
+        {
+            MemSumLabel.Text = AppSettings.S(
+                $"每 {(int)MemSumSlider.Value} 轮总结一次",
+                $"Summarize every {(int)MemSumSlider.Value} turns");
+            MemInjLabel.Text = AppSettings.S(
+                $"每 {(int)MemInjSlider.Value} 轮注入一次记忆",
+                $"Inject memory every {(int)MemInjSlider.Value} turns");
         }
 
         // ── 记忆条目列表（RAG 索引 + 长期记忆） ────────────────────────

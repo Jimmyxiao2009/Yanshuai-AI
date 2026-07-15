@@ -63,8 +63,11 @@ namespace yanshuai
                         }
                         else
                         {
-                            // 尝试 Gemini 格式: candidates[0].content.parts[0].text
-                            ct2 = ExtractGeminiText(data);
+                            string claude = ExtractClaudeText(data);
+                            if (!string.IsNullOrEmpty(claude))
+                                ct2 = claude;
+                            else
+                                ct2 = ExtractGeminiText(data);
                         }
 
                         if (ct2 == null && rt == null) continue;

@@ -38,6 +38,28 @@ namespace yanshuai
             return ExtractJsonString(json, textIdx + 7);
         }
 
+        private static string ExtractClaudeText(string json)
+        {
+            if (string.IsNullOrEmpty(json)) return null;
+            // 尝试流式 content_block_delta
+            int deltaIdx = json.IndexOf("\"delta\"");
+            if (deltaIdx >= 0)
+            {
+                int textIdx = json.IndexOf("\"text\":", deltaIdx);
+                if (textIdx >= 0)
+                    return ExtractJsonString(json, textIdx + 7);
+            }
+            // 尝试非流式 content array
+            int contentIdx = json.IndexOf("\"content\"");
+            if (contentIdx >= 0)
+            {
+                int textIdx = json.IndexOf("\"text\":", contentIdx);
+                if (textIdx >= 0)
+                    return ExtractJsonString(json, textIdx + 7);
+            }
+            return null;
+        }
+
         // 按偏移量从 JSON 字符串中读取引号包裹的值
         private static string ExtractJsonString(string json, int start)
         {

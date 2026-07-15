@@ -13,152 +13,174 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- 顶栏 -->
-        <Grid Grid.Row="0" Background="{ThemeResource YanshuaiPanelBrush}"
-              BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="0,0,0,1"
-              Padding="14,8">
-            <StackPanel VerticalAlignment="Center">
+        <!-- 页眉：心象点 + 标题 -->
+        <StackPanel Grid.Row="0" Margin="18,22,18,12">
+            <StackPanel Orientation="Horizontal">
+                <Ellipse Width="9" Height="9" Fill="{ThemeResource YanshuaiAccentBrush}"
+                         VerticalAlignment="Center" Margin="0,0,12,0"/>
                 <TextBlock Text="默认对话外观"
-                           FontSize="18" FontWeight="SemiBold" Opacity="0.9"/>
-                <TextBlock Text="新建对话时使用这些默认外观设置" FontSize="12" Opacity="0.5"/>
+                           FontFamily="{ThemeResource YanshuaiTitleFont}"
+                           FontSize="30"
+                           VerticalAlignment="Center"
+                           Foreground="{ThemeResource YanshuaiTextBrush}"/>
             </StackPanel>
-        </Grid>
+            <TextBlock Text="新建对话时使用这些默认外观设置"
+                       Style="{StaticResource CaptionTextStyle}" Margin="21,2,0,0"/>
+        </StackPanel>
 
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-            <StackPanel>
+            <StackPanel Margin="18,0,18,30">
 
                 <!-- ══ 背景 section ══ -->
-                <StackPanel Margin="18,10,18,10">
-                    <TextBlock Text="背景" FontSize="12" FontWeight="SemiBold"
-                               Foreground="{ThemeResource YanshuaiAccentBrush}" CharacterSpacing="80"/>
-                    <Border BorderBrush="{ThemeResource YanshuaiAccentBrush}"
-                            BorderThickness="0,0,0,1" Margin="0,3,0,0" Opacity="0.4"/>
-                </StackPanel>
+                <TextBlock Text="背景" Style="{StaticResource LabelTextStyle}"
+                           Margin="2,4,0,8"/>
+                <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,24">
+                    <StackPanel>
+                        <TextBlock Text="背景类型" Style="{StaticResource BodyTextStyle}" Margin="0,0,0,8"/>
+                        <ComboBox x:Name="BgTypePicker" HorizontalAlignment="Stretch"
+                                  SelectionChanged="BgTypePicker_SelectionChanged">
+                            <ComboBoxItem Content="默认（无背景）" Tag="none"/>
+                            <ComboBoxItem Content="纯色" Tag="solid"/>
+                        </ComboBox>
 
-                <TextBlock Text="背景类型" FontSize="13" Opacity="0.6" Margin="18,0,18,8"/>
-                <ComboBox x:Name="BgTypePicker" HorizontalAlignment="Stretch"
-                          Margin="18,0,18,20"
-                          SelectionChanged="BgTypePicker_SelectionChanged">
-                    <ComboBoxItem Content="默认（无背景）" Tag="none"/>
-                    <ComboBoxItem Content="纯色" Tag="solid"/>
-                </ComboBox>
-
-                <!-- Solid color picker -->
-                <StackPanel x:Name="SolidPanel" Visibility="Collapsed" Margin="0,0,0,12">
-                    <Border x:Name="BgColorPreview"
-                            Height="48" Margin="18,0,18,10"
-                            BorderBrush="{ThemeResource YanshuaiBorderBrush}"
-                            BorderThickness="1">
-                        <TextBlock x:Name="BgColorHexLabel"
-                                   HorizontalAlignment="Center" VerticalAlignment="Center"
-                                   FontSize="13" FontFamily="Consolas"/>
-                    </Border>
-                    <TextBox x:Name="BgHexBox"
-                             PlaceholderText="#RRGGBB"
-                             Margin="18,0,18,10"
-                             TextChanged="BgHexBox_TextChanged"/>
-                    <local:ColorPresetPanel ColorSelected="BgPreset_Click"/>
-                </StackPanel>
+                        <!-- Solid color picker -->
+                        <StackPanel x:Name="SolidPanel" Visibility="Collapsed" Margin="0,16,0,0">
+                            <Border x:Name="BgColorPreview"
+                                    Height="48" Margin="0,0,0,10"
+                                    CornerRadius="{ThemeResource YanshuaiControlCornerRadius}"
+                                    BorderBrush="{ThemeResource YanshuaiBorderBrush}"
+                                    BorderThickness="1">
+                                <TextBlock x:Name="BgColorHexLabel"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           FontFamily="{ThemeResource YanshuaiEnglishFont}"
+                                           FontSize="{StaticResource FontSizeBody}"/>
+                            </Border>
+                            <TextBox x:Name="BgHexBox"
+                                     PlaceholderText="#RRGGBB"
+                                     Margin="0,0,0,10"
+                                     TextChanged="BgHexBox_TextChanged"/>
+                            <local:ColorPresetPanel ColorSelected="BgPreset_Click"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
 
                 <!-- ══ 气泡颜色 section ══ -->
-                <StackPanel Margin="18,8,18,10">
-                    <TextBlock Text="气泡颜色" FontSize="12" FontWeight="SemiBold"
-                               Foreground="{ThemeResource YanshuaiAccentBrush}" CharacterSpacing="80"/>
-                    <Border BorderBrush="{ThemeResource YanshuaiAccentBrush}"
-                            BorderThickness="0,0,0,1" Margin="0,3,0,0" Opacity="0.4"/>
-                </StackPanel>
+                <TextBlock Text="气泡颜色" Style="{StaticResource LabelTextStyle}"
+                           Margin="2,0,0,8"/>
+                <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,24">
+                    <StackPanel>
+                        <!-- User bubble -->
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="用户消息气泡" Style="{StaticResource BodyTextStyle}"
+                                       VerticalAlignment="Center"/>
+                            <Button Grid.Column="1" Content="清除" Click="ClearUserBubble_Click"
+                                    Style="{StaticResource GhostButtonStyle}" Padding="12,4"/>
+                        </Grid>
+                        <Border x:Name="UserBubblePreview"
+                                Height="40" Margin="0,8,0,8"
+                                CornerRadius="{ThemeResource YanshuaiControlCornerRadius}"
+                                BorderBrush="{ThemeResource YanshuaiBorderBrush}"
+                                BorderThickness="1">
+                            <TextBlock x:Name="UserBubbleHexLabel"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       FontFamily="{ThemeResource YanshuaiEnglishFont}"
+                                       FontSize="{StaticResource FontSizeCaption}" Text="（使用强调色）"/>
+                        </Border>
+                        <TextBox x:Name="UserHexBox"
+                                 PlaceholderText="#RRGGBB"
+                                 Margin="0,0,0,8"
+                                 TextChanged="UserHexBox_TextChanged"/>
+                        <local:ColorPresetPanel ColorSelected="UserPreset_Click"/>
 
-                <!-- User bubble -->
-                <Grid Margin="18,0,18,8">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Text="用户消息气泡" FontSize="13" VerticalAlignment="Center"/>
-                    <Button Grid.Column="1" Content="清除" Click="ClearUserBubble_Click"
-                            Padding="12,0" Height="34"/>
-                </Grid>
-                <Border x:Name="UserBubblePreview"
-                        Height="40" Margin="18,0,18,8"
-                        BorderBrush="{ThemeResource YanshuaiBorderBrush}"
-                        BorderThickness="1">
-                    <TextBlock x:Name="UserBubbleHexLabel"
-                               HorizontalAlignment="Center" VerticalAlignment="Center"
-                               FontSize="12" FontFamily="Consolas" Text="（使用强调色）"/>
-                </Border>
-                <TextBox x:Name="UserHexBox"
-                         PlaceholderText="#RRGGBB"
-                         Margin="18,0,18,8"
-                         TextChanged="UserHexBox_TextChanged"/>
-                <local:ColorPresetPanel ColorSelected="UserPreset_Click"/>
+                        <Border BorderBrush="{ThemeResource YanshuaiBorderBrush}"
+                                BorderThickness="0,1,0,0" Margin="0,16,0,16"/>
 
-                <!-- AI bubble -->
-                <Grid Margin="18,0,18,8">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Text="AI 消息气泡" FontSize="13" VerticalAlignment="Center"/>
-                    <Button Grid.Column="1" Content="清除" Click="ClearAiBubble_Click"
-                            Padding="12,0" Height="34"/>
-                </Grid>
-                <Border x:Name="AiBubblePreview"
-                        Height="40" Margin="18,0,18,8"
-                        BorderBrush="{ThemeResource YanshuaiBorderBrush}"
-                        BorderThickness="1">
-                    <TextBlock x:Name="AiBubbleHexLabel"
-                               HorizontalAlignment="Center" VerticalAlignment="Center"
-                               FontSize="12" FontFamily="Consolas" Text="（使用强调色暗色）"/>
+                        <!-- AI bubble -->
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="AI 消息气泡" Style="{StaticResource BodyTextStyle}"
+                                       VerticalAlignment="Center"/>
+                            <Button Grid.Column="1" Content="清除" Click="ClearAiBubble_Click"
+                                    Style="{StaticResource GhostButtonStyle}" Padding="12,4"/>
+                        </Grid>
+                        <Border x:Name="AiBubblePreview"
+                                Height="40" Margin="0,8,0,8"
+                                CornerRadius="{ThemeResource YanshuaiControlCornerRadius}"
+                                BorderBrush="{ThemeResource YanshuaiBorderBrush}"
+                                BorderThickness="1">
+                            <TextBlock x:Name="AiBubbleHexLabel"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       FontFamily="{ThemeResource YanshuaiEnglishFont}"
+                                       FontSize="{StaticResource FontSizeCaption}" Text="（使用强调色暗色）"/>
+                        </Border>
+                        <TextBox x:Name="AiHexBox"
+                                 PlaceholderText="#RRGGBB"
+                                 Margin="0,0,0,8"
+                                 TextChanged="AiHexBox_TextChanged"/>
+                        <local:ColorPresetPanel ColorSelected="AiPreset_Click"/>
+                    </StackPanel>
                 </Border>
-                <TextBox x:Name="AiHexBox"
-                         PlaceholderText="#RRGGBB"
-                         Margin="18,0,18,8"
-                         TextChanged="AiHexBox_TextChanged"/>
-                <local:ColorPresetPanel ColorSelected="AiPreset_Click"/>
 
                 <!-- ══ 引号 / 括号颜色 section ══ -->
-                <StackPanel Margin="18,8,18,10">
-                    <TextBlock Text="文本高亮颜色" FontSize="12" FontWeight="SemiBold"
-                               Foreground="{ThemeResource YanshuaiAccentBrush}" CharacterSpacing="80"/>
-                    <Border BorderBrush="{ThemeResource YanshuaiAccentBrush}"
-                            BorderThickness="0,0,0,1" Margin="0,3,0,0" Opacity="0.4"/>
-                </StackPanel>
+                <TextBlock Text="文本高亮颜色" Style="{StaticResource LabelTextStyle}"
+                           Margin="2,0,0,8"/>
+                <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,24">
+                    <StackPanel>
+                        <!-- Quote color -->
+                        <TextBlock Text="引号颜色（「」&quot;&quot; 等）"
+                                   Style="{StaticResource BodyTextStyle}" Margin="0,0,0,8"/>
+                        <Border x:Name="QuoteColorPreview"
+                                Height="40" Margin="0,0,0,8"
+                                CornerRadius="{ThemeResource YanshuaiControlCornerRadius}"
+                                BorderBrush="{ThemeResource YanshuaiBorderBrush}"
+                                BorderThickness="1">
+                            <TextBlock x:Name="QuoteColorHexLabel"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       FontFamily="{ThemeResource YanshuaiEnglishFont}"
+                                       FontSize="{StaticResource FontSizeCaption}" Text="（默认橘黄）"/>
+                        </Border>
+                        <TextBox x:Name="QuoteHexBox"
+                                 PlaceholderText="#RRGGBB"
+                                 Margin="0,0,0,8"
+                                 TextChanged="QuoteHexBox_TextChanged"/>
+                        <local:ColorPresetPanel ColorSelected="QuotePreset_Click"/>
+                        <Button Content="清除（使用默认橘黄）" Click="ClearQuoteColor_Click"
+                                Style="{StaticResource GhostButtonStyle}"
+                                HorizontalAlignment="Left" Margin="0,8,0,0"/>
 
-                <!-- Quote color -->
-                <TextBlock Text="引号颜色（「」&quot;&quot; 等）" FontSize="13" Opacity="0.7" Margin="18,0,18,5"/>
-                <Border x:Name="QuoteColorPreview"
-                        Height="40" Margin="18,0,18,8"
-                        BorderBrush="{ThemeResource YanshuaiBorderBrush}"
-                        BorderThickness="1">
-                    <TextBlock x:Name="QuoteColorHexLabel"
-                               HorizontalAlignment="Center" VerticalAlignment="Center"
-                               FontSize="12" FontFamily="Consolas" Text="（默认橘黄）"/>
-                </Border>
-                <TextBox x:Name="QuoteHexBox"
-                         PlaceholderText="#RRGGBB"
-                         Margin="18,0,18,8"
-                         TextChanged="QuoteHexBox_TextChanged"/>
-                <local:ColorPresetPanel ColorSelected="QuotePreset_Click"/>
-                <Button Content="清除（使用默认橘黄）" Click="ClearQuoteColor_Click"
-                        Margin="18,0,18,20" Padding="12,0" Height="36"/>
+                        <Border BorderBrush="{ThemeResource YanshuaiBorderBrush}"
+                                BorderThickness="0,1,0,0" Margin="0,16,0,16"/>
 
-                <!-- Bracket color -->
-                <TextBlock Text="括号颜色（（）* * 等）" FontSize="13" Opacity="0.7" Margin="18,0,18,5"/>
-                <Border x:Name="BracketColorPreview"
-                        Height="40" Margin="18,0,18,8"
-                        BorderBrush="{ThemeResource YanshuaiBorderBrush}"
-                        BorderThickness="1">
-                    <TextBlock x:Name="BracketColorHexLabel"
-                               HorizontalAlignment="Center" VerticalAlignment="Center"
-                               FontSize="12" FontFamily="Consolas" Text="（默认灰色）"/>
+                        <!-- Bracket color -->
+                        <TextBlock Text="括号颜色（（）* * 等）"
+                                   Style="{StaticResource BodyTextStyle}" Margin="0,0,0,8"/>
+                        <Border x:Name="BracketColorPreview"
+                                Height="40" Margin="0,0,0,8"
+                                CornerRadius="{ThemeResource YanshuaiControlCornerRadius}"
+                                BorderBrush="{ThemeResource YanshuaiBorderBrush}"
+                                BorderThickness="1">
+                            <TextBlock x:Name="BracketColorHexLabel"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       FontFamily="{ThemeResource YanshuaiEnglishFont}"
+                                       FontSize="{StaticResource FontSizeCaption}" Text="（默认灰色）"/>
+                        </Border>
+                        <TextBox x:Name="BracketHexBox"
+                                 PlaceholderText="#RRGGBB"
+                                 Margin="0,0,0,8"
+                                 TextChanged="BracketHexBox_TextChanged"/>
+                        <local:ColorPresetPanel ColorSelected="BracketPreset_Click"/>
+                        <Button Content="清除（使用默认灰色）" Click="ClearBracketColor_Click"
+                                Style="{StaticResource GhostButtonStyle}"
+                                HorizontalAlignment="Left" Margin="0,8,0,0"/>
+                    </StackPanel>
                 </Border>
-                <TextBox x:Name="BracketHexBox"
-                         PlaceholderText="#RRGGBB"
-                         Margin="18,0,18,8"
-                         TextChanged="BracketHexBox_TextChanged"/>
-                <local:ColorPresetPanel ColorSelected="BracketPreset_Click"/>
-                <Button Content="清除（使用默认灰色）" Click="ClearBracketColor_Click"
-                        Margin="18,0,18,30" Padding="12,0" Height="36"/>
 
             </StackPanel>
         </ScrollViewer>

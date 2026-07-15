@@ -12,41 +12,63 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- 顶栏 -->
-        <Grid Grid.Row="0" Background="{ThemeResource YanshuaiPanelBrush}"
-              BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="0,0,0,1"
-              Padding="14,8">
-            <StackPanel VerticalAlignment="Center">
+        <!-- 顶栏：心象点 + 标题（站酷小薇） + 步骤指示器 -->
+        <StackPanel Grid.Row="0" Background="{ThemeResource YanshuaiChromeBrush}"
+                    Padding="{StaticResource PagePadding}">
+            <StackPanel Orientation="Horizontal">
+                <Ellipse Width="9" Height="9" Fill="{ThemeResource YanshuaiAccentBrush}"
+                         VerticalAlignment="Center" Margin="0,0,12,0"/>
                 <TextBlock x:Name="PageTitleBlock" Text="新建角色卡"
-                           FontSize="18" FontWeight="SemiBold" Opacity="0.9"/>
-                <TextBlock x:Name="StepText" Text="第 4 步 / 共 4 步  ·  开场白"
-                           FontSize="12" Opacity="0.5"/>
+                           FontFamily="{ThemeResource YanshuaiTitleFont}" FontSize="30"
+                           VerticalAlignment="Center"
+                           Foreground="{ThemeResource YanshuaiTextBrush}"/>
             </StackPanel>
-        </Grid>
+
+            <!-- 步骤进度条（第 4 步：四段全为心象色） -->
+            <StackPanel Orientation="Horizontal" Margin="0,14,0,2">
+                <Rectangle Width="40" Height="3" RadiusX="1.5" RadiusY="1.5"
+                           Fill="{ThemeResource YanshuaiAccentBrush}" Margin="0,0,6,0"/>
+                <Rectangle Width="40" Height="3" RadiusX="1.5" RadiusY="1.5"
+                           Fill="{ThemeResource YanshuaiAccentBrush}" Margin="0,0,6,0"/>
+                <Rectangle Width="40" Height="3" RadiusX="1.5" RadiusY="1.5"
+                           Fill="{ThemeResource YanshuaiAccentBrush}" Margin="0,0,6,0"/>
+                <Rectangle Width="40" Height="3" RadiusX="1.5" RadiusY="1.5"
+                           Fill="{ThemeResource YanshuaiAccentBrush}"/>
+            </StackPanel>
+            <TextBlock x:Name="StepText" Text="第 4 步 / 共 4 步  ·  开场白"
+                       Style="{StaticResource CaptionTextStyle}" Margin="0,8,0,0"/>
+        </StackPanel>
 
         <ScrollViewer Grid.Row="1">
-            <StackPanel Margin="18,18,18,36">
+            <StackPanel Margin="{StaticResource PagePadding}" Padding="0,4,0,40">
 
-                <TextBlock x:Name="FirstMsgLabel" Text="开场白" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                <TextBlock x:Name="FirstMsgLabel" Text="开场白"
+                           Style="{StaticResource LabelTextStyle}" Margin="0,0,0,6"/>
                 <TextBlock x:Name="FirstMsgHint" Text="对话开始时角色发送的第一条消息"
-                           FontSize="13" Opacity="0.5" Margin="0,0,0,10"/>
+                           Style="{StaticResource CaptionTextStyle}" Margin="0,0,0,10"/>
                 <TextBox x:Name="FirstMsgBox"
                          PlaceholderText="例：（抬眸看你一眼，随即收回目光）你找我有何要事？"
                          AcceptsReturn="True" TextWrapping="Wrap"
-                         FontSize="15" Padding="12,12"
-                         Height="180" Margin="0,0,0,28"/>
+                         FontFamily="{ThemeResource YanshuaiVoiceFont}"
+                         FontSize="{StaticResource FontSizeBodyLarge}" Padding="12,12"
+                         Height="180" Margin="0,0,0,12"/>
 
                 <TextBlock x:Name="FirstMsgNote" Text="留空则对话开始时不显示开场白，可随时在角色卡编辑页修改"
-                           FontSize="13" Opacity="0.45" TextWrapping="Wrap"/>
+                           Style="{StaticResource CaptionTextStyle}" TextWrapping="Wrap"/>
 
-                <!-- 预览区 -->
+                <!-- 预览区：开场白以文楷气泡形式呈现 -->
                 <StackPanel x:Name="PreviewPanel" Visibility="Collapsed" Margin="0,24,0,0">
-                    <TextBlock x:Name="PreviewLabel" Text="预览" FontSize="14" FontWeight="SemiBold"
-                               Opacity="0.7" Margin="0,0,0,10"/>
-                    <Border Background="{ThemeResource YanshuaiSurfaceBrush}"
+                    <TextBlock x:Name="PreviewLabel" Text="预览"
+                               Style="{StaticResource LabelTextStyle}" Margin="0,0,0,10"/>
+                    <Border Background="{ThemeResource YanshuaiAiBubbleBrush}"
+                            BorderBrush="{ThemeResource YanshuaiBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="14,14,14,4"
                             Padding="18,14">
                         <TextBlock x:Name="PreviewText" TextWrapping="Wrap"
-                                   FontSize="15" Opacity="0.85"/>
+                                   FontFamily="{ThemeResource YanshuaiVoiceFont}"
+                                   FontSize="{StaticResource FontSizeBodyLarge}" LineHeight="24"
+                                   Foreground="{ThemeResource YanshuaiTextBrush}"/>
                     </Border>
                 </StackPanel>
 

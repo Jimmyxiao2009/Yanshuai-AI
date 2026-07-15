@@ -28,7 +28,7 @@ namespace yanshuai
                 using (var stream = await file.OpenStreamForReadAsync())
                 {
                     var ser = new DataContractJsonSerializer(typeof(AppData));
-                    Data = (AppData)ser.ReadObject(stream) ?? new AppData();
+                    Data = await Task.Run(() => (AppData)ser.ReadObject(stream)) ?? new AppData();
                 }
                 // Ensure lists are never null after deserialisation
                 if (Data.ApiProfiles == null)   Data.ApiProfiles   = new List<ApiProfile>();
@@ -44,6 +44,9 @@ namespace yanshuai
                 // Ensure branch state is consistent after deserialisation
                 foreach (var conv in Data.Conversations)
                     conv.InitBranches();
+
+                // 加载全局 RAG 记忆向量库，防止重启后首次保存覆盖清空历史记忆 (P0-15)
+                await MemoryStore.LoadAsync();
             }
             catch
             {

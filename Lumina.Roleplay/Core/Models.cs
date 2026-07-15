@@ -79,6 +79,8 @@ namespace yanshuai
         // 旧字段保留，仅用于反序列化迁移
         [DataMember] public string CharacterId { get; set; } = "";
         [DataMember] public List<string> CharacterIds { get; set; } = new List<string>();
+        [DataMember] public int Order { get; set; } = 100;
+        [DataMember] public bool Disable { get; set; } = false;
 
         [OnDeserialized]
         private void OnDeserialized(StreamingContext ctx)

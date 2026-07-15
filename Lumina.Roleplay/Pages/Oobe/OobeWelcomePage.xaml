@@ -9,31 +9,50 @@
     <Grid x:Name="RootGrid" Background="{ThemeResource YanshuaiPageBrush}">
         <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
-                    Margin="32,40" MaxWidth="360">
+                    Margin="32,48" MaxWidth="380">
 
-            <FontIcon Glyph="&#xE8BD;" FontSize="72" Opacity="0.4"
-                      HorizontalAlignment="Center" Margin="0,0,0,32"/>
+            <!-- 心象环：起始的仪式感 -->
+            <Border Width="84" Height="84" CornerRadius="42"
+                    Background="{ThemeResource YanshuaiAccentWashBrush}"
+                    BorderBrush="{ThemeResource YanshuaiAccentBrush}"
+                    BorderThickness="1"
+                    HorizontalAlignment="Center" Margin="0,0,0,32">
+                <FontIcon Glyph="&#xE8BD;" FontSize="34"
+                          Foreground="{ThemeResource YanshuaiAccentBrush}"/>
+            </Border>
 
+            <!-- 品牌名：标题字体 -->
             <TextBlock Text="言枢"
-                       FontSize="48" FontWeight="Light"
+                       FontFamily="{ThemeResource YanshuaiTitleFont}"
+                       FontSize="48"
+                       Foreground="{ThemeResource YanshuaiTextBrush}"
                        HorizontalAlignment="Center"
                        Margin="0,0,0,12"/>
 
             <TextBlock x:Name="SubtitleText"
                        Text="AI 对话助手"
-                       FontSize="18" Opacity="0.6" FontWeight="Light"
+                       Style="{StaticResource SubtitleTextStyle}"
+                       Foreground="{ThemeResource YanshuaiMutedTextBrush}"
                        HorizontalAlignment="Center"
                        Margin="0,0,0,8"/>
 
             <TextBlock x:Name="PlatformText"
                        Text="适配 Windows 10 Mobile"
-                       FontSize="14" Opacity="0.55"
+                       Style="{StaticResource CaptionTextStyle}"
                        HorizontalAlignment="Center"
                        Margin="0,0,0,48"/>
 
+            <!-- 心象色细线分隔 -->
+            <Border Height="1" Width="40"
+                    Background="{ThemeResource YanshuaiAccentBrush}"
+                    Opacity="{StaticResource OpacitySubtle}"
+                    HorizontalAlignment="Center" Margin="0,0,0,24"/>
+
             <TextBlock x:Name="DescText"
                        Text="接下来将引导你完成基本设置，只需几分钟。"
-                       FontSize="15" Opacity="0.7"
+                       Style="{StaticResource BodyTextStyle}"
+                       Foreground="{ThemeResource YanshuaiMutedTextBrush}"
+                       FontSize="{StaticResource FontSizeBodyLarge}"
                        HorizontalAlignment="Center"
                        TextWrapping="Wrap" TextAlignment="Center"
                        Margin="0,0,0,8"/>

@@ -281,7 +281,8 @@ namespace yanshuai
                 var match = System.Text.RegularExpressions.Regex.Match(favText, @"-?\d+");
                 if (match.Success && int.TryParse(match.Value, out int change))
                 {
-                    profile.Favorability = profile.Favorability + change;
+                    // 钳制到文档化的 0–100 区间，避免长期累积漂移到负数或远超 100
+                    profile.Favorability = Math.Max(0, Math.Min(100, profile.Favorability + change));
                     profile.FavorabilityTrend = change > 0 ? "up" : change < 0 ? "down" : "stable";
                 }
             }
@@ -293,36 +294,49 @@ namespace yanshuai
 
         private static string ExtractSection(string text, string header)
         {
-            int idx = text.IndexOf(header, StringComparison.Ordinal);
-            if (idx < 0) return null;
+            string clean = header.Trim('[', ']', '【', '】', ':', '：');
+            string[] patterns = { $"[{clean}]", $"【{clean}】", $"{clean}:", $"{clean}：" };
 
-            int start = idx + header.Length;
+            int idx = -1;
+            string matchedPattern = null;
+            foreach (var pat in patterns)
+            {
+                idx = text.IndexOf(pat, StringComparison.OrdinalIgnoreCase);
+                if (idx >= 0)
+                {
+                    matchedPattern = pat;
+                    break;
+                }
+            }
+
+            if (idx < 0) return null;
+            int start = idx + matchedPattern.Length;
             if (start >= text.Length) return null;
 
-            // Find next header or end
-            string[] headers = { "[总体认知]", "[印象]", "[互动经历]", "[事实]" };
+            string[] headers = { "总体认知", "印象", "互动经历", "事实", "好感度" };
             int end = text.Length;
             foreach (var h in headers)
             {
-                if (h == header) continue;
-                int ni = text.IndexOf(h, start, StringComparison.Ordinal);
-                if (ni >= 0 && ni < end) end = ni;
+                if (h.Equals(clean, StringComparison.OrdinalIgnoreCase)) continue;
+                string[] nextPatterns = { $"[{h}]", $"【{h}】", $"{h}:", $"{h}：" };
+                foreach (var np in nextPatterns)
+                {
+                    int ni = text.IndexOf(np, start, StringComparison.OrdinalIgnoreCase);
+                    if (ni >= 0 && ni < end) end = ni;
+                }
             }
 
             var section = text.Substring(start, end - start).Trim();
             if (string.IsNullOrWhiteSpace(section)) return null;
 
-            // Check if it's a single-line (portrait) or multi-line (lists)
             var lines = section.Split('\n')
                 .Select(l => l.Trim('-', ' ', '\t', '\r').Trim())
                 .Where(l => l.Length > 0)
                 .ToList();
 
-            // Single line = portrait-style return
-            if (lines.Count == 1 && header == "[总体认知]")
+            if (lines.Count == 1 && clean == "总体认知")
                 return lines[0];
 
-            // Multi-line or non-portrait: return as comma-joined for lists, or null if empty
             if (lines.Count == 0) return null;
             return string.Join("\n", lines);
         }

@@ -104,7 +104,8 @@ namespace yanshuai
             Conversation conv, ApiProfile profile,
             Action<string> onProgress = null,
             double threshold = DefaultThreshold,
-            int keepRecent = DefaultKeepRecent)
+            int keepRecent = DefaultKeepRecent,
+            System.Threading.CancellationToken ct = default)
         {
             if (conv == null || profile == null)
                 return new CompactResult(false, 0, 0, 0, "参数为空");
@@ -130,7 +131,7 @@ namespace yanshuai
             var toCompress = conv.Messages.Skip(startIdx).Take(willCompressCount).ToList();
 
             onProgress?.Invoke("⏳ 正在压缩上下文…");
-            string newSummary = await GenerateSummaryAsync(toCompress, profile, onProgress);
+            string newSummary = await GenerateSummaryAsync(toCompress, profile, onProgress, ct);
             onProgress?.Invoke("⏳ 整理摘要…");
 
             if (string.IsNullOrEmpty(newSummary))
@@ -189,7 +190,7 @@ namespace yanshuai
         // ── 内部方法 ──────────────────────────────────────────────────
 
         private static async Task<string> GenerateSummaryAsync(
-            List<ConversationMessage> messages, ApiProfile profile, Action<string> onProgress)
+            List<ConversationMessage> messages, ApiProfile profile, Action<string> onProgress, System.Threading.CancellationToken ct = default)
         {
             var sb = new StringBuilder();
             sb.AppendLine("你是一个对话压缩助手。请将以下对话历史压缩为结构化摘要，**只输出摘要内容本身**。");
@@ -235,7 +236,7 @@ namespace yanshuai
                 }
                 req.Content = new StringContent(requestJson, Encoding.UTF8, "application/json");
 
-                using (var resp = await _http.SendAsync(req))
+                using (var resp = await _http.SendAsync(req, ct))
                 {
                     if (!resp.IsSuccessStatusCode) return null;
                     var body = await resp.Content.ReadAsStringAsync();

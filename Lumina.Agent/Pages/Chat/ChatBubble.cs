@@ -80,6 +80,18 @@ namespace yanshuai
             get => _detail;
             set { _detail = value; OnProp(); }
         }
+        private string _args = "";
+        public string Args
+        {
+            get => _args;
+            set { _args = value; OnProp(); }
+        }
+        private string _result = "";
+        public string Result
+        {
+            get => _result;
+            set { _result = value; OnProp(); }
+        }
 
         // Shared
         private bool _isExpanded = true;
@@ -499,7 +511,7 @@ namespace yanshuai
         }
 
         /// <summary>新建或更新工具步骤条目。</summary>
-        public void AddOrUpdateToolStep(string icon, string toolName, string detail)
+        public void AddOrUpdateToolStep(string icon, string toolName, string detail, string args = "", string resultText = "")
         {
             // 从后往前找同名工具条目更新
             for (int i = _thinkChain.Count - 1; i >= 0; i--)
@@ -509,14 +521,30 @@ namespace yanshuai
                 {
                     e.Icon = icon;
                     e.Detail = detail;
+                    if (!string.IsNullOrEmpty(args)) e.Args = args;
+                    if (!string.IsNullOrEmpty(resultText)) e.Result = resultText;
                     OnProp(nameof(ThinkChainVisibility));
                     return;
                 }
             }
             // 新建
-            _thinkChain.Add(new ThinkChainEntry { Kind = ThinkChainKind.Tool, Icon = icon, ToolName = toolName, Detail = detail });
+            _thinkChain.Add(new ThinkChainEntry { Kind = ThinkChainKind.Tool, Icon = icon, ToolName = toolName, Detail = detail, Args = args, Result = resultText });
             OnProp(nameof(ThinkChainVisibility));
         }
+
+        /// <summary>添加一个完整的推理步骤到 ThinkChain。</summary>
+        public void AddReasoningStep(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return;
+            _thinkChain.Add(new ThinkChainEntry
+            {
+                Kind = ThinkChainKind.Reasoning,
+                ReasoningText = text,
+                IsExpanded = AppSettings.ReasoningExpandedByDefault
+            });
+            OnProp(nameof(ThinkChainVisibility));
+        }
+
 
         /// <summary>导出 ThinkChain 为可持久化的步骤列表（推理+工具，保序）。无内容返回 null。</summary>
         public List<ThinkStep> ExportThinkSteps()
@@ -532,7 +560,7 @@ namespace yanshuai
                 }
                 else
                 {
-                    list.Add(new ThinkStep { Kind = "tool", ToolName = e.ToolName, Detail = e.Detail, Icon = e.Icon });
+                    list.Add(new ThinkStep { Kind = "tool", ToolName = e.ToolName, Detail = e.Detail, Icon = e.Icon, Args = e.Args, Result = e.Result });
                 }
             }
             return list.Count > 0 ? list : null;
@@ -557,6 +585,8 @@ namespace yanshuai
                             Icon = string.IsNullOrEmpty(s.Icon) ? "✅" : s.Icon,
                             ToolName = s.ToolName,
                             Detail = s.Detail,
+                            Args = s.Args ?? "",
+                            Result = s.Result ?? "",
                             IsExpanded = expanded,
                         });
                     }

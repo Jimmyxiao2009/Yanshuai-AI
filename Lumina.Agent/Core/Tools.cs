@@ -124,7 +124,7 @@ namespace yanshuai
     /// </summary>
     public delegate System.Threading.Tasks.Task<bool> ToolPermissionCallback(string toolName, string description);
 public delegate System.Threading.Tasks.Task<string> FolderAccessCallback(string requestedPath);
-public delegate void ToolProgressCallback(string phase, string toolName, string detail);
+public delegate void ToolProgressCallback(string phase, string toolName, string detail, string args = "", string result = "");
 public delegate void ToolTextContentCallback(string intermediateText);
 public delegate void ToolReasoningCallback(string reasoningToken);
 public delegate System.Threading.Tasks.Task<string> AskUserCallback(string title, List<AskQuestion> questions);
@@ -489,7 +489,9 @@ public class AskQuestion
             ToolCall call, Conversation conv,
             ToolPermissionCallback permissionCallback = null,
             FolderAccessCallback folderAccessCallback = null,
-            bool visionEnabled = false)
+            bool visionEnabled = false,
+            CancellationToken ct = default(CancellationToken),
+            int depth = 0)
         {
             var result = new ApiMessageWithTools
             {
@@ -575,7 +577,7 @@ public class AskQuestion
                         result.Content = await ExecuteMediaControl(argsJson);
                         break;
                     case "spawn_subagent":
-                        result.Content = await ExecuteSpawnSubagent(argsJson, conv, permissionCallback, folderAccessCallback, visionEnabled);
+                        result.Content = await ExecuteSpawnSubagent(argsJson, conv, permissionCallback, folderAccessCallback, visionEnabled, ct, depth);
                         break;
                     case "mcp_list":  result.Content = ExecuteMcpList();  break;
                     case "mcp_call":  result.Content = await ExecuteMcpCall(argsJson);  break;
@@ -599,9 +601,11 @@ public class AskQuestion
             string argsJson, Conversation conv,
             ToolPermissionCallback permissionCallback,
             FolderAccessCallback folderAccessCallback,
-            bool visionEnabled)
+            bool visionEnabled,
+            CancellationToken ct = default(CancellationToken),
+            int depth = 0)
         {
-            if (_subagentDepth >= MaxSubagentDepth)
+            if (depth >= MaxSubagentDepth)
                 return "错误：已达到子代理最大嵌套深度（" + MaxSubagentDepth + "），无法继续派生。请直接完成当前任务。";
 
             string task = ExtractJsonString(argsJson, "task");
@@ -633,32 +637,27 @@ public class AskQuestion
             subMessages.Add(new ApiMessageWithTools { Role = "system", Content = sysPrompt.ToString() });
             subMessages.Add(new ApiMessageWithTools { Role = "user", Content = task });
 
-            // 执行子代理循环：原子地占用深度名额，超限则回退并拒绝
-            // （并行 spawn_subagent 时非原子 ++ 会让上限被绕过）
-            if (System.Threading.Interlocked.Increment(ref _subagentDepth) > MaxSubagentDepth)
-            {
-                System.Threading.Interlocked.Decrement(ref _subagentDepth);
-                return "错误：已达到子代理最大嵌套深度（" + MaxSubagentDepth + "），无法继续派生。请直接完成当前任务。";
-            }
+            // 注册到子代理跟踪器（驱动徽章 / 列表 UI）。子代理在后台线程执行，
+            // SubagentTracker 内部已把 Records 的增删与 Status/Result 写入 marshal 回 UI 线程，
+            // 故此处可安全地从后台线程调用 Start/Complete/Fail。
+            var rec = SubagentTracker.Start(task);
             try
             {
                 var result = await RunFunctionCallLoopAsync(
                     profile, subMessages, conv,
                     permissionCallback, folderAccessCallback,
-                    null, null, visionEnabled);
+                    null, null, visionEnabled, null, ct, depth + 1);
 
                 string output = result.Content ?? "";
+                SubagentTracker.Complete(rec, output);
                 if (output.Length > 4000)
                     output = output.Substring(0, 4000) + "\n…[子代理输出已截断]";
                 return "【子代理完成】\n" + output;
             }
             catch (Exception ex)
             {
+                SubagentTracker.Fail(rec, ex.Message);
                 return "子代理执行失败: " + ex.Message;
-            }
-            finally
-            {
-                System.Threading.Interlocked.Decrement(ref _subagentDepth);
             }
         }
 
@@ -928,7 +927,9 @@ public class AskQuestion
                 ToolProgressCallback progressCallback = null,
                 ToolTextContentCallback textContentCallback = null,
                 bool visionEnabled = false,
-                ToolReasoningCallback reasoningCallback = null)
+                ToolReasoningCallback reasoningCallback = null,
+                CancellationToken ct = default(CancellationToken),
+                int depth = 0)
         {
             var allMessages = new List<ApiMessageWithTools>(initialMessages);
             int maxTurns = AppSettings.MaxToolTurns;
@@ -937,6 +938,15 @@ public class AskQuestion
 
             for (int turn = 0; turn < maxTurns; turn++)
             {
+                // 用户点击「停止」后立即中断工具循环，避免继续调用 API / 执行工具 / 派生子代理
+                if (ct.IsCancellationRequested)
+                    return new FunctionCallLoopResult
+                    {
+                        Content = "",
+                        Reasoning = reasoningParts.ToString(),
+                        AllMessages = allMessages
+                    };
+
                 string requestJson = isClaude
                     ? BuildClaudeToolRequestJson(profile.Model, allMessages, GetTools())
                     : BuildToolRequestJsonManual(profile.Model, allMessages, GetTools());
@@ -958,7 +968,7 @@ public class AskQuestion
                     }
                     req.Content = new StringContent(requestJson, Encoding.UTF8, "application/json");
 
-                    using (var resp = await _http.SendAsync(req))
+                    using (var resp = await _http.SendAsync(req, ct))
                     {
                         body = await resp.Content.ReadAsStringAsync();
 
@@ -969,15 +979,18 @@ public class AskQuestion
                         bool retryable = code == 429 || code == 500 || code == 502 || code == 503;
                         if (!retryable || attempt == maxRetries)
                         {
+                            // 截断原始错误正文，避免把超长/含密钥的 JSON 原样回放给用户
+                            string errBody = body ?? "";
+                            if (errBody.Length > 500) errBody = errBody.Substring(0, 500) + "…";
                             return new FunctionCallLoopResult
                             {
-                                Content = $"HTTP {code}：{body}",
+                                Content = $"HTTP {code}：{errBody}",
                                 Reasoning = "",
                                 AllMessages = allMessages
                             };
                         }
                         int delayMs = 1000 * (1 << attempt); // 1s, 2s, 4s
-                        await Task.Delay(delayMs);
+                        await Task.Delay(delayMs, ct);
                     }
                 }
 
@@ -1057,8 +1070,8 @@ public class AskQuestion
                 {
                     string tcName = tc.Function?.Name ?? "";
                     string tcArgs = tc.Function?.Arguments ?? "{}";
-                    progressCallback?.Invoke("thinking", tcName, SummarizeArgs(tcName, tcArgs));
-                    progressCallback?.Invoke("calling", tcName, SummarizeArgs(tcName, tcArgs));
+                    progressCallback?.Invoke("thinking", tcName, SummarizeArgs(tcName, tcArgs), tcArgs, "");
+                    progressCallback?.Invoke("calling", tcName, SummarizeArgs(tcName, tcArgs), tcArgs, "");
                 }
 
                 // 并行执行所有工具
@@ -1070,7 +1083,7 @@ public class AskQuestion
                     stopwatches.Add(swItem);
                     execTasks.Add(Task.Run(async () =>
                     {
-                        var r = await ExecuteToolAsync(tc, conv, permissionCallback, folderAccessCallback, visionEnabled);
+                        var r = await ExecuteToolAsync(tc, conv, permissionCallback, folderAccessCallback, visionEnabled, ct, depth);
                         swItem.Stop();
                         return r;
                     }));
@@ -1091,7 +1104,7 @@ public class AskQuestion
                         || (result.Content ?? "").StartsWith("权限不足")
                         || (result.Content ?? "").Contains("失败")
                         || (result.Content ?? "").Contains("用户拒绝");
-                    progressCallback?.Invoke(isError ? "error" : "result", tn, resultBrief);
+                    progressCallback?.Invoke(isError ? "error" : "result", tn, resultBrief, args, result.Content ?? "");
 
                     logEntries.Add(new ToolCallLogEntry
                     {

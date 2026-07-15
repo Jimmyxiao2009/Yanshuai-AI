@@ -1,0 +1,29 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Model weights / large binaries (not for git — README explains how to obtain/export them)
+*.safetensors
+*.llmmodel
+*.embmodel
+*.onnx
+
+# .NET / UWP build output
+bin/
+obj/
+AppPackages/
+*.appx
+*.appxbundle
+*.appxupload
+*.appxsym
+.vs/
+*.user
+*.suo
+
+# NuGet
+packages/
+*.nupkg
+
+# 本地自签测试证书（每台开发机自己生成即可，不进仓库）
+*.pfx

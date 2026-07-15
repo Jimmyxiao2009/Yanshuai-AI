@@ -18,575 +18,637 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- 顶栏 -->
-        <Grid Grid.Row="0" Background="{ThemeResource YanshuaiPanelBrush}"
-              BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="0,0,0,1"
-              Padding="14,8">
+        <!-- 页眉：心象点 + 标题 -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="18,22,18,10">
+            <Ellipse Width="9" Height="9" Fill="{ThemeResource YanshuaiAccentBrush}"
+                     VerticalAlignment="Center" Margin="0,0,12,0"/>
             <TextBlock x:Name="PageTitle" Text="主题与字体"
-                       FontSize="18" FontWeight="SemiBold"
-                       VerticalAlignment="Center" Opacity="0.9"/>
-        </Grid>
+                       FontFamily="{ThemeResource YanshuaiTitleFont}"
+                       FontSize="30"
+                       VerticalAlignment="Center"
+                       Foreground="{ThemeResource YanshuaiTextBrush}"/>
+        </StackPanel>
 
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-            <StackPanel>
+            <StackPanel Margin="18,4,18,8">
 
-<!-- ★ 主题预设 ★ -->
-                <StackPanel Margin="18,4,18,8"
-                            Background="{ThemeResource YanshuaiPanelBrush}"
-                            BorderBrush="{ThemeResource YanshuaiBorderBrush}"
-                            BorderThickness="0,0,0,1"
-                            Padding="12,12">
-                    <TextBlock x:Name="ThemeStyleLabel" Text="主题风格" FontSize="15"/>
-                    <TextBlock x:Name="ThemeStyleDesc" Text="选择整体配色和字体风格，重启应用后部分元素生效"
-                               FontSize="12" Opacity="0.55" Margin="0,2,0,10"/>
+                <!-- ★ 主题预设 ★ -->
+                <Border Style="{StaticResource CardBorderStyle}" Margin="0,4,0,18">
+                    <StackPanel>
+                        <TextBlock x:Name="ThemeStyleLabel" Text="主题风格"
+                                   Style="{StaticResource BodyTextStyle}" FontWeight="SemiBold"/>
+                        <TextBlock x:Name="ThemeStyleDesc" Text="选择整体配色和字体风格，重启应用后部分元素生效"
+                                   Style="{StaticResource CaptionTextStyle}" Margin="0,2,0,12"/>
 
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="*"/>
-                            <RowDefinition Height="8"/>
-                            <RowDefinition Height="*"/>
-                            <RowDefinition Height="8"/>
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="8"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-
-                        <!-- A 墨韵书卷 -->
-                        <Border x:Name="ThemeCardInk" Grid.Row="0" Grid.Column="0"
-                                Background="#F5EFE0"
-                                BorderBrush="#2B2620"
-                                BorderThickness="2"
-                                CornerRadius="6"
-                                Padding="10,12"
-                                Tapped="ThemeCardInk_Tapped">
-                            <StackPanel>
-                                <Border Background="#A33A2C" Width="22" Height="22"
-                                        CornerRadius="3" HorizontalAlignment="Left" Margin="0,0,0,6"/>
-                                <TextBlock x:Name="InkThemeName" Text="墨韵书卷" FontSize="13" FontWeight="SemiBold"
-                                           Foreground="#2B2620"/>
-                                <TextBlock x:Name="InkThemeSubtitle" Text="宣纸·朱砂" FontSize="11" Foreground="#6E5A48"
-                                           Margin="0,2,0,0"/>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- B 青瓷雅韵 -->
-                        <Border x:Name="ThemeCardCeladon" Grid.Row="0" Grid.Column="2"
-                                Background="#F4F1E8"
-                                BorderBrush="#1F3A3A"
-                                BorderThickness="2"
-                                CornerRadius="10"
-                                Padding="10,12"
-                                Tapped="ThemeCardCeladon_Tapped">
-                            <StackPanel>
-                                <Border Background="#7DB6B0" Width="22" Height="22"
-                                        CornerRadius="11" HorizontalAlignment="Left" Margin="0,0,0,6"/>
-                                <TextBlock x:Name="CeladonThemeName" Text="青瓷雅韵" FontSize="13" FontWeight="SemiBold"
-                                           Foreground="#1F3A3A"/>
-                                <TextBlock x:Name="CeladonThemeSubtitle" Text="天青·月白" FontSize="11" Foreground="#5A8E89"
-                                           Margin="0,2,0,0"/>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- C 朱砂深夜 -->
-                        <Border x:Name="ThemeCardMidnight" Grid.Row="2" Grid.Column="0"
-                                Background="#1A1B26"
-                                BorderBrush="#C9A86A"
-                                BorderThickness="2"
-                                CornerRadius="6"
-                                Padding="10,12"
-                                Tapped="ThemeCardMidnight_Tapped">
-                            <StackPanel>
-                                <Border Background="#D4504A" Width="22" Height="22"
-                                        CornerRadius="3"
-                                        BorderBrush="#C9A86A"
-                                        BorderThickness="1"
-                                        HorizontalAlignment="Left" Margin="0,0,0,6"/>
-                                <TextBlock x:Name="MidnightThemeName" Text="朱砂深夜" FontSize="13" FontWeight="SemiBold"
-                                           Foreground="#F5F0E8"/>
-                                <TextBlock x:Name="MidnightThemeSubtitle" Text="墨蓝·鎏金" FontSize="11" Foreground="#888A9D"
-                                           Margin="0,2,0,0"/>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- D 自定义 -->
-                        <Border x:Name="ThemeCardCustom" Grid.Row="2" Grid.Column="2"
-                                Background="#F0F0F0"
-                                BorderBrush="#888888"
-                                BorderThickness="2"
-                                CornerRadius="6"
-                                Padding="10,12"
-                                Tapped="ThemeCardCustom_Tapped">
-                            <StackPanel>
-                                <!-- 彩虹渐变色条表示自定义 -->
-                                <Border Width="22" Height="22"
-                                        CornerRadius="3" HorizontalAlignment="Left" Margin="0,0,0,6">
-                                    <Border.Background>
-                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                            <GradientStop Color="#A33A2C" Offset="0.0"/>
-                                            <GradientStop Color="#7DB6B0" Offset="0.33"/>
-                                            <GradientStop Color="#D4504A" Offset="0.66"/>
-                                            <GradientStop Color="#C9A86A" Offset="1.0"/>
-                                        </LinearGradientBrush>
-                                    </Border.Background>
+                        <!-- 心象 / Mindscape：默认设计语言（主推，非交互展示卡） -->
+                        <Border Background="{ThemeResource YanshuaiAccentWashBrush}"
+                                BorderBrush="{ThemeResource YanshuaiAccentBrush}"
+                                BorderThickness="1.5"
+                                CornerRadius="{StaticResource CardCornerRadius}"
+                                Padding="14,12" Margin="0,0,0,14">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Ellipse Grid.Column="0" Width="28" Height="28"
+                                         Fill="{ThemeResource YanshuaiAccentBrush}"
+                                         VerticalAlignment="Center" Margin="0,0,14,0"/>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="心象"
+                                                   FontFamily="{ThemeResource YanshuaiTitleFont}"
+                                                   FontSize="{StaticResource FontSizeBodyLarge}"
+                                                   Foreground="{ThemeResource YanshuaiTextBrush}"/>
+                                        <TextBlock Text="Mindscape"
+                                                   FontFamily="{ThemeResource YanshuaiEnglishFont}"
+                                                   FontSize="{StaticResource FontSizeCaption}"
+                                                   Foreground="{ThemeResource YanshuaiMutedTextBrush}"
+                                                   VerticalAlignment="Bottom" Margin="8,0,0,1"/>
+                                    </StackPanel>
+                                    <TextBlock Text="晨雾 · 夜墨 · 暮蓝紫"
+                                               Style="{StaticResource CaptionTextStyle}" Margin="0,2,0,0"/>
+                                </StackPanel>
+                                <Border Grid.Column="2" Style="{StaticResource PillBorderStyle}"
+                                        Background="{ThemeResource YanshuaiAccentBrush}"
+                                        VerticalAlignment="Center">
+                                    <TextBlock Text="默认"
+                                               FontSize="{StaticResource FontSizeCaption}"
+                                               Foreground="{ThemeResource YanshuaiOnAccentBrush}"/>
                                 </Border>
-                                <TextBlock x:Name="CustomThemeName" Text="自定义" FontSize="13" FontWeight="SemiBold"
-                                           Foreground="#333333"/>
-                                <TextBlock x:Name="CustomThemeSubtitle" Text="自由调色" FontSize="11" Foreground="#888888"
-                                           Margin="0,2,0,0"/>
-                            </StackPanel>
+                            </Grid>
                         </Border>
 
-                        <!-- E 现代·石板 -->
-                        <Border x:Name="ThemeCardModern" Grid.Row="4" Grid.Column="0"
-                                Background="#14171C"
-                                BorderBrush="#4F6BED"
-                                BorderThickness="2"
-                                CornerRadius="4"
-                                Padding="10,12"
-                                Tapped="ThemeCardModern_Tapped">
-                            <StackPanel>
-                                <Border Background="#4F6BED" Width="22" Height="22"
-                                        CornerRadius="4" HorizontalAlignment="Left" Margin="0,0,0,6"/>
-                                <TextBlock x:Name="ModernThemeName" Text="现代·石板" FontSize="13" FontWeight="SemiBold"
-                                           Foreground="#E6EAF0"/>
-                                <TextBlock x:Name="ModernThemeSubtitle" Text="石板·靛蓝" FontSize="11" Foreground="#8A94A6"
-                                           Margin="0,2,0,0"/>
-                            </StackPanel>
-                        </Border>
-                    </Grid>
-
-                    <TextBlock x:Name="ThemeSelectedLabel"
-                               Text="当前：墨韵书卷"
-                               FontSize="12"
-                               Foreground="{ThemeResource YanshuaiAccentBrush}"
-                               Margin="0,8,0,0"/>
-
-                    <!-- 自定义主题编辑器 -->
-                    <StackPanel x:Name="CustomEditorPanel" Visibility="Collapsed"
-                                Margin="0,12,0,0">
-
-                        <!-- 实时预览卡片 -->
-                        <Border x:Name="PreviewCard" CornerRadius="8" Padding="14"
-                                Background="{ThemeResource YanshuaiPageBrush}"
-                                BorderBrush="{ThemeResource YanshuaiBorderBrush}"
-                                BorderThickness="1" Margin="0,0,0,16">
-                            <StackPanel>
-                                <TextBlock x:Name="PreviewTitle" Text="实时预览" FontSize="13" FontWeight="SemiBold"
-                                           Foreground="{ThemeResource YanshuaiTextBrush}"
-                                           Margin="0,0,0,8"/>
-                                <!-- 主题色标题栏 -->
-                                <Border x:Name="PreviewAccentBar" Height="4" CornerRadius="2"
-                                        Background="{ThemeResource YanshuaiAccentBrush}" Margin="0,0,0,10"/>
-                                <!-- 用户气泡 -->
-                                <Border x:Name="PreviewUserBubble" MaxWidth="200"
-                                        HorizontalAlignment="Right" CornerRadius="10,10,4,10"
-                                        Padding="12,8"
-                                        Background="{ThemeResource YanshuaiUserBubbleBrush}">
-                                    <TextBlock x:Name="PreviewUserText" Text="你好，今天天气真好！"
-                                               FontSize="13" Foreground="White"/>
-                                </Border>
-                                <!-- AI 气泡 -->
-                                <Border x:Name="PreviewAiBubble" MaxWidth="200"
-                                        HorizontalAlignment="Left" CornerRadius="10,10,10,4"
-                                        Padding="12,8" Margin="0,8,0,0"
-                                        Background="{ThemeResource YanshuaiAiBubbleBrush}">
-                                    <TextBlock x:Name="PreviewAiText" Text="是啊，很适合出去走走。"
-                                               FontSize="13"
-                                               Foreground="{ThemeResource YanshuaiTextBrush}"/>
-                                </Border>
-                                <!-- 模拟输入区 -->
-                                <Grid Margin="0,12,0,0" Height="36">
-                                    <Border x:Name="PreviewInputBg" CornerRadius="6"
-                                            Background="{ThemeResource YanshuaiSubtlePanelBrush}"
-                                            BorderBrush="{ThemeResource YanshuaiBorderBrush}"
-                                            BorderThickness="1"/>
-                                    <Button x:Name="PreviewSendBtn" Content="发送"
-                                            HorizontalAlignment="Right" Width="60" Height="30"
-                                            Margin="0,0,4,0" VerticalAlignment="Center"
-                                            Background="{ThemeResource YanshuaiAccentBrush}"
-                                            Foreground="White" FontSize="12" BorderThickness="0"/>
-                                </Grid>
-                            </StackPanel>
-                        </Border>
-
-                        <TextBlock x:Name="CustomColorsLabel" Text="自定义配色" FontSize="14" FontWeight="SemiBold"
-                                   Foreground="{ThemeResource YanshuaiTextBrush}"
+                        <TextBlock Text="其他预设主题"
+                                   Style="{StaticResource LabelTextStyle}"
                                    Margin="0,0,0,8"/>
 
-                        <!-- 颜色编辑区：页面背景 -->
-                        <Grid Margin="0,0,0,8">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="8"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="8"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <Border x:Name="Swatch_PageBg" Grid.Column="0"
-                                    Width="28" Height="28" CornerRadius="4" Margin="0,0,8,0"
-                                    BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="1"/>
-                            <TextBlock Grid.Column="1" x:Name="ColorPageBgLabel" Text="页面背景" FontSize="13"
-                                       VerticalAlignment="Center"
-                                       Foreground="{ThemeResource YanshuaiTextBrush}"/>
-                            <TextBox x:Name="Hex_PageBg" Grid.Column="2"
-                                     Width="90" FontSize="12" TextAlignment="Center"
-                                     PlaceholderText="#RRGGBB"/>
-                        </Grid>
-                        <!-- 强调色 -->
-                        <Grid Margin="0,0,0,8">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="8"/>
                                 <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <Border x:Name="Swatch_Accent" Grid.Column="0"
-                                    Width="28" Height="28" CornerRadius="4" Margin="0,0,8,0"
-                                    BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="1"/>
-                            <TextBlock Grid.Column="1" x:Name="ColorAccentLabel" Text="强调色" FontSize="13"
-                                       VerticalAlignment="Center"
-                                       Foreground="{ThemeResource YanshuaiTextBrush}"/>
-                            <TextBox x:Name="Hex_Accent" Grid.Column="2"
-                                     Width="90" FontSize="12" TextAlignment="Center"
-                                     PlaceholderText="#RRGGBB"/>
-                        </Grid>
-                        <!-- 文字色 -->
-                        <Grid Margin="0,0,0,8">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <Border x:Name="Swatch_Text" Grid.Column="0"
-                                    Width="28" Height="28" CornerRadius="4" Margin="0,0,8,0"
-                                    BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="1"/>
-                            <TextBlock Grid.Column="1" x:Name="ColorTextLabel" Text="文字色" FontSize="13"
-                                       VerticalAlignment="Center"
-                                       Foreground="{ThemeResource YanshuaiTextBrush}"/>
-                            <TextBox x:Name="Hex_Text" Grid.Column="2"
-                                     Width="90" FontSize="12" TextAlignment="Center"
-                                     PlaceholderText="#RRGGBB"/>
-                        </Grid>
-                        <!-- 面板色 -->
-                        <Grid Margin="0,0,0,8">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <Border x:Name="Swatch_Surface" Grid.Column="0"
-                                    Width="28" Height="28" CornerRadius="4" Margin="0,0,8,0"
-                                    BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="1"/>
-                            <TextBlock Grid.Column="1" x:Name="ColorSurfaceLabel" Text="面板色" FontSize="13"
-                                       VerticalAlignment="Center"
-                                       Foreground="{ThemeResource YanshuaiTextBrush}"/>
-                            <TextBox x:Name="Hex_Surface" Grid.Column="2"
-                                     Width="90" FontSize="12" TextAlignment="Center"
-                                     PlaceholderText="#RRGGBB"/>
-                        </Grid>
-                        <!-- 边框色 -->
-                        <Grid Margin="0,0,0,8">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <Border x:Name="Swatch_Border" Grid.Column="0"
-                                    Width="28" Height="28" CornerRadius="4" Margin="0,0,8,0"
-                                    BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="1"/>
-                            <TextBlock Grid.Column="1" x:Name="ColorBorderLabel" Text="边框色" FontSize="13"
-                                       VerticalAlignment="Center"
-                                       Foreground="{ThemeResource YanshuaiTextBrush}"/>
-                            <TextBox x:Name="Hex_Border" Grid.Column="2"
-                                     Width="90" FontSize="12" TextAlignment="Center"
-                                     PlaceholderText="#RRGGBB"/>
-                        </Grid>
-                        <!-- 用户气泡色 -->
-                        <Grid Margin="0,0,0,8">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <Border x:Name="Swatch_UserBubble" Grid.Column="0"
-                                    Width="28" Height="28" CornerRadius="4" Margin="0,0,8,0"
-                                    BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="1"/>
-                            <TextBlock Grid.Column="1" x:Name="ColorUserBubbleLabel" Text="用户气泡" FontSize="13"
-                                       VerticalAlignment="Center"
-                                       Foreground="{ThemeResource YanshuaiTextBrush}"/>
-                            <TextBox x:Name="Hex_UserBubble" Grid.Column="2"
-                                     Width="90" FontSize="12" TextAlignment="Center"
-                                     PlaceholderText="#RRGGBB"/>
-                        </Grid>
-                        <!-- AI 气泡色 -->
-                        <Grid Margin="0,0,0,8">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <Border x:Name="Swatch_AiBubble" Grid.Column="0"
-                                    Width="28" Height="28" CornerRadius="4" Margin="0,0,8,0"
-                                    BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="1"/>
-                            <TextBlock Grid.Column="1" x:Name="ColorAiBubbleLabel" Text="AI 气泡" FontSize="13"
-                                       VerticalAlignment="Center"
-                                       Foreground="{ThemeResource YanshuaiTextBrush}"/>
-                            <TextBox x:Name="Hex_AiBubble" Grid.Column="2"
-                                     Width="90" FontSize="12" TextAlignment="Center"
-                                     PlaceholderText="#RRGGBB"/>
-                        </Grid>
-                        <!-- 辅助文字色 -->
-                        <Grid Margin="0,0,0,8">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <Border x:Name="Swatch_MutedText" Grid.Column="0"
-                                    Width="28" Height="28" CornerRadius="4" Margin="0,0,8,0"
-                                    BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="1"/>
-                            <TextBlock Grid.Column="1" x:Name="ColorMutedTextLabel" Text="辅助文字" FontSize="13"
-                                       VerticalAlignment="Center"
-                                       Foreground="{ThemeResource YanshuaiTextBrush}"/>
-                            <TextBox x:Name="Hex_MutedText" Grid.Column="2"
-                                     Width="90" FontSize="12" TextAlignment="Center"
-                                     PlaceholderText="#RRGGBB"/>
+
+                            <!-- A 墨韵书卷（预览色保留各主题真实配色） -->
+                            <Border x:Name="ThemeCardInk" Grid.Row="0" Grid.Column="0"
+                                    Background="#F5EFE0"
+                                    BorderBrush="#2B2620"
+                                    BorderThickness="2"
+                                    CornerRadius="6"
+                                    Padding="10,12"
+                                    Tapped="ThemeCardInk_Tapped">
+                                <StackPanel>
+                                    <Border Background="#A33A2C" Width="22" Height="22"
+                                            CornerRadius="3" HorizontalAlignment="Left" Margin="0,0,0,6"/>
+                                    <TextBlock x:Name="InkThemeName" Text="墨韵书卷" FontSize="13" FontWeight="SemiBold"
+                                               Foreground="#2B2620"/>
+                                    <TextBlock x:Name="InkThemeSubtitle" Text="宣纸·朱砂" FontSize="11" Foreground="#6E5A48"
+                                               Margin="0,2,0,0"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- B 青瓷雅韵 -->
+                            <Border x:Name="ThemeCardCeladon" Grid.Row="0" Grid.Column="2"
+                                    Background="#F4F1E8"
+                                    BorderBrush="#1F3A3A"
+                                    BorderThickness="2"
+                                    CornerRadius="10"
+                                    Padding="10,12"
+                                    Tapped="ThemeCardCeladon_Tapped">
+                                <StackPanel>
+                                    <Border Background="#7DB6B0" Width="22" Height="22"
+                                            CornerRadius="11" HorizontalAlignment="Left" Margin="0,0,0,6"/>
+                                    <TextBlock x:Name="CeladonThemeName" Text="青瓷雅韵" FontSize="13" FontWeight="SemiBold"
+                                               Foreground="#1F3A3A"/>
+                                    <TextBlock x:Name="CeladonThemeSubtitle" Text="天青·月白" FontSize="11" Foreground="#5A8E89"
+                                               Margin="0,2,0,0"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- C 朱砂深夜 -->
+                            <Border x:Name="ThemeCardMidnight" Grid.Row="2" Grid.Column="0"
+                                    Background="#1A1B26"
+                                    BorderBrush="#C9A86A"
+                                    BorderThickness="2"
+                                    CornerRadius="6"
+                                    Padding="10,12"
+                                    Tapped="ThemeCardMidnight_Tapped">
+                                <StackPanel>
+                                    <Border Background="#D4504A" Width="22" Height="22"
+                                            CornerRadius="3"
+                                            BorderBrush="#C9A86A"
+                                            BorderThickness="1"
+                                            HorizontalAlignment="Left" Margin="0,0,0,6"/>
+                                    <TextBlock x:Name="MidnightThemeName" Text="朱砂深夜" FontSize="13" FontWeight="SemiBold"
+                                               Foreground="#F5F0E8"/>
+                                    <TextBlock x:Name="MidnightThemeSubtitle" Text="墨蓝·鎏金" FontSize="11" Foreground="#888A9D"
+                                               Margin="0,2,0,0"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- D 自定义 -->
+                            <Border x:Name="ThemeCardCustom" Grid.Row="2" Grid.Column="2"
+                                    Background="#F0F0F0"
+                                    BorderBrush="#888888"
+                                    BorderThickness="2"
+                                    CornerRadius="6"
+                                    Padding="10,12"
+                                    Tapped="ThemeCardCustom_Tapped">
+                                <StackPanel>
+                                    <!-- 彩虹渐变色条表示自定义 -->
+                                    <Border Width="22" Height="22"
+                                            CornerRadius="3" HorizontalAlignment="Left" Margin="0,0,0,6">
+                                        <Border.Background>
+                                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                <GradientStop Color="#A33A2C" Offset="0.0"/>
+                                                <GradientStop Color="#7DB6B0" Offset="0.33"/>
+                                                <GradientStop Color="#D4504A" Offset="0.66"/>
+                                                <GradientStop Color="#C9A86A" Offset="1.0"/>
+                                            </LinearGradientBrush>
+                                        </Border.Background>
+                                    </Border>
+                                    <TextBlock x:Name="CustomThemeName" Text="自定义" FontSize="13" FontWeight="SemiBold"
+                                               Foreground="#333333"/>
+                                    <TextBlock x:Name="CustomThemeSubtitle" Text="自由调色" FontSize="11" Foreground="#888888"
+                                               Margin="0,2,0,0"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- E 现代·石板 -->
+                            <Border x:Name="ThemeCardModern" Grid.Row="4" Grid.Column="0"
+                                    Background="#14171C"
+                                    BorderBrush="#4F6BED"
+                                    BorderThickness="2"
+                                    CornerRadius="4"
+                                    Padding="10,12"
+                                    Tapped="ThemeCardModern_Tapped">
+                                <StackPanel>
+                                    <Border Background="#4F6BED" Width="22" Height="22"
+                                            CornerRadius="4" HorizontalAlignment="Left" Margin="0,0,0,6"/>
+                                    <TextBlock x:Name="ModernThemeName" Text="现代·石板" FontSize="13" FontWeight="SemiBold"
+                                               Foreground="#E6EAF0"/>
+                                    <TextBlock x:Name="ModernThemeSubtitle" Text="石板·靛蓝" FontSize="11" Foreground="#8A94A6"
+                                               Margin="0,2,0,0"/>
+                                </StackPanel>
+                            </Border>
                         </Grid>
 
-                        <!-- 预设色板 -->
-                        <TextBlock x:Name="CustomSwatchLabel" Text="预设色板" FontSize="11" Opacity="0.6"
-                                   Margin="0,8,0,6"
-                                   Foreground="{ThemeResource YanshuaiTextBrush}"/>
-                        <ItemsControl x:Name="CustomThemeSwatchList">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <StackPanel Orientation="Horizontal"/>
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                        </ItemsControl>
+                        <TextBlock x:Name="ThemeSelectedLabel"
+                                   Text="当前：心象"
+                                   Style="{StaticResource CaptionTextStyle}"
+                                   Foreground="{ThemeResource YanshuaiAccentBrush}"
+                                   Margin="0,12,0,0"/>
 
-                        <TextBlock x:Name="AutoApplyLabel" Text="修改后自动应用" FontSize="11" Opacity="0.4"
-                                   Margin="0,8,0,0" TextAlignment="Center"
-                                   Foreground="{ThemeResource YanshuaiTextBrush}"/>
+                        <!-- 自定义主题编辑器 -->
+                        <StackPanel x:Name="CustomEditorPanel" Visibility="Collapsed"
+                                    Margin="0,12,0,0">
+
+                            <!-- 实时预览卡片 -->
+                            <Border x:Name="PreviewCard" CornerRadius="{StaticResource CardCornerRadius}" Padding="14"
+                                    Background="{ThemeResource YanshuaiPageBrush}"
+                                    BorderBrush="{ThemeResource YanshuaiBorderBrush}"
+                                    BorderThickness="1" Margin="0,0,0,16">
+                                <StackPanel>
+                                    <TextBlock x:Name="PreviewTitle" Text="实时预览"
+                                               Style="{StaticResource BodyTextStyle}" FontWeight="SemiBold"
+                                               Margin="0,0,0,8"/>
+                                    <!-- 主题色标题栏 -->
+                                    <Border x:Name="PreviewAccentBar" Height="4" CornerRadius="2"
+                                            Background="{ThemeResource YanshuaiAccentBrush}" Margin="0,0,0,10"/>
+                                    <!-- 用户气泡 -->
+                                    <Border x:Name="PreviewUserBubble" MaxWidth="200"
+                                            HorizontalAlignment="Right" CornerRadius="10,10,4,10"
+                                            Padding="12,8"
+                                            Background="{ThemeResource YanshuaiUserBubbleBrush}">
+                                        <TextBlock x:Name="PreviewUserText" Text="你好，今天天气真好！"
+                                                   FontSize="13" Foreground="White"/>
+                                    </Border>
+                                    <!-- AI 气泡 -->
+                                    <Border x:Name="PreviewAiBubble" MaxWidth="200"
+                                            HorizontalAlignment="Left" CornerRadius="10,10,10,4"
+                                            Padding="12,8" Margin="0,8,0,0"
+                                            Background="{ThemeResource YanshuaiAiBubbleBrush}">
+                                        <TextBlock x:Name="PreviewAiText" Text="是啊，很适合出去走走。"
+                                                   FontSize="13"
+                                                   Foreground="{ThemeResource YanshuaiTextBrush}"/>
+                                    </Border>
+                                    <!-- 模拟输入区 -->
+                                    <Grid Margin="0,12,0,0" Height="36">
+                                        <Border x:Name="PreviewInputBg" CornerRadius="6"
+                                                Background="{ThemeResource YanshuaiSubtlePanelBrush}"
+                                                BorderBrush="{ThemeResource YanshuaiBorderBrush}"
+                                                BorderThickness="1"/>
+                                        <Button x:Name="PreviewSendBtn" Content="发送"
+                                                HorizontalAlignment="Right" Width="60" Height="30"
+                                                Margin="0,0,4,0" VerticalAlignment="Center"
+                                                Background="{ThemeResource YanshuaiAccentBrush}"
+                                                Foreground="White" FontSize="12" BorderThickness="0"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <TextBlock x:Name="CustomColorsLabel" Text="自定义配色"
+                                       Style="{StaticResource BodyTextStyle}" FontWeight="SemiBold"
+                                       Margin="0,0,0,8"/>
+
+                            <!-- 颜色编辑区：页面背景 -->
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Border x:Name="Swatch_PageBg" Grid.Column="0"
+                                        Width="28" Height="28" CornerRadius="4" Margin="0,0,8,0"
+                                        BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="1"/>
+                                <TextBlock Grid.Column="1" x:Name="ColorPageBgLabel" Text="页面背景" FontSize="13"
+                                           VerticalAlignment="Center"
+                                           Foreground="{ThemeResource YanshuaiTextBrush}"/>
+                                <TextBox x:Name="Hex_PageBg" Grid.Column="2"
+                                         Width="90" FontSize="12" TextAlignment="Center"
+                                         PlaceholderText="#RRGGBB"/>
+                            </Grid>
+                            <!-- 强调色 -->
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Border x:Name="Swatch_Accent" Grid.Column="0"
+                                        Width="28" Height="28" CornerRadius="4" Margin="0,0,8,0"
+                                        BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="1"/>
+                                <TextBlock Grid.Column="1" x:Name="ColorAccentLabel" Text="强调色" FontSize="13"
+                                           VerticalAlignment="Center"
+                                           Foreground="{ThemeResource YanshuaiTextBrush}"/>
+                                <TextBox x:Name="Hex_Accent" Grid.Column="2"
+                                         Width="90" FontSize="12" TextAlignment="Center"
+                                         PlaceholderText="#RRGGBB"/>
+                            </Grid>
+                            <!-- 文字色 -->
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Border x:Name="Swatch_Text" Grid.Column="0"
+                                        Width="28" Height="28" CornerRadius="4" Margin="0,0,8,0"
+                                        BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="1"/>
+                                <TextBlock Grid.Column="1" x:Name="ColorTextLabel" Text="文字色" FontSize="13"
+                                           VerticalAlignment="Center"
+                                           Foreground="{ThemeResource YanshuaiTextBrush}"/>
+                                <TextBox x:Name="Hex_Text" Grid.Column="2"
+                                         Width="90" FontSize="12" TextAlignment="Center"
+                                         PlaceholderText="#RRGGBB"/>
+                            </Grid>
+                            <!-- 面板色 -->
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Border x:Name="Swatch_Surface" Grid.Column="0"
+                                        Width="28" Height="28" CornerRadius="4" Margin="0,0,8,0"
+                                        BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="1"/>
+                                <TextBlock Grid.Column="1" x:Name="ColorSurfaceLabel" Text="面板色" FontSize="13"
+                                           VerticalAlignment="Center"
+                                           Foreground="{ThemeResource YanshuaiTextBrush}"/>
+                                <TextBox x:Name="Hex_Surface" Grid.Column="2"
+                                         Width="90" FontSize="12" TextAlignment="Center"
+                                         PlaceholderText="#RRGGBB"/>
+                            </Grid>
+                            <!-- 边框色 -->
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Border x:Name="Swatch_Border" Grid.Column="0"
+                                        Width="28" Height="28" CornerRadius="4" Margin="0,0,8,0"
+                                        BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="1"/>
+                                <TextBlock Grid.Column="1" x:Name="ColorBorderLabel" Text="边框色" FontSize="13"
+                                           VerticalAlignment="Center"
+                                           Foreground="{ThemeResource YanshuaiTextBrush}"/>
+                                <TextBox x:Name="Hex_Border" Grid.Column="2"
+                                         Width="90" FontSize="12" TextAlignment="Center"
+                                         PlaceholderText="#RRGGBB"/>
+                            </Grid>
+                            <!-- 用户气泡色 -->
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Border x:Name="Swatch_UserBubble" Grid.Column="0"
+                                        Width="28" Height="28" CornerRadius="4" Margin="0,0,8,0"
+                                        BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="1"/>
+                                <TextBlock Grid.Column="1" x:Name="ColorUserBubbleLabel" Text="用户气泡" FontSize="13"
+                                           VerticalAlignment="Center"
+                                           Foreground="{ThemeResource YanshuaiTextBrush}"/>
+                                <TextBox x:Name="Hex_UserBubble" Grid.Column="2"
+                                         Width="90" FontSize="12" TextAlignment="Center"
+                                         PlaceholderText="#RRGGBB"/>
+                            </Grid>
+                            <!-- AI 气泡色 -->
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Border x:Name="Swatch_AiBubble" Grid.Column="0"
+                                        Width="28" Height="28" CornerRadius="4" Margin="0,0,8,0"
+                                        BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="1"/>
+                                <TextBlock Grid.Column="1" x:Name="ColorAiBubbleLabel" Text="AI 气泡" FontSize="13"
+                                           VerticalAlignment="Center"
+                                           Foreground="{ThemeResource YanshuaiTextBrush}"/>
+                                <TextBox x:Name="Hex_AiBubble" Grid.Column="2"
+                                         Width="90" FontSize="12" TextAlignment="Center"
+                                         PlaceholderText="#RRGGBB"/>
+                            </Grid>
+                            <!-- 辅助文字色 -->
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Border x:Name="Swatch_MutedText" Grid.Column="0"
+                                        Width="28" Height="28" CornerRadius="4" Margin="0,0,8,0"
+                                        BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="1"/>
+                                <TextBlock Grid.Column="1" x:Name="ColorMutedTextLabel" Text="辅助文字" FontSize="13"
+                                           VerticalAlignment="Center"
+                                           Foreground="{ThemeResource YanshuaiTextBrush}"/>
+                                <TextBox x:Name="Hex_MutedText" Grid.Column="2"
+                                         Width="90" FontSize="12" TextAlignment="Center"
+                                         PlaceholderText="#RRGGBB"/>
+                            </Grid>
+
+                            <!-- 预设色板 -->
+                            <TextBlock x:Name="CustomSwatchLabel" Text="预设色板"
+                                       Style="{StaticResource LabelTextStyle}"
+                                       Margin="0,8,0,6"/>
+                            <ItemsControl x:Name="CustomThemeSwatchList">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                            </ItemsControl>
+
+                            <TextBlock x:Name="AutoApplyLabel" Text="修改后自动应用"
+                                       Style="{StaticResource CaptionTextStyle}"
+                                       Opacity="{StaticResource OpacityFaint}"
+                                       Margin="0,8,0,0" TextAlignment="Center"/>
+                        </StackPanel>
                     </StackPanel>
-                </StackPanel>
+                </Border>
 
                 <!-- ★ 字体选择 ★ -->
-                <Grid Margin="18,0,18,8"
-                      Background="{ThemeResource YanshuaiPanelBrush}"
-                      BorderBrush="{ThemeResource YanshuaiBorderBrush}"
-                      BorderThickness="0,0,0,1"
-                      Padding="12,12">
+                <TextBlock Text="字体"
+                           Style="{StaticResource LabelTextStyle}"
+                           Margin="2,0,0,8"/>
+                <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,18">
                     <StackPanel>
-                        <TextBlock x:Name="ChineseFontLabel" Text="中文字体" FontSize="15"/>
+                        <TextBlock x:Name="ChineseFontLabel" Text="中文字体"
+                                   Style="{StaticResource BodyTextStyle}" FontWeight="SemiBold"/>
                         <TextBlock x:Name="ChineseFontDesc" Text="选择正文使用的字体"
-                                   FontSize="12" Opacity="0.55" Margin="0,2,0,8"/>
+                                   Style="{StaticResource CaptionTextStyle}" Margin="0,2,0,8"/>
                         <ComboBox x:Name="ChineseFontPicker"
                                   HorizontalAlignment="Stretch"
                                   SelectionChanged="ChineseFontPicker_SelectionChanged">
                         </ComboBox>
-                    </StackPanel>
-                </Grid>
 
-                <Grid Margin="18,0,18,8"
-                      Background="{ThemeResource YanshuaiPanelBrush}"
-                      BorderBrush="{ThemeResource YanshuaiBorderBrush}"
-                      BorderThickness="0,0,0,1"
-                      Padding="12,12">
-                    <StackPanel>
-                        <TextBlock x:Name="EnglishFontLabel" Text="英文字体" FontSize="15"/>
+                        <Border Height="1" Margin="0,16" Background="{ThemeResource YanshuaiBorderBrush}" Opacity="{StaticResource OpacityFaint}"/>
+
+                        <TextBlock x:Name="EnglishFontLabel" Text="英文字体"
+                                   Style="{StaticResource BodyTextStyle}" FontWeight="SemiBold"/>
                         <TextBlock x:Name="EnglishFontDesc" Text="选择英文/数字使用的字体"
-                                   FontSize="12" Opacity="0.55" Margin="0,2,0,8"/>
+                                   Style="{StaticResource CaptionTextStyle}" Margin="0,2,0,8"/>
                         <ComboBox x:Name="EnglishFontPicker"
                                   HorizontalAlignment="Stretch"
                                   SelectionChanged="EnglishFontPicker_SelectionChanged">
                         </ComboBox>
                     </StackPanel>
-                </Grid>
+                </Border>
 
                 <!-- ★ 自定义主色 ★ -->
-                <StackPanel Margin="18,0,18,24"
-                            Background="{ThemeResource YanshuaiPanelBrush}"
-                            BorderBrush="{ThemeResource YanshuaiBorderBrush}"
-                            BorderThickness="0,0,0,1"
-                            Padding="12,12">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                            <TextBlock x:Name="CustomAccentLabel" Text="自定义主色调" FontSize="15"/>
-                            <TextBlock x:Name="CustomAccentDesc" Text="覆盖当前主题的强调色"
-                                       FontSize="12" Opacity="0.55" Margin="0,2,0,0"/>
-                        </StackPanel>
-                        <ToggleSwitch x:Name="CustomAccentToggle" Grid.Column="1"
-                                      VerticalAlignment="Center"
-                                      Toggled="CustomAccentToggle_Toggled"/>
-                    </Grid>
-
-                    <StackPanel x:Name="CustomAccentPanel" Visibility="Collapsed" Margin="0,12,0,0">
-                        <TextBlock x:Name="AccentSwatchLabel" Text="预设色板"
-                                   FontSize="12" Opacity="0.55" Margin="0,0,0,8"/>
-                        <ItemsControl x:Name="AccentSwatchList">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <StackPanel Orientation="Horizontal"/>
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                        </ItemsControl>
-
-                        <TextBlock x:Name="AccentHexLabel" Text="或输入十六进制值（#RRGGBB）"
-                                   FontSize="12" Opacity="0.55" Margin="0,12,0,4"/>
+                <TextBlock Text="主色调"
+                           Style="{StaticResource LabelTextStyle}"
+                           Margin="2,0,0,8"/>
+                <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,18">
+                    <StackPanel>
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="8"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <TextBox x:Name="AccentHexBox" Grid.Column="0"
-                                     PlaceholderText="#A33A2C"/>
-                            <Button Grid.Column="2" x:Name="ApplyAccentBtn" Content="应用"
-                                    Click="ApplyAccentHex_Click"
-                                    Padding="14,8"/>
+                            <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                <TextBlock x:Name="CustomAccentLabel" Text="自定义主色调"
+                                           Style="{StaticResource BodyTextStyle}"/>
+                                <TextBlock x:Name="CustomAccentDesc" Text="覆盖当前主题的强调色"
+                                           Style="{StaticResource CaptionTextStyle}" Margin="0,2,0,0"/>
+                            </StackPanel>
+                            <ToggleSwitch x:Name="CustomAccentToggle" Grid.Column="1"
+                                          VerticalAlignment="Center"
+                                          Toggled="CustomAccentToggle_Toggled"/>
                         </Grid>
 
-                        <Grid Margin="0,10,0,0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Border x:Name="CurrentAccentSwatch" Grid.Column="0"
-                                    Width="32" Height="32"
-                                    CornerRadius="4"
-                                    Background="{ThemeResource YanshuaiAccentBrush}"
-                                    BorderBrush="{ThemeResource YanshuaiBorderBrush}"
-                                    BorderThickness="1"/>
-                            <TextBlock Grid.Column="1" x:Name="CurrentAccentLabel"
-                                       Text="当前主色"
-                                       FontSize="13" Opacity="0.7"
-                                       VerticalAlignment="Center"
-                                       Margin="10,0,0,0"/>
-                        </Grid>
+                        <StackPanel x:Name="CustomAccentPanel" Visibility="Collapsed" Margin="0,12,0,0">
+                            <TextBlock x:Name="AccentSwatchLabel" Text="预设色板"
+                                       Style="{StaticResource CaptionTextStyle}" Margin="0,0,0,8"/>
+                            <ItemsControl x:Name="AccentSwatchList">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                            </ItemsControl>
+
+                            <TextBlock x:Name="AccentHexLabel" Text="或输入十六进制值（#RRGGBB）"
+                                       Style="{StaticResource CaptionTextStyle}" Margin="0,12,0,4"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="8"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="AccentHexBox" Grid.Column="0"
+                                         PlaceholderText="#A33A2C"/>
+                                <Button Grid.Column="2" x:Name="ApplyAccentBtn" Content="应用"
+                                        Click="ApplyAccentHex_Click"
+                                        Style="{StaticResource PrimaryButtonStyle}"/>
+                            </Grid>
+
+                            <Grid Margin="0,10,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Border x:Name="CurrentAccentSwatch" Grid.Column="0"
+                                        Width="32" Height="32"
+                                        CornerRadius="4"
+                                        Background="{ThemeResource YanshuaiAccentBrush}"
+                                        BorderBrush="{ThemeResource YanshuaiBorderBrush}"
+                                        BorderThickness="1"/>
+                                <TextBlock Grid.Column="1" x:Name="CurrentAccentLabel"
+                                           Text="当前主色"
+                                           Style="{StaticResource BodyTextStyle}"
+                                           Opacity="{StaticResource OpacityMuted}"
+                                           VerticalAlignment="Center"
+                                           Margin="10,0,0,0"/>
+                            </Grid>
+                        </StackPanel>
                     </StackPanel>
-                </StackPanel>
+                </Border>
 
                 <!-- ★ 默认对话外观 ★ -->
-                <StackPanel Margin="18,0,18,24"
-                            Background="{ThemeResource YanshuaiPanelBrush}"
-                            BorderBrush="{ThemeResource YanshuaiBorderBrush}"
-                            BorderThickness="0,0,0,1"
-                            Padding="12,12">
-                    <StackPanel Margin="0,0,0,10">
-                        <TextBlock x:Name="DefaultAppearanceLabel" Text="默认对话外观" FontSize="15"/>
-                        <TextBlock x:Name="DefaultAppearanceDesc" Text="新建对话时使用的默认气泡和背景颜色"
-                                   FontSize="12" Opacity="0.55" Margin="0,2,0,0"/>
-                    </StackPanel>
+                <TextBlock Text="默认对话外观"
+                           Style="{StaticResource LabelTextStyle}"
+                           Margin="2,0,0,8"/>
+                <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,24">
+                    <StackPanel>
+                        <StackPanel Margin="0,0,0,10">
+                            <TextBlock x:Name="DefaultAppearanceLabel" Text="默认对话外观"
+                                       Style="{StaticResource BodyTextStyle}" FontWeight="SemiBold"/>
+                            <TextBlock x:Name="DefaultAppearanceDesc" Text="新建对话时使用的默认气泡和背景颜色"
+                                       Style="{StaticResource CaptionTextStyle}" Margin="0,2,0,0"/>
+                        </StackPanel>
 
-                    <!-- 背景 -->
-                    <TextBlock x:Name="BgSectionLabel" Text="对话背景" FontSize="12" FontWeight="SemiBold"
-                               Foreground="{ThemeResource YanshuaiAccentBrush}" CharacterSpacing="80"
-                               Margin="0,0,0,6"/>
-                    <ComboBox x:Name="DefaultBgType" HorizontalAlignment="Stretch"
-                              Margin="0,0,0,8" SelectionChanged="DefaultBgType_Changed">
-                    </ComboBox>
-                    <StackPanel x:Name="DefaultSolidPanel" Visibility="Collapsed" Margin="0,0,0,8">
-                        <Border x:Name="DefaultBgPreview" Height="40" Margin="0,0,0,6"
+                        <!-- 背景 -->
+                        <TextBlock x:Name="BgSectionLabel" Text="对话背景"
+                                   Style="{StaticResource LabelTextStyle}"
+                                   Foreground="{ThemeResource YanshuaiAccentBrush}"
+                                   Margin="0,0,0,6"/>
+                        <ComboBox x:Name="DefaultBgType" HorizontalAlignment="Stretch"
+                                  Margin="0,0,0,8" SelectionChanged="DefaultBgType_Changed">
+                        </ComboBox>
+                        <StackPanel x:Name="DefaultSolidPanel" Visibility="Collapsed" Margin="0,0,0,8">
+                            <Border x:Name="DefaultBgPreview" Height="40" Margin="0,0,0,6"
+                                    CornerRadius="{StaticResource CardCornerRadius}"
+                                    BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="1">
+                                <TextBlock x:Name="DefaultBgLabel" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           FontSize="12" FontFamily="Consolas"/>
+                            </Border>
+                            <TextBox x:Name="DefaultBgHex" PlaceholderText="#RRGGBB" Margin="0,0,0,4"
+                                     TextChanged="DefaultBgHex_Changed"/>
+                            <local:ColorPresetPanel ColorSelected="DefaultBgPreset_Click"/>
+                        </StackPanel>
+
+                        <!-- 用户气泡 -->
+                        <TextBlock x:Name="UserBubbleSectionLabel" Text="用户气泡颜色"
+                                   Style="{StaticResource LabelTextStyle}"
+                                   Foreground="{ThemeResource YanshuaiAccentBrush}"
+                                   Margin="0,8,0,6"/>
+                        <Border x:Name="DefaultUserPreview" Height="36" Margin="0,0,0,4"
+                                CornerRadius="{StaticResource CardCornerRadius}"
                                 BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="1">
-                            <TextBlock x:Name="DefaultBgLabel" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                       FontSize="12" FontFamily="Consolas"/>
+                            <TextBlock x:Name="DefaultUserLabel" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       FontSize="12" FontFamily="Consolas" Text=""/>
                         </Border>
-                        <TextBox x:Name="DefaultBgHex" PlaceholderText="#RRGGBB" Margin="0,0,0,4"
-                                 TextChanged="DefaultBgHex_Changed"/>
-                        <local:ColorPresetPanel ColorSelected="DefaultBgPreset_Click"/>
+                        <TextBox x:Name="DefaultUserHex" PlaceholderText="#RRGGBB" Margin="0,0,0,4"
+                                 TextChanged="DefaultUserHex_Changed"/>
+                        <Grid Margin="0,0,0,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <local:ColorPresetPanel Grid.Column="0" ColorSelected="DefaultUserPreset_Click"/>
+                            <Button Grid.Column="1" x:Name="DefaultUserClearBtn" Content="清除" Click="DefaultUserClear_Click"
+                                    Style="{StaticResource GhostButtonStyle}" Margin="8,0,0,0"/>
+                        </Grid>
+
+                        <!-- AI 气泡 -->
+                        <TextBlock x:Name="AiBubbleSectionLabel" Text="AI 气泡颜色"
+                                   Style="{StaticResource LabelTextStyle}"
+                                   Foreground="{ThemeResource YanshuaiAccentBrush}"
+                                   Margin="0,8,0,6"/>
+                        <Border x:Name="DefaultAiPreview" Height="36" Margin="0,0,0,4"
+                                CornerRadius="{StaticResource CardCornerRadius}"
+                                BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="1">
+                            <TextBlock x:Name="DefaultAiLabel" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       FontSize="12" FontFamily="Consolas" Text=""/>
+                        </Border>
+                        <TextBox x:Name="DefaultAiHex" PlaceholderText="#RRGGBB" Margin="0,0,0,4"
+                                 TextChanged="DefaultAiHex_Changed"/>
+                        <Grid Margin="0,0,0,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <local:ColorPresetPanel Grid.Column="0" ColorSelected="DefaultAiPreset_Click"/>
+                            <Button Grid.Column="1" x:Name="DefaultAiClearBtn" Content="清除" Click="DefaultAiClear_Click"
+                                    Style="{StaticResource GhostButtonStyle}" Margin="8,0,0,0"/>
+                        </Grid>
+
+                        <!-- 引号/括号高亮 -->
+                        <TextBlock x:Name="HighlightSectionLabel" Text="文本高亮颜色"
+                                   Style="{StaticResource LabelTextStyle}"
+                                   Foreground="{ThemeResource YanshuaiAccentBrush}"
+                                   Margin="0,8,0,6"/>
+
+                        <TextBlock x:Name="QuoteSectionLabel" Text="引号颜色"
+                                   Style="{StaticResource CaptionTextStyle}" Margin="0,0,0,4"/>
+                        <Border x:Name="DefaultQuotePreview" Height="32" Margin="0,0,0,4"
+                                CornerRadius="{StaticResource CardCornerRadius}"
+                                BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="1">
+                            <TextBlock x:Name="DefaultQuoteLabel" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       FontSize="11" FontFamily="Consolas" Text=""/>
+                        </Border>
+                        <Grid Margin="0,0,0,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox x:Name="DefaultQuoteHex" Grid.Column="0" PlaceholderText="#RRGGBB" Margin="0,0,6,0"
+                                     TextChanged="DefaultQuoteHex_Changed"/>
+                            <Button Grid.Column="1" x:Name="QuotePresetBtn" Content="预设" Click="DefaultQuotePreset_Click"
+                                    Style="{StaticResource GhostButtonStyle}" Margin="0,0,4,0"/>
+                            <Button Grid.Column="2" x:Name="QuoteClearBtn" Content="清除" Click="DefaultQuoteClear_Click"
+                                    Style="{StaticResource GhostButtonStyle}"/>
+                        </Grid>
+
+                        <TextBlock x:Name="BracketSectionLabel" Text="括号颜色"
+                                   Style="{StaticResource CaptionTextStyle}" Margin="0,0,0,4"/>
+                        <Border x:Name="DefaultBracketPreview" Height="32" Margin="0,0,0,4"
+                                CornerRadius="{StaticResource CardCornerRadius}"
+                                BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="1">
+                            <TextBlock x:Name="DefaultBracketLabel" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       FontSize="11" FontFamily="Consolas" Text=""/>
+                        </Border>
+                        <Grid Margin="0,0,0,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox x:Name="DefaultBracketHex" Grid.Column="0" PlaceholderText="#RRGGBB" Margin="0,0,6,0"
+                                     TextChanged="DefaultBracketHex_Changed"/>
+                            <Button Grid.Column="1" x:Name="BracketPresetBtn" Content="预设" Click="DefaultBracketPreset_Click"
+                                    Style="{StaticResource GhostButtonStyle}" Margin="0,0,4,0"/>
+                            <Button Grid.Column="2" x:Name="BracketClearBtn" Content="清除" Click="DefaultBracketClear_Click"
+                                    Style="{StaticResource GhostButtonStyle}"/>
+                        </Grid>
+
+                        <Button x:Name="ResetDefaultBtn" Content="恢复默认" Click="DefaultAppearanceReset_Click"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                Margin="0,12,0,0" HorizontalAlignment="Left"/>
                     </StackPanel>
-
-                    <!-- 用户气泡 -->
-                    <TextBlock x:Name="UserBubbleSectionLabel" Text="用户气泡颜色" FontSize="12" FontWeight="SemiBold"
-                               Foreground="{ThemeResource YanshuaiAccentBrush}" CharacterSpacing="80"
-                               Margin="0,8,0,6"/>
-                    <Border x:Name="DefaultUserPreview" Height="36" Margin="0,0,0,4"
-                            BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="1">
-                        <TextBlock x:Name="DefaultUserLabel" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                   FontSize="12" FontFamily="Consolas" Text=""/>
-                    </Border>
-                    <TextBox x:Name="DefaultUserHex" PlaceholderText="#RRGGBB" Margin="0,0,0,4"
-                             TextChanged="DefaultUserHex_Changed"/>
-                    <Grid Margin="0,0,0,4">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <local:ColorPresetPanel Grid.Column="0" ColorSelected="DefaultUserPreset_Click"/>
-                        <Button Grid.Column="1" x:Name="DefaultUserClearBtn" Content="清除" Click="DefaultUserClear_Click"
-                                Padding="10,0" Height="30" Margin="8,0,0,0"/>
-                    </Grid>
-
-                    <!-- AI 气泡 -->
-                    <TextBlock x:Name="AiBubbleSectionLabel" Text="AI 气泡颜色" FontSize="12" FontWeight="SemiBold"
-                               Foreground="{ThemeResource YanshuaiAccentBrush}" CharacterSpacing="80"
-                               Margin="0,8,0,6"/>
-                    <Border x:Name="DefaultAiPreview" Height="36" Margin="0,0,0,4"
-                            BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="1">
-                        <TextBlock x:Name="DefaultAiLabel" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                   FontSize="12" FontFamily="Consolas" Text=""/>
-                    </Border>
-                    <TextBox x:Name="DefaultAiHex" PlaceholderText="#RRGGBB" Margin="0,0,0,4"
-                             TextChanged="DefaultAiHex_Changed"/>
-                    <Grid Margin="0,0,0,4">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <local:ColorPresetPanel Grid.Column="0" ColorSelected="DefaultAiPreset_Click"/>
-                        <Button Grid.Column="1" x:Name="DefaultAiClearBtn" Content="清除" Click="DefaultAiClear_Click"
-                                Padding="10,0" Height="30" Margin="8,0,0,0"/>
-                    </Grid>
-
-                    <!-- 引号/括号高亮 -->
-                    <TextBlock x:Name="HighlightSectionLabel" Text="文本高亮颜色" FontSize="12" FontWeight="SemiBold"
-                               Foreground="{ThemeResource YanshuaiAccentBrush}" CharacterSpacing="80"
-                               Margin="0,8,0,6"/>
-
-                    <TextBlock x:Name="QuoteSectionLabel" Text="引号颜色" FontSize="13" Opacity="0.7" Margin="0,0,0,4"/>
-                    <Border x:Name="DefaultQuotePreview" Height="32" Margin="0,0,0,4"
-                            BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="1">
-                        <TextBlock x:Name="DefaultQuoteLabel" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                   FontSize="11" FontFamily="Consolas" Text=""/>
-                    </Border>
-                    <Grid Margin="0,0,0,8">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBox x:Name="DefaultQuoteHex" Grid.Column="0" PlaceholderText="#RRGGBB" Margin="0,0,6,0"
-                                 TextChanged="DefaultQuoteHex_Changed"/>
-                        <Button Grid.Column="1" x:Name="QuotePresetBtn" Content="预设" Click="DefaultQuotePreset_Click" Padding="8,0" Height="30" Margin="0,0,4,0"/>
-                        <Button Grid.Column="2" x:Name="QuoteClearBtn" Content="清除" Click="DefaultQuoteClear_Click" Padding="8,0" Height="30"/>
-                    </Grid>
-
-                    <TextBlock x:Name="BracketSectionLabel" Text="括号颜色" FontSize="13" Opacity="0.7" Margin="0,0,0,4"/>
-                    <Border x:Name="DefaultBracketPreview" Height="32" Margin="0,0,0,4"
-                            BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="1">
-                        <TextBlock x:Name="DefaultBracketLabel" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                   FontSize="11" FontFamily="Consolas" Text=""/>
-                    </Border>
-                    <Grid Margin="0,0,0,4">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBox x:Name="DefaultBracketHex" Grid.Column="0" PlaceholderText="#RRGGBB" Margin="0,0,6,0"
-                                 TextChanged="DefaultBracketHex_Changed"/>
-                        <Button Grid.Column="1" x:Name="BracketPresetBtn" Content="预设" Click="DefaultBracketPreset_Click" Padding="8,0" Height="30" Margin="0,0,4,0"/>
-                        <Button Grid.Column="2" x:Name="BracketClearBtn" Content="清除" Click="DefaultBracketClear_Click" Padding="8,0" Height="30"/>
-                    </Grid>
-
-                    <Button x:Name="ResetDefaultBtn" Content="恢复默认" Click="DefaultAppearanceReset_Click"
-                            Margin="0,12,0,0" Padding="12,8" HorizontalAlignment="Left"/>
-                </StackPanel>
+                </Border>
 
             </StackPanel>
         </ScrollViewer>

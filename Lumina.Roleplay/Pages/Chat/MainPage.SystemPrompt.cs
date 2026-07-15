@@ -206,7 +206,7 @@ namespace yanshuai
                 sb.AppendLine("- " + item);
         }
 
-        private async System.Threading.Tasks.Task PrefetchCloudRagAsync(string userInput)
+        private async System.Threading.Tasks.Task PrefetchCloudRagAsync(string userInput, System.Threading.CancellationToken ct = default)
         {
             RAGForPrompt = null;
             _ragDebugText = "";
@@ -226,7 +226,7 @@ namespace yanshuai
                         if (profile != null)
                         {
                             var sw = System.Diagnostics.Stopwatch.StartNew();
-                            RAGForPrompt = await pool.SearchMemoriesCloudAsync(userInput, profile, pool.Settings.RAGTopK);
+                            RAGForPrompt = await pool.SearchMemoriesCloudAsync(userInput, profile, pool.Settings.RAGTopK, ct);
                             sw.Stop();
                             debugLines.Add($"对话池 RAG：{sw.ElapsedMilliseconds} ms，命中 {RAGForPrompt?.Count ?? 0}");
                         }
@@ -252,6 +252,7 @@ namespace yanshuai
 
         private void MaybeShowFirstMessage()
         {
+            if (_conv.Messages.Count > 0) return;
             var character = DataManager.GetCharacterForConversation(_conv);
             if (character == null || string.IsNullOrEmpty(character.FirstMessage)) return;
 

@@ -197,7 +197,8 @@ namespace yanshuai
                     lens[d] = wc;
                     totalWords += wc;
                 }
-                double avgDocLength = totalWords / (double)totalDocs;
+                // 全部文档为空/纯分隔符时 totalWords==0，避免 docLen/avgDocLength 产生 NaN/Infinity
+                double avgDocLength = totalWords > 0 ? totalWords / (double)totalDocs : 1.0;
 
                 // 预计算 IDF（用预先 ToLower 的文本 + Ordinal 查找，与下方 TF 统计一致）
                 var idfCache = new Dictionary<string, double>();
@@ -290,15 +291,17 @@ namespace yanshuai
         private static readonly HttpClient _http = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
 
         /// <summary>用API生成文本嵌入向量</summary>
-        public static async Task<float[]> GetEmbeddingAsync(string text, ApiProfile profile)
+        public static async Task<float[]> GetEmbeddingAsync(string text, ApiProfile profile, System.Threading.CancellationToken ct = default)
         {
             if (string.IsNullOrWhiteSpace(text) || profile == null) return null;
+            if (!IsNetworkAvailable()) return null;
 
             // 构建 embeddings API 请求
+            var m = profile.Model ?? "";
             var payload = new
             {
                 input = text.Length > 8000 ? text.Substring(0, 8000) : text,
-                model = profile.Model.StartsWith("text-embedding") ? profile.Model : "text-embedding-ada-002"
+                model = m.StartsWith("text-embedding", StringComparison.Ordinal) ? m : "text-embedding-ada-002"
             };
 
             string json;
@@ -322,14 +325,14 @@ namespace yanshuai
                 req.Headers.TryAddWithoutValidation("Authorization", $"Bearer {profile.ApiKey}");
                 req.Content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                using (var resp = await _http.SendAsync(req))
+                using (var resp = await _http.SendAsync(req, ct))
                 {
                     if (!resp.IsSuccessStatusCode) return null;
                     var body = await resp.Content.ReadAsStringAsync();
                     return ParseEmbeddingResponse(body);
                 }
             }
-            catch { return null; }
+            catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"[RAG] GetEmbedding failed: {ex.Message}"); return null; }
         }
 
         private static float[] ParseEmbeddingResponse(string json)
@@ -364,9 +367,10 @@ namespace yanshuai
         /// <summary>云端重排：将粗排候选发给 DeepSeek/OpenAI 做精排</summary>
         /// <returns>重排后的索引列表（只含 top-K）</returns>
         public static async Task<List<int>> RerankWithApiAsync(string query,
-            List<string> candidates, ApiProfile profile, int topK = 5)
+            List<string> candidates, ApiProfile profile, int topK = 5, System.Threading.CancellationToken ct = default)
         {
             if (candidates.Count == 0 || profile == null) return null;
+            if (!IsNetworkAvailable()) return null;
 
             try
             {
@@ -411,33 +415,41 @@ namespace yanshuai
                 req.Headers.TryAddWithoutValidation("Authorization", $"Bearer {profile.ApiKey}");
                 req.Content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                using (var resp = await _http.SendAsync(req))
+                using (var resp = await _http.SendAsync(req, ct))
                 {
                     if (!resp.IsSuccessStatusCode) return null;
                     var body = await resp.Content.ReadAsStringAsync();
 
-                    // 解析响应中的编号
+                    // 只解析模型答复正文里的编号，不能用整个 HTTP/JSON 包体：
+                    // 否则 created/index/token 计数等落在 [0,candidates.Count) 的整数会被误当成排名。
+                    ApiResponse parsed;
+                    using (var ms = new MemoryStream(Encoding.UTF8.GetBytes(body)))
+                        parsed = (ApiResponse)new DataContractJsonSerializer(typeof(ApiResponse)).ReadObject(ms);
+                    var content = (parsed?.Choices?.Count > 0 ? parsed.Choices[0]?.Message?.Content : null) ?? "";
+                    if (string.IsNullOrWhiteSpace(content)) return null; // 触发本地重排降级
+
+                    // 解析答复正文中的编号
                     var ids = new List<int>();
-                    foreach (var part in body.Split(',', '，', ' ', '\n', '\r',
+                    foreach (var part in content.Split(',', '，', ' ', '\n', '\r',
                         '[', ']', '{', '}', '"', '\t'))
                     {
                         if (int.TryParse(part.Trim(), out int id) &&
                             id >= 0 && id < candidates.Count && !ids.Contains(id))
                             ids.Add(id);
                     }
-                    return ids.Take(topK).ToList();
+                    return ids.Count > 0 ? ids.Take(topK).ToList() : null;
                 }
             }
-            catch { return null; }
+            catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"[RAG] Rerank failed: {ex.Message}"); return null; }
         }
 
         /// <summary>检索并构建 RAG 上下文文本</summary>
-        public static async Task<string> BuildRagContextAsync(string userInput, ApiProfile profile, string conversationId = null)
+        public static async Task<string> BuildRagContextAsync(string userInput, ApiProfile profile, string conversationId = null, System.Threading.CancellationToken ct = default)
         {
             if (string.IsNullOrWhiteSpace(userInput)) return null;
 
             // 1. 先尝试用嵌入检索
-            var embedding = await GetEmbeddingAsync(userInput, profile);
+            var embedding = await GetEmbeddingAsync(userInput, profile, ct);
             List<SearchResult> results;
 
             if (embedding != null && embedding.Length > 0)
@@ -460,6 +472,16 @@ namespace yanshuai
             }
 
             return sb.ToString();
+        }
+
+        private static bool IsNetworkAvailable()
+        {
+            try
+            {
+                var profile = Windows.Networking.Connectivity.NetworkInformation.GetInternetConnectionProfile();
+                return profile != null && profile.GetNetworkConnectivityLevel() == Windows.Networking.Connectivity.NetworkConnectivityLevel.InternetAccess;
+            }
+            catch { return true; }
         }
     }
 }

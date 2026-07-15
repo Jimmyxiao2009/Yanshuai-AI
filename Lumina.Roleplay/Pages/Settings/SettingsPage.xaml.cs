@@ -27,58 +27,9 @@ namespace yanshuai
             ReplySoundToggle.IsOn = AppSettings.ReplySoundEnabled;
             ReasoningExpandedToggle.IsOn = AppSettings.ReasoningExpandedByDefault;
 
-            RestoreSectionStates();
-
             _loading = false;
             ApplyLanguage();
         }
-
-        // ── Section collapse/expand ──────────────────────────────────
-
-        private void RestoreSectionStates()
-        {
-            ApplySectionState(DisplaySection,  DisplaySectionIcon,  AppSettings.GetBool("sec_display",  true));
-            ApplySectionState(InputSection,    InputSectionIcon,    AppSettings.GetBool("sec_input",    true));
-            ApplySectionState(StartupSection,  StartupSectionIcon,  AppSettings.GetBool("sec_startup",  true));
-            ApplySectionState(CharaSection,    CharaSectionIcon,    AppSettings.GetBool("sec_chara",    true));
-            ApplySectionState(BackupSection,   BackupSectionIcon,   AppSettings.GetBool("sec_backup",   true));
-            ApplySectionState(OobeSection,     OobeSectionIcon,     AppSettings.GetBool("sec_oobe",     true));
-            ApplySectionState(AboutSection,    AboutSectionIcon,    AppSettings.GetBool("sec_about",    true));
-        }
-
-        private static void ApplySectionState(StackPanel content, FontIcon icon, bool expanded)
-        {
-            content.Visibility = expanded ? Visibility.Visible : Visibility.Collapsed;
-            icon.Glyph = expanded ? "\uE76E" : "\uE76B";
-        }
-
-        private static void ToggleSection(StackPanel content, FontIcon icon, string key)
-        {
-            bool nowExpanded = content.Visibility == Visibility.Collapsed;
-            ApplySectionState(content, icon, nowExpanded);
-            AppSettings.SetBool(key, nowExpanded);
-        }
-
-        private void DisplaySection_Tapped(object sender, TappedRoutedEventArgs e)
-            => ToggleSection(DisplaySection, DisplaySectionIcon, "sec_display");
-
-        private void InputSection_Tapped(object sender, TappedRoutedEventArgs e)
-            => ToggleSection(InputSection, InputSectionIcon, "sec_input");
-
-        private void StartupSection_Tapped(object sender, TappedRoutedEventArgs e)
-            => ToggleSection(StartupSection, StartupSectionIcon, "sec_startup");
-
-        private void CharaSection_Tapped(object sender, TappedRoutedEventArgs e)
-            => ToggleSection(CharaSection, CharaSectionIcon, "sec_chara");
-
-        private void BackupSection_Tapped(object sender, TappedRoutedEventArgs e)
-            => ToggleSection(BackupSection, BackupSectionIcon, "sec_backup");
-
-        private void OobeSection_Tapped(object sender, TappedRoutedEventArgs e)
-            => ToggleSection(OobeSection, OobeSectionIcon, "sec_oobe");
-
-        private void AboutSection_Tapped(object sender, TappedRoutedEventArgs e)
-            => ToggleSection(AboutSection, AboutSectionIcon, "sec_about");
 
         // ── Language ─────────────────────────────────────────────────
 

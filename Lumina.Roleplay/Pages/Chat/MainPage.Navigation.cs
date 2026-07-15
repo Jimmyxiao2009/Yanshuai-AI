@@ -31,6 +31,8 @@ namespace yanshuai
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
+            _pageCts = new System.Threading.CancellationTokenSource();
+            RegisterKeyboardNotifications();
             if (ShellPage.Current == null)
             {
                 Frame.Navigate(typeof(ShellPage));
@@ -191,12 +193,15 @@ namespace yanshuai
                 // 让恢复气泡持续跟踪 AppState 内容，直到任务完成
                 _ = Task.Run(async () =>
                 {
-                    while (AppState.IsRunning(convId))
+                    var pageToken = _pageCts?.Token ?? default;
+                    while (AppState.IsRunning(convId) && !pageToken.IsCancellationRequested)
                     {
                         await Task.Delay(200);
                         var cur = AppState.GetTask(convId);
+                        if (pageToken.IsCancellationRequested) break;
                         await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                         {
+                            if (pageToken.IsCancellationRequested) return;
                             if (cur != null)
                             {
                                 recoverBubble.Content          = cur.Content;
@@ -204,9 +209,11 @@ namespace yanshuai
                             }
                         });
                     }
+                    if (pageToken.IsCancellationRequested) return;
                     // 任务完成，同步最终状态并恢复 UI
                     await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                     {
+                        if (pageToken.IsCancellationRequested) return;
                         recoverBubble.IsStreaming = false;
                         _isSending = false;
                         SubmitButton.IsEnabled = true;
@@ -228,6 +235,10 @@ namespace yanshuai
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
             base.OnNavigatedFrom(e);
+            _pageCts?.Cancel();
+            _pageCts?.Dispose();
+            _pageCts = null;
+            UnregisterKeyboardNotifications();
             _memoryTimer?.Stop();
             // 不取消 _streamCts：后台任务继续运行，结果会写入数据库
             // Fire-and-forget：不 await，导航立即完成，保存在后台进行
@@ -260,5 +271,38 @@ namespace yanshuai
 
         // ── 图片附加 ──────────────────────────────────────────────────────────
 
+        private void RegisterKeyboardNotifications()
+        {
+            try
+            {
+                var inputPane = Windows.UI.ViewManagement.InputPane.GetForCurrentView();
+                inputPane.Showing += InputPane_Showing;
+                inputPane.Hiding += InputPane_Hiding;
+            }
+            catch { }
+        }
+
+        private void UnregisterKeyboardNotifications()
+        {
+            try
+            {
+                var inputPane = Windows.UI.ViewManagement.InputPane.GetForCurrentView();
+                inputPane.Showing -= InputPane_Showing;
+                inputPane.Hiding -= InputPane_Hiding;
+            }
+            catch { }
+        }
+
+        private void InputPane_Showing(Windows.UI.ViewManagement.InputPane sender, Windows.UI.ViewManagement.InputPaneVisibilityEventArgs args)
+        {
+            args.EnsuredFocusedElementInView = true;
+            RootGrid.Margin = new Thickness(0, 0, 0, args.OccludedRect.Height);
+        }
+
+        private void InputPane_Hiding(Windows.UI.ViewManagement.InputPane sender, Windows.UI.ViewManagement.InputPaneVisibilityEventArgs args)
+        {
+            args.EnsuredFocusedElementInView = true;
+            RootGrid.Margin = new Thickness(0);
+        }
     }
 }

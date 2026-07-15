@@ -11,9 +11,16 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock x:Name="PageTitle" Grid.Row="0" Text="角色卡"
-                   FontSize="32" FontWeight="Light" Margin="18,20,18,8"
-                   Foreground="{ThemeResource YanshuaiTextBrush}"/>
+        <!-- 页眉：心象点 + 标题 -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="18,22,18,10">
+            <Ellipse Width="9" Height="9" Fill="{ThemeResource YanshuaiAccentBrush}"
+                     VerticalAlignment="Center" Margin="0,0,12,0"/>
+            <TextBlock x:Name="PageTitle" Text="角色卡"
+                       FontFamily="{ThemeResource YanshuaiTitleFont}"
+                       FontSize="30"
+                       VerticalAlignment="Center"
+                       Foreground="{ThemeResource YanshuaiTextBrush}"/>
+        </StackPanel>
 
         <!-- 角色卡网格（绑定 + 分组 + 自适应列；多选用 GridView 原生选择） -->
         <GridView x:Name="CardsGrid" Grid.Row="1"
@@ -40,12 +47,18 @@
                 <GroupStyle>
                     <GroupStyle.HeaderTemplate>
                         <DataTemplate>
-                            <StackPanel Orientation="Horizontal" Margin="6,12,0,4">
+                            <StackPanel Orientation="Horizontal" Margin="8,14,0,6">
+                                <Rectangle Width="3" Height="15" RadiusX="1.5" RadiusY="1.5"
+                                           Fill="{ThemeResource YanshuaiAccentBrush}"
+                                           VerticalAlignment="Center" Margin="0,0,9,0"/>
                                 <TextBlock Text="{Binding Key}"
-                                           FontSize="13" FontWeight="SemiBold"
-                                           Foreground="{ThemeResource YanshuaiAccentBrush}"/>
+                                           FontFamily="{ThemeResource YanshuaiTitleFont}"
+                                           FontSize="14"
+                                           VerticalAlignment="Center"
+                                           Foreground="{ThemeResource YanshuaiTextBrush}"/>
                                 <TextBlock Text="{Binding CardCount}"
-                                           FontSize="13" Opacity="0.5" Margin="8,0,0,0"
+                                           FontSize="12" Opacity="{StaticResource OpacitySubtle}" Margin="9,0,0,0"
+                                           VerticalAlignment="Center"
                                            Foreground="{ThemeResource YanshuaiMutedTextBrush}"/>
                             </StackPanel>
                         </DataTemplate>
@@ -57,12 +70,16 @@
         <!-- 空状态 -->
         <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center"
                     Visibility="{Binding EmptyVisibility}">
-            <FontIcon Glyph="&#xE77B;" FontFamily="Segoe MDL2 Assets"
-                      FontSize="48" Opacity="0.3"
-                      HorizontalAlignment="Center"
-                      Foreground="{ThemeResource YanshuaiMutedTextBrush}"/>
-            <TextBlock x:Name="EmptyLabel" Margin="0,12,0,0"
-                       FontSize="14" Opacity="0.6"
+            <Border Width="84" Height="84" CornerRadius="42" HorizontalAlignment="Center"
+                    Background="{ThemeResource YanshuaiAccentWashBrush}"
+                    BorderBrush="{ThemeResource YanshuaiAccentBrush}" BorderThickness="1">
+                <FontIcon Glyph="&#xE77B;" FontFamily="Segoe MDL2 Assets"
+                          FontSize="32"
+                          Foreground="{ThemeResource YanshuaiAccentBrush}"
+                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            <TextBlock x:Name="EmptyLabel" Margin="0,16,0,0"
+                       FontSize="14" Opacity="{StaticResource OpacitySubtle}"
                        HorizontalAlignment="Center"
                        Foreground="{ThemeResource YanshuaiMutedTextBrush}"/>
         </StackPanel>

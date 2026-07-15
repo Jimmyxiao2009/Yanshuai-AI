@@ -72,6 +72,7 @@ namespace yanshuai
         // Delete this message and everything after it
         private void DeleteMsg_Click(object sender, RoutedEventArgs e)
         {
+            if (_isSending) return;
             try
             {
                 if (!((sender as Button)?.Tag is ChatBubble b)) return;
@@ -86,7 +87,10 @@ namespace yanshuai
                 while (_bubbles.Count > idx) _bubbles.RemoveAt(_bubbles.Count - 1);
                 _ = DataManager.SaveAsync();
             }
-            catch { }
+            catch (Exception ex)
+            {
+                AddSystemBubble("⚠ 删除消息失败: " + ex.Message);
+            }
         }
 
         // Edit user message → creates a new branch
@@ -159,6 +163,7 @@ namespace yanshuai
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine("EditMsg_Click error: " + ex.Message);
+                AddSystemBubble("⚠ 编辑消息失败: " + ex.Message);
             }
         }
 
@@ -258,6 +263,7 @@ namespace yanshuai
                 _isSending = false;
                 if (SubmitIcon != null) SubmitIcon.Glyph = "\uE74A";
                 SubmitButton.IsEnabled = true;
+                AddSystemBubble("⚠ 继续输入失败: " + ex.Message);
             }
         }
 
@@ -308,6 +314,7 @@ namespace yanshuai
                 _isSending = false;
                 SubmitButton.IsEnabled = true;
                 if (SubmitIcon != null) SubmitIcon.Glyph = "\uE74A";
+                AddSystemBubble("⚠ 重新生成失败: " + ex.Message);
             }
         }
 
@@ -358,6 +365,7 @@ namespace yanshuai
                 _isSending = false;
                 SubmitButton.IsEnabled = true;
                 if (SubmitIcon != null) SubmitIcon.Glyph = "";
+                AddSystemBubble("⚠ 重试失败: " + ex.Message);
             }
         }
 
@@ -452,31 +460,40 @@ namespace yanshuai
 
         private void SwitchBranch(ChatBubble anchorBubble, int targetIndex)
         {
-            var bp = anchorBubble?.BranchData;
-            if (bp == null || targetIndex < 0 || targetIndex >= bp.Count) return;
+            if (_isSending) return;
+            try
+            {
+                var bp = anchorBubble?.BranchData;
+                if (bp == null || targetIndex < 0 || targetIndex >= bp.Count) return;
 
-            // Use the stored index — no message-ID search, so it works after edits
-            int anchorIdx = bp.AnchorIndex;
-            if (anchorIdx < 0 || anchorIdx >= _conv.Messages.Count) return;
+                // Use the stored index — no message-ID search, so it works after edits
+                int anchorIdx = bp.AnchorIndex;
+                if (anchorIdx < 0 || anchorIdx >= _conv.Messages.Count) return;
 
-            // Save current tail into current branch slot
-            SaveCurrentTailToBranch(bp);
+                // Save current tail into current branch slot
+                SaveCurrentTailToBranch(bp);
 
-            // Restore target branch
-            var target = bp.Branches[targetIndex];
-            _conv.Messages.RemoveRange(anchorIdx, _conv.Messages.Count - anchorIdx);
-            foreach (var m in target.Messages) _conv.Messages.Add(CloneMessage(m));
-            bp.ActiveIndex = targetIndex;
+                // Restore target branch
+                var target = bp.Branches[targetIndex];
+                _conv.Messages.RemoveRange(anchorIdx, _conv.Messages.Count - anchorIdx);
+                foreach (var m in target.Messages) _conv.Messages.Add(CloneMessage(m));
+                bp.ActiveIndex = targetIndex;
 
-            // Rebuild bubbles from anchorIdx onwards
-            // BuildBubble will auto-attach BranchData by AnchorIndex
-            while (_bubbles.Count > anchorIdx) _bubbles.RemoveAt(_bubbles.Count - 1);
-            int rebuildIdx = anchorIdx;
-            foreach (var m in _conv.Messages.Skip(anchorIdx))
-                _bubbles.Add(BuildBubble(m, rebuildIdx++));
+                // Rebuild bubbles from anchorIdx onwards
+                // BuildBubble will auto-attach BranchData by AnchorIndex
+                while (_bubbles.Count > anchorIdx) _bubbles.RemoveAt(_bubbles.Count - 1);
+                int rebuildIdx = anchorIdx;
+                foreach (var m in _conv.Messages.Skip(anchorIdx))
+                    _bubbles.Add(BuildBubble(m, rebuildIdx++));
 
-            _ = DataManager.SaveAsync();
-            ScrollToBottom();
+                _ = DataManager.SaveAsync();
+                ScrollToBottom();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("SwitchBranch error: " + ex.Message);
+                AddSystemBubble("⚠ 切换分支失败: " + ex.Message);
+            }
         }
 
         // ── Shared send helper (used by Edit + Regenerate) ────────────────────

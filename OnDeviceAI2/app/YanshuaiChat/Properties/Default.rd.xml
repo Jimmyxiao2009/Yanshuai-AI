@@ -1,0 +1,11 @@
+<!--
+    此文件包含 .NET Native 运行时指令。
+    用于控制 .NET Native 优化器在发布构建中保留哪些元数据。
+    详见 https://go.microsoft.com/fwlink/?LinkID=391919
+-->
+<Directives xmlns="http://schemas.microsoft.com/netfx/2013/01/metadata">
+  <Application>
+    <Assembly Name="*Application*" Dynamic="Required All" />
+    <Type Name="Windows.UI.Xaml.Data.Binding" Dynamic="Required Public" />
+  </Application>
+</Directives>

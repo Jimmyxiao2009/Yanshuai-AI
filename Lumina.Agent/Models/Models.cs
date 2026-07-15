@@ -131,6 +131,10 @@ namespace yanshuai
         [DataMember] public string Detail { get; set; } = "";
         /// <summary>工具状态图标 ⏳/✅/❌（Kind=tool）</summary>
         [DataMember] public string Icon { get; set; } = "";
+        /// <summary>工具调用参数（Kind=tool）</summary>
+        [DataMember] public string Args { get; set; } = "";
+        /// <summary>工具执行结果（Kind=tool）</summary>
+        [DataMember] public string Result { get; set; } = "";
     }
 
     public class ConversationMessage
@@ -163,6 +167,38 @@ namespace yanshuai
         [DataMember] public int TokensOutput { get; set; } = 0;
         /// <summary>提示命中缓存的 token 数（OpenAI prompt_tokens_details.cached_tokens / Anthropic cache_read_input_tokens）</summary>
         [DataMember] public int CachedTokens { get; set; } = 0;
+
+        public ConversationMessage Clone()
+        {
+            return new ConversationMessage
+            {
+                Id = Id,
+                Role = Role,
+                Content = Content,
+                ReasoningContent = ReasoningContent,
+                ThinkSteps = ThinkSteps != null ? ThinkSteps.Select(s => new ThinkStep
+                {
+                    Kind = s.Kind,
+                    Text = s.Text,
+                    ToolName = s.ToolName,
+                    Detail = s.Detail,
+                    Icon = s.Icon,
+                    Args = s.Args,
+                    Result = s.Result
+                }).ToList() : null,
+                ImagesBase64 = ImagesBase64 != null ? new List<string>(ImagesBase64) : null,
+                ImagesMimeType = ImagesMimeType != null ? new List<string>(ImagesMimeType) : null,
+                ImageRefs = ImageRefs != null ? new List<string>(ImageRefs) : null,
+                ImageBase64 = ImageBase64,
+                ImageMimeType = ImageMimeType,
+                AttachedFileNames = AttachedFileNames != null ? new List<string>(AttachedFileNames) : null,
+                LatentStateJson = LatentStateJson,
+                Timestamp = Timestamp,
+                TokensInput = TokensInput,
+                TokensOutput = TokensOutput,
+                CachedTokens = CachedTokens
+            };
+        }
 
         /// <summary>此消息是否带图片（看引用或内联 base64，均不读盘）。</summary>
         public bool HasImages =>
@@ -354,12 +390,7 @@ namespace yanshuai
                 if (bp.ActiveIndex < 0 || bp.ActiveIndex >= bp.Branches.Count) continue;
                 bp.Branches[bp.ActiveIndex] = new ConversationBranch
                 {
-                    Messages = Messages.Skip(bp.AnchorIndex).Select(m => new ConversationMessage
-                    {
-                        Id = m.Id, Role = m.Role, Content = m.Content,
-                        ReasoningContent = m.ReasoningContent, ThinkSteps = m.ThinkSteps,
-                        Timestamp = m.Timestamp
-                    }).ToList()
+                    Messages = Messages.Skip(bp.AnchorIndex).Select(m => m.Clone()).ToList()
                 };
             }
         }

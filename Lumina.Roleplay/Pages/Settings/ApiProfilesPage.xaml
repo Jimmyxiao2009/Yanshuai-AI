@@ -13,29 +13,35 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- 顶栏 -->
-        <Grid Grid.Row="0" Background="{ThemeResource YanshuaiPanelBrush}"
-              BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="0,0,0,1"
-              Padding="14,8">
+        <!-- 页眉：心象点 + 标题 -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="18,22,18,10">
+            <Ellipse Width="9" Height="9" Fill="{ThemeResource YanshuaiAccentBrush}"
+                     VerticalAlignment="Center" Margin="0,0,12,0"/>
             <TextBlock x:Name="PageTitle" Text="API 配置"
-                       FontSize="18" FontWeight="SemiBold"
-                       VerticalAlignment="Center" Opacity="0.9"/>
-        </Grid>
+                       FontFamily="{ThemeResource YanshuaiTitleFont}"
+                       FontSize="30"
+                       VerticalAlignment="Center"
+                       Foreground="{ThemeResource YanshuaiTextBrush}"/>
+        </StackPanel>
 
         <ScrollViewer Grid.Row="1">
             <StackPanel>
-                <!-- 空状态 -->
+                <!-- 空状态：心象色光环 -->
                 <StackPanel x:Name="EmptyPanel" Visibility="Collapsed"
                             VerticalAlignment="Center" HorizontalAlignment="Center"
                             Margin="32,80,32,0">
-                    <FontIcon Glyph="&#xE8D4;" FontSize="48"
-                              Opacity="0.3" HorizontalAlignment="Center"
-                              Foreground="{ThemeResource YanshuaiMutedTextBrush}"/>
+                    <Border Width="84" Height="84" CornerRadius="42" HorizontalAlignment="Center"
+                            Background="{ThemeResource YanshuaiAccentWashBrush}"
+                            BorderBrush="{ThemeResource YanshuaiAccentBrush}" BorderThickness="1">
+                        <FontIcon Glyph="&#xE8D4;" FontSize="32"
+                                  Foreground="{ThemeResource YanshuaiAccentBrush}"
+                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
                     <TextBlock x:Name="EmptyTitle" Text="还没有 API 配置"
-                               FontSize="20" FontWeight="Light" Opacity="0.5"
+                               Style="{StaticResource SubtitleTextStyle}"
                                HorizontalAlignment="Center" Margin="0,16,0,6"/>
                     <TextBlock x:Name="EmptyDesc" Text="点击下方「新增」添加 API 连接"
-                               FontSize="13" Opacity="0.4"
+                               Style="{StaticResource CaptionTextStyle}"
                                HorizontalAlignment="Center"
                                TextWrapping="Wrap" TextAlignment="Center"/>
                 </StackPanel>
@@ -65,7 +71,7 @@
                 <AppBarButton x:Name="ImportBackupBtn" Icon="Download" Label="从备份恢复" Click="ImportApi_Click"/>
             </CommandBar.SecondaryCommands>
             <CommandBar.Content>
-                <TextBlock x:Name="SelectHint" Text="" FontSize="13" Opacity="0.7"
+                <TextBlock x:Name="SelectHint" Text="" FontSize="13" Opacity="{StaticResource OpacityMuted}"
                            VerticalAlignment="Center" Margin="12,0" Visibility="Collapsed"/>
             </CommandBar.Content>
         </CommandBar>

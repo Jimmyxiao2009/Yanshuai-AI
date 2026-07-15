@@ -52,7 +52,8 @@ namespace yanshuai
                                     .Select(k => k.Trim())
                                     .Where(k => k.Length > 0)
                                     .ToList(),
-                        Order    = 100,
+                        Order    = entry.Order,
+                        Disable  = entry.Disable,
                     };
                     wb.Entries[i.ToString()] = ste;
                 }
@@ -87,6 +88,8 @@ namespace yanshuai
                             Content      = ste.Content ?? "",
                             AlwaysActive = ste.Constant,
                             Keywords     = string.Join(", ", ste.Key ?? new List<string>()),
+                            Order        = ste.Order,
+                            Disable      = ste.Disable,
                         });
                         total++;
                     }

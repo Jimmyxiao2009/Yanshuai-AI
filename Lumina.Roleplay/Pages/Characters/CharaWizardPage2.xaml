@@ -12,46 +12,64 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- 顶栏 -->
-        <Grid Grid.Row="0" Background="{ThemeResource YanshuaiPanelBrush}"
-              BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="0,0,0,1"
-              Padding="14,8">
-            <StackPanel VerticalAlignment="Center">
+        <!-- 顶栏：心象点 + 标题（站酷小薇） + 步骤指示器 -->
+        <StackPanel Grid.Row="0" Background="{ThemeResource YanshuaiChromeBrush}"
+                    Padding="{StaticResource PagePadding}">
+            <StackPanel Orientation="Horizontal">
+                <Ellipse Width="9" Height="9" Fill="{ThemeResource YanshuaiAccentBrush}"
+                         VerticalAlignment="Center" Margin="0,0,12,0"/>
                 <TextBlock x:Name="PageTitle" Text="新建角色卡"
-                           FontSize="18" FontWeight="SemiBold" Opacity="0.9"/>
-                <TextBlock x:Name="StepText" Text="第 2 步 / 共 4 步  ·  描述与性格"
-                           FontSize="12" Opacity="0.5"/>
+                           FontFamily="{ThemeResource YanshuaiTitleFont}" FontSize="30"
+                           VerticalAlignment="Center"
+                           Foreground="{ThemeResource YanshuaiTextBrush}"/>
             </StackPanel>
-        </Grid>
+
+            <!-- 步骤进度条（第 2 步：前两段为心象色） -->
+            <StackPanel Orientation="Horizontal" Margin="0,14,0,2">
+                <Rectangle Width="40" Height="3" RadiusX="1.5" RadiusY="1.5"
+                           Fill="{ThemeResource YanshuaiAccentBrush}" Margin="0,0,6,0"/>
+                <Rectangle Width="40" Height="3" RadiusX="1.5" RadiusY="1.5"
+                           Fill="{ThemeResource YanshuaiAccentBrush}" Margin="0,0,6,0"/>
+                <Rectangle Width="40" Height="3" RadiusX="1.5" RadiusY="1.5"
+                           Fill="{ThemeResource YanshuaiBorderBrush}" Margin="0,0,6,0"/>
+                <Rectangle Width="40" Height="3" RadiusX="1.5" RadiusY="1.5"
+                           Fill="{ThemeResource YanshuaiBorderBrush}"/>
+            </StackPanel>
+            <TextBlock x:Name="StepText" Text="第 2 步 / 共 4 步  ·  描述与性格"
+                       Style="{StaticResource CaptionTextStyle}" Margin="0,8,0,0"/>
+        </StackPanel>
 
         <ScrollViewer Grid.Row="1">
-            <StackPanel Margin="18,18,18,36">
+            <StackPanel Margin="{StaticResource PagePadding}" Padding="0,4,0,40">
 
-                <TextBlock x:Name="DescLabel" Text="描述" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                <TextBlock x:Name="DescLabel" Text="描述"
+                           Style="{StaticResource LabelTextStyle}" Margin="0,0,0,6"/>
                 <TextBlock x:Name="DescHint" Text="介绍角色的背景、外貌、身份等"
-                           FontSize="13" Opacity="0.5" Margin="0,0,0,10"/>
+                           Style="{StaticResource CaptionTextStyle}" Margin="0,0,0,10"/>
                 <TextBox x:Name="DescBox"
                          PlaceholderText="例：一位来自古代的剑客，沉默寡言，却在关键时刻总能挺身而出…"
                          AcceptsReturn="True" TextWrapping="Wrap"
-                         FontSize="15" Padding="12,12"
+                         FontSize="{StaticResource FontSizeBodyLarge}" Padding="12,12"
                          Height="130" Margin="0,0,0,28"/>
 
-                <TextBlock x:Name="PersonalityLabel" Text="性格" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                <TextBlock x:Name="PersonalityLabel" Text="性格"
+                           Style="{StaticResource LabelTextStyle}" Margin="0,0,0,6"/>
                 <TextBlock x:Name="PersonalityHint" Text="角色的个性特点、说话方式"
-                           FontSize="13" Opacity="0.5" Margin="0,0,0,10"/>
+                           Style="{StaticResource CaptionTextStyle}" Margin="0,0,0,10"/>
                 <TextBox x:Name="PersonalityBox"
                          PlaceholderText="例：冷静理性，偶尔会流露出温柔，不喜欢拐弯抹角…"
                          AcceptsReturn="True" TextWrapping="Wrap"
-                         FontSize="15" Padding="12,12"
+                         FontSize="{StaticResource FontSizeBodyLarge}" Padding="12,12"
                          Height="110" Margin="0,0,0,28"/>
 
-                <TextBlock x:Name="ScenarioLabel" Text="场景（可选）" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                <TextBlock x:Name="ScenarioLabel" Text="场景（可选）"
+                           Style="{StaticResource LabelTextStyle}" Margin="0,0,0,6"/>
                 <TextBlock x:Name="ScenarioHint" Text="对话发生的背景设定"
-                           FontSize="13" Opacity="0.5" Margin="0,0,0,10"/>
+                           Style="{StaticResource CaptionTextStyle}" Margin="0,0,0,10"/>
                 <TextBox x:Name="ScenarioBox"
                          PlaceholderText="例：你在一家古朴的茶馆里遇见了他…"
                          AcceptsReturn="True" TextWrapping="Wrap"
-                         FontSize="15" Padding="12,12"
+                         FontSize="{StaticResource FontSizeBodyLarge}" Padding="12,12"
                          Height="90"/>
 
             </StackPanel>

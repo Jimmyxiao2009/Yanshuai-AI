@@ -92,8 +92,11 @@ namespace yanshuai
                     {
                         var line = await reader.ReadLineAsync();
                         if (line == null) break;
-                        if (!line.StartsWith("data: ")) continue;
-                        var data = line.Substring(6).Trim();
+                        // SSE 规范：data: 后的单个空格可选，部分网关发 data:{...}（无空格）
+                        if (!line.StartsWith("data:")) continue;
+                        var data = line.Substring(5);
+                        if (data.StartsWith(" ")) data = data.Substring(1);
+                        data = data.Trim();
                         if (data == "[DONE]") break;
 
                         string ct2 = null;
@@ -116,8 +119,11 @@ namespace yanshuai
                         }
                         else
                         {
-                            // 尝试 Gemini 格式: candidates[0].content.parts[0].text
-                            ct2 = ExtractGeminiText(data);
+                            string claude = ExtractClaudeText(data);
+                            if (!string.IsNullOrEmpty(claude))
+                                ct2 = claude;
+                            else
+                                ct2 = ExtractGeminiText(data);
                         }
 
                         if (chunk?.Usage != null) lastUsage = chunk.Usage;
@@ -185,8 +191,13 @@ namespace yanshuai
                     if (!string.IsNullOrEmpty(openAiContent))
                         newContent = openAiContent;
                     else
-                        // 尝试 Gemini 格式: candidates[0].content.parts[0].text
-                        newContent = ExtractGeminiText(body) ?? "（无响应）";
+                    {
+                        string claude = ExtractClaudeText(body);
+                        if (!string.IsNullOrEmpty(claude))
+                            newContent = claude;
+                        else
+                            newContent = ExtractGeminiText(body) ?? "（无响应）";
+                    }
                     usage = parsed?.Usage;
                     if (usage != null) PatchCachedTokens(body, usage);
                 }

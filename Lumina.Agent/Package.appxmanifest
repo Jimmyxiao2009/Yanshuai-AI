@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10" xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest" xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10" IgnorableNamespaces="uap mp">
-  <Identity Name="com.yanshuai.agent" Publisher="CN=LuminaAgent" Version="3.1.0.0" />
+  <Identity Name="com.yanshuai.agent" Publisher="CN=LockWizard" Version="3.1.0.0" />
   <mp:PhoneIdentity PhoneProductId="f497554b-aafc-4bd0-bdb6-8d5230e1f556" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
   <Properties>
     <DisplayName>言枢·智能体</DisplayName>
@@ -8,7 +8,7 @@
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
   <Dependencies>
-    <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.10240.0" MaxVersionTested="10.0.19041.0" />
+    <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.15063.0" MaxVersionTested="10.0.19041.0" />
   </Dependencies>
   <Resources>
     <Resource Language="x-generate" />
@@ -23,31 +23,21 @@
     </Application>
   </Applications>
   <Capabilities>
-    <!-- 网络 -->
+    <!-- 网络：API 调用、网页抓取、本地/局域网 MCP 与 SearXNG -->
     <Capability Name="internetClient" />
     <Capability Name="internetClientServer" />
     <Capability Name="privateNetworkClientServer" />
-    <!-- 库 / 存储 -->
+    <!-- 库 / 存储：list_files / read_file / read_image 经 KnownFolders 访问系统库与 SD 卡 -->
     <uap:Capability Name="removableStorage" />
     <uap:Capability Name="picturesLibrary" />
     <uap:Capability Name="musicLibrary" />
     <uap:Capability Name="videosLibrary" />
-    <!-- 个人信息 / 通讯 -->
+    <!-- 个人信息：calendar_* 工具需 appointments，contacts_search 需 contacts -->
     <uap:Capability Name="appointments" />
     <uap:Capability Name="contacts" />
-    <uap:Capability Name="userAccountInformation" />
-    <uap:Capability Name="phoneCall" />
-    <uap:Capability Name="voipCall" />
-    <uap:Capability Name="chat" />
-    <!-- 设备 / 传感器 -->
-    <DeviceCapability Name="location" />
-    <DeviceCapability Name="microphone" />
-    <DeviceCapability Name="webcam" />
-    <DeviceCapability Name="proximity" />
-    <DeviceCapability Name="bluetooth" />
-    <DeviceCapability Name="radios" />
-    <DeviceCapability Name="wifiControl" />
-    <DeviceCapability Name="activity" />
-    <DeviceCapability Name="sms" />
+    <!-- 注：make_call / send_sms 通过 tel:/sms: URI 启动系统应用，无需 phoneCall/sms 能力；
+         media_control 使用 SystemMediaTransportControls，无需 microphone。
+         已移除未被任何功能使用的能力：userAccountInformation, phoneCall, voipCall, chat,
+         location, microphone, webcam, proximity, bluetooth, radios, wifiControl, activity, sms。 -->
   </Capabilities>
 </Package>

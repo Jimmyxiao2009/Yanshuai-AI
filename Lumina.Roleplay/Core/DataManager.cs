@@ -28,7 +28,7 @@ namespace yanshuai
                 using (var stream = await file.OpenStreamForReadAsync())
                 {
                     var ser = new DataContractJsonSerializer(typeof(AppData));
-                    Data = (AppData)ser.ReadObject(stream) ?? new AppData();
+                    Data = await Task.Run(() => (AppData)ser.ReadObject(stream)) ?? new AppData();
                 }
                 // Ensure lists are never null after deserialisation
                 if (Data.ApiProfiles == null)      Data.ApiProfiles      = new List<ApiProfile>();
@@ -53,6 +53,7 @@ namespace yanshuai
                 DialoguePoolManager.LoadAll();
                 // Inject built-in cards on first run
                 BuiltinCards.EnsureLoaded();
+                await MemoryStore.LoadAsync();
             }
             catch
             {

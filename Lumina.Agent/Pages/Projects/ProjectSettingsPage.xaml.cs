@@ -28,6 +28,7 @@ namespace yanshuai
             LoadProjectData();
             RefreshConvList();
             RefreshMemoryList();
+            RefreshKbList();
         }
 
         // ── Load project ────────────────────────────────────────────────────

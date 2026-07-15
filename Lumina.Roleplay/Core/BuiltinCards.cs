@@ -1,15 +1,22 @@
-// BuiltinCards.cs — 内置角色卡，首次启动时自动导入
-// 涵盖：古代纯爱、现代男女、西幻男女、男男、女女、四爱多玩法、现代纯爱、古代男男
+using System.Linq;
 
 namespace yanshuai
 {
     internal static class BuiltinCards
     {
+        private static readonly object _loadLock = new object();
+
         internal static void EnsureLoaded()
         {
-            if (DataManager.Data.CharacterCards.Count > 0) return;
-            foreach (var card in All)
-                DataManager.Data.CharacterCards.Add(card);
+            lock (_loadLock)
+            {
+                if (DataManager.Data.CharacterCards.Count > 0) return;
+                foreach (var card in All)
+                {
+                    if (!DataManager.Data.CharacterCards.Any(c => c.Name == card.Name))
+                        DataManager.Data.CharacterCards.Add(card);
+                }
+            }
         }
 
         private static readonly CharacterCard[] All = new[]

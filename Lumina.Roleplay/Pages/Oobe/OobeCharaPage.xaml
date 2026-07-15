@@ -12,15 +12,20 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- 顶栏 -->
+        <!-- 顶栏：心象点 + 标题字体 -->
         <Grid Grid.Row="0" Background="{ThemeResource YanshuaiPanelBrush}"
               BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="0,0,0,1"
-              Padding="14,8">
-            <StackPanel VerticalAlignment="Center">
-                <TextBlock x:Name="PageTitle" Text="角色卡"
-                           FontSize="18" FontWeight="SemiBold" Opacity="0.9"/>
-                <TextBlock x:Name="PageStepHint" Text="步骤 4 / 8  ·  可跳过"
-                           FontSize="12" Opacity="0.5"/>
+              Padding="18,12">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <Ellipse Width="9" Height="9" Fill="{ThemeResource YanshuaiAccentBrush}"
+                         VerticalAlignment="Top" Margin="0,7,12,0"/>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock x:Name="PageTitle" Text="角色卡"
+                               FontFamily="{ThemeResource YanshuaiTitleFont}"
+                               FontSize="{StaticResource FontSizeSubtitle}"/>
+                    <TextBlock x:Name="PageStepHint" Text="步骤 4 / 8  ·  可跳过"
+                               Style="{StaticResource CaptionTextStyle}"/>
+                </StackPanel>
             </StackPanel>
         </Grid>
 
@@ -29,52 +34,62 @@
 
             <TextBlock x:Name="DescText"
                        Text="添加一张角色卡开始角色扮演对话，也可以跳过直接使用普通对话模式。"
-                       FontSize="15" Opacity="0.7" TextWrapping="Wrap"
+                       Style="{StaticResource BodyTextStyle}"
+                       Foreground="{ThemeResource YanshuaiMutedTextBrush}"
+                       FontSize="{StaticResource FontSizeBodyLarge}"
+                       TextWrapping="Wrap"
                        Margin="0,0,0,32" TextAlignment="Center"/>
 
-            <!-- New card button -->
+            <!-- New card button：主操作（心象色实底，圆角） -->
             <Button x:Name="NewCardBtn" Click="NewCardBtn_Click"
                     HorizontalAlignment="Stretch"
                     Padding="0,24" Margin="0,0,0,16"
+                    CornerRadius="{StaticResource CardCornerRadius}"
                     Background="{ThemeResource YanshuaiAccentBrush}"
-                    Foreground="White" BorderBrush="Transparent">
+                    Foreground="{ThemeResource YanshuaiOnAccentBrush}" BorderBrush="Transparent">
                 <StackPanel HorizontalAlignment="Center">
-                    <FontIcon Glyph="&#xE710;" FontSize="28" Foreground="White" Margin="0,0,0,8"/>
-                    <TextBlock x:Name="NewCardText" Text="新建角色卡" FontSize="18" FontWeight="SemiBold" Foreground="White" TextAlignment="Center"/>
-                    <TextBlock x:Name="NewCardDesc" Text="使用向导逐步填写" FontSize="13" Opacity="0.8" Foreground="White" Margin="0,4,0,0" TextAlignment="Center"/>
+                    <FontIcon Glyph="&#xE710;" FontSize="28" Foreground="{ThemeResource YanshuaiOnAccentBrush}" Margin="0,0,0,8"/>
+                    <TextBlock x:Name="NewCardText" Text="新建角色卡"
+                               FontFamily="{ThemeResource YanshuaiTitleFont}" FontSize="{StaticResource FontSizeSubtitle}"
+                               Foreground="{ThemeResource YanshuaiOnAccentBrush}" TextAlignment="Center"/>
+                    <TextBlock x:Name="NewCardDesc" Text="使用向导逐步填写" FontSize="13" Opacity="{StaticResource OpacityMuted}" Foreground="{ThemeResource YanshuaiOnAccentBrush}" Margin="0,4,0,0" TextAlignment="Center"/>
                 </StackPanel>
             </Button>
 
-            <!-- Import button -->
+            <!-- Import button：卡片式次操作 -->
             <Button x:Name="ImportCardBtn" Click="ImportCardBtn_Click"
                     HorizontalAlignment="Stretch"
                     HorizontalContentAlignment="Center"
                     Padding="0,24" Margin="0,0,0,16"
-                    Background="{ThemeResource YanshuaiSurfaceBrush}"
+                    CornerRadius="{StaticResource CardCornerRadius}"
+                    Background="{ThemeResource YanshuaiPanelBrush}"
                     BorderBrush="{ThemeResource YanshuaiBorderBrush}">
                 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <FontIcon Glyph="&#xE8B5;" FontSize="28" Margin="0,0,0,8"/>
-                    <TextBlock x:Name="ImportCardText" Text="导入角色卡" FontSize="18" FontWeight="SemiBold" TextAlignment="Center"/>
-                    <TextBlock x:Name="ImportCardDesc" Text="支持 .json 和 .png 格式" FontSize="13" Opacity="0.6" Margin="0,4,0,0" TextAlignment="Center"/>
+                    <FontIcon Glyph="&#xE8B5;" FontSize="28" Foreground="{ThemeResource YanshuaiAccentBrush}" Margin="0,0,0,8"/>
+                    <TextBlock x:Name="ImportCardText" Text="导入角色卡"
+                               FontFamily="{ThemeResource YanshuaiTitleFont}" FontSize="{StaticResource FontSizeSubtitle}" TextAlignment="Center"/>
+                    <TextBlock x:Name="ImportCardDesc" Text="支持 .json 和 .png 格式" Style="{StaticResource CaptionTextStyle}" Margin="0,4,0,0" TextAlignment="Center"/>
                 </StackPanel>
             </Button>
 
-            <!-- Network import button -->
+            <!-- Network import button：卡片式次操作 -->
             <Button x:Name="NetCardBtn" Click="NetCardBtn_Click"
                     HorizontalAlignment="Stretch"
                     HorizontalContentAlignment="Center"
                     Padding="0,24"
-                    Background="{ThemeResource YanshuaiSurfaceBrush}"
+                    CornerRadius="{StaticResource CardCornerRadius}"
+                    Background="{ThemeResource YanshuaiPanelBrush}"
                     BorderBrush="{ThemeResource YanshuaiBorderBrush}">
                 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <FontIcon Glyph="&#xE774;" FontSize="28" Margin="0,0,0,8"/>
-                    <TextBlock x:Name="NetCardText" Text="从角色广场导入" FontSize="18" FontWeight="SemiBold" TextAlignment="Center"/>
-                    <TextBlock x:Name="NetCardDesc" Text="浏览和下载在线角色卡" FontSize="13" Opacity="0.6" Margin="0,4,0,0" TextAlignment="Center"/>
+                    <FontIcon Glyph="&#xE774;" FontSize="28" Foreground="{ThemeResource YanshuaiAccentBrush}" Margin="0,0,0,8"/>
+                    <TextBlock x:Name="NetCardText" Text="从角色广场导入"
+                               FontFamily="{ThemeResource YanshuaiTitleFont}" FontSize="{StaticResource FontSizeSubtitle}" TextAlignment="Center"/>
+                    <TextBlock x:Name="NetCardDesc" Text="浏览和下载在线角色卡" Style="{StaticResource CaptionTextStyle}" Margin="0,4,0,0" TextAlignment="Center"/>
                 </StackPanel>
             </Button>
 
             <!-- Imported cards summary -->
-            <TextBlock x:Name="ImportedSummary" FontSize="13" Opacity="0.5"
+            <TextBlock x:Name="ImportedSummary" Style="{StaticResource CaptionTextStyle}"
                        TextAlignment="Center" Margin="0,20,0,0"/>
 
         </StackPanel>
@@ -82,15 +97,15 @@
             <AppBarButton x:Name="SkipBtn" Icon="Forward" Label="跳过" Click="SkipBtn_Click"/>
             <CommandBar.Content>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0">
-                    <Ellipse Width="10" Height="10" Margin="3,0" Fill="Gray" Opacity="0.4"/>
-                    <Ellipse Width="10" Height="10" Margin="3,0" Fill="Gray" Opacity="0.4"/>
-                    <Ellipse Width="10" Height="10" Margin="3,0" Fill="Gray" Opacity="0.4"/>
-                    <Ellipse Width="10" Height="10" Margin="3,0" Fill="Gray" Opacity="0.4"/>
-                    <Ellipse Fill="{ThemeResource YanshuaiAccentBrush}" Width="10" Height="10" Margin="3,0"/>
-                    <Ellipse Width="10" Height="10" Margin="3,0" Fill="Gray" Opacity="0.4"/>
-                    <Ellipse Width="10" Height="10" Margin="3,0" Fill="Gray" Opacity="0.4"/>
-                    <Ellipse Width="10" Height="10" Margin="3,0" Fill="Gray" Opacity="0.4"/>
-                    <TextBlock x:Name="StepLabel" Text="4/8" FontSize="11" Opacity="0.4" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                    <Ellipse Width="7" Height="7" Margin="3,0" Fill="{ThemeResource YanshuaiMutedTextBrush}" Opacity="{StaticResource OpacityFaint}"/>
+                    <Ellipse Width="7" Height="7" Margin="3,0" Fill="{ThemeResource YanshuaiMutedTextBrush}" Opacity="{StaticResource OpacityFaint}"/>
+                    <Ellipse Width="7" Height="7" Margin="3,0" Fill="{ThemeResource YanshuaiMutedTextBrush}" Opacity="{StaticResource OpacityFaint}"/>
+                    <Ellipse Fill="{ThemeResource YanshuaiAccentBrush}" Width="7" Height="7" Margin="3,0"/>
+                    <Ellipse Width="7" Height="7" Margin="3,0" Fill="{ThemeResource YanshuaiMutedTextBrush}" Opacity="{StaticResource OpacityFaint}"/>
+                    <Ellipse Width="7" Height="7" Margin="3,0" Fill="{ThemeResource YanshuaiMutedTextBrush}" Opacity="{StaticResource OpacityFaint}"/>
+                    <Ellipse Width="7" Height="7" Margin="3,0" Fill="{ThemeResource YanshuaiMutedTextBrush}" Opacity="{StaticResource OpacityFaint}"/>
+                    <Ellipse Width="7" Height="7" Margin="3,0" Fill="{ThemeResource YanshuaiMutedTextBrush}" Opacity="{StaticResource OpacityFaint}"/>
+                    <TextBlock x:Name="StepLabel" Text="4/8" Style="{StaticResource CaptionTextStyle}" FontSize="11" Margin="8,0,0,0" VerticalAlignment="Center"/>
                 </StackPanel>
             </CommandBar.Content>
         </CommandBar>

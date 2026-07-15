@@ -11,8 +11,8 @@
             Background="{ThemeResource YanshuaiPanelBrush}"
             BorderBrush="{ThemeResource YanshuaiBorderBrush}"
             BorderThickness="1"
-            CornerRadius="{ThemeResource YanshuaiControlCornerRadius}"
-            Padding="12,10">
+            CornerRadius="{StaticResource CardCornerRadius}"
+            Padding="14,12">
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
@@ -20,32 +20,34 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-            <!-- 头像 -->
-            <Grid Grid.Column="0" Width="48" Height="48" VerticalAlignment="Center">
-                <Border CornerRadius="24" Background="{ThemeResource YanshuaiSubtlePanelBrush}"/>
-                <Border CornerRadius="24" Background="{Binding Avatar}"/>
-                <TextBlock Text="?" FontSize="20" Opacity="0.35"
+            <!-- 头像 + 心象环 -->
+            <Grid Grid.Column="0" Width="52" Height="52" VerticalAlignment="Center">
+                <Ellipse Stroke="{ThemeResource YanshuaiAccentBrush}" StrokeThickness="1.5" Opacity="0.55"/>
+                <Border CornerRadius="25" Margin="3" Background="{ThemeResource YanshuaiSubtlePanelBrush}"/>
+                <Border CornerRadius="25" Margin="3" Background="{Binding Avatar}"/>
+                <TextBlock Text="?" FontSize="20" Opacity="{StaticResource OpacityFaint}"
                            Foreground="{ThemeResource YanshuaiMutedTextBrush}"
                            HorizontalAlignment="Center" VerticalAlignment="Center"
                            Visibility="{Binding PlaceholderVisibility}"/>
             </Grid>
 
             <!-- 文本 -->
-            <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
+            <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
                 <TextBlock Text="{Binding Name}"
-                           FontSize="16" FontWeight="SemiBold"
+                           FontFamily="{ThemeResource YanshuaiTitleFont}"
+                           FontSize="17"
                            Foreground="{ThemeResource YanshuaiTextBrush}"
                            TextTrimming="CharacterEllipsis"/>
                 <TextBlock Text="{Binding Subtitle}"
-                           FontSize="12" Opacity="0.5"
+                           FontSize="12" Opacity="{StaticResource OpacitySubtle}"
                            Foreground="{ThemeResource YanshuaiMutedTextBrush}"
                            TextTrimming="CharacterEllipsis"
-                           Margin="0,2,0,0"/>
+                           Margin="0,3,0,0"/>
                 <TextBlock Text="{Binding ConvCountText}"
                            Visibility="{Binding ConvCountVisibility}"
-                           FontSize="11" Opacity="0.45"
+                           FontSize="11" Opacity="{StaticResource OpacityFaint}"
                            Foreground="{ThemeResource YanshuaiMutedTextBrush}"
-                           Margin="0,2,0,0"/>
+                           Margin="0,3,0,0"/>
             </StackPanel>
 
             <!-- 角标：置顶 / R18G -->
@@ -54,10 +56,10 @@
                           FontSize="12" Margin="0,0,6,0"
                           Foreground="{ThemeResource YanshuaiAccentBrush}"
                           Visibility="{Binding PinVisibility}"/>
-                <Border CornerRadius="3" Padding="4,1"
-                        Background="#CCC0392B"
+                <Border CornerRadius="6" Padding="6,1"
+                        Background="#CCB23A30"
                         Visibility="{Binding R18GVisibility}">
-                    <TextBlock Text="R18" FontSize="9" Foreground="White"/>
+                    <TextBlock Text="R18" FontSize="9" FontWeight="SemiBold" Foreground="White"/>
                 </Border>
             </StackPanel>
         </Grid>

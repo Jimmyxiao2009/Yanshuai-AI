@@ -53,7 +53,14 @@ namespace yanshuai
                     if (w > h) { newW = MaxDim; newH = (uint)(h * MaxDim / w); }
                     else        { newH = MaxDim; newW = (uint)(w * MaxDim / h); }
                 }
-                var transform = new BitmapTransform { ScaledWidth = newW, ScaledHeight = newH };
+                uint scaleW = newW, scaleH = newH;
+                if (decoder.OrientedPixelWidth != decoder.PixelWidth &&
+                    decoder.OrientedPixelWidth == decoder.PixelHeight)
+                {
+                    scaleW = newH;
+                    scaleH = newW;
+                }
+                var transform = new BitmapTransform { ScaledWidth = scaleW, ScaledHeight = scaleH };
                 var pixels = await decoder.GetPixelDataAsync(
                     BitmapPixelFormat.Rgba8, BitmapAlphaMode.Premultiplied, transform,
                     ExifOrientationMode.RespectExifOrientation, ColorManagementMode.DoNotColorManage);
@@ -302,126 +309,147 @@ namespace yanshuai
                 _streamCts?.Cancel();
                 return;
             }
-            string userInput = InputTextBox.Text.Trim();
-            // 构建 API 消息（文件内容内联）和气泡文字（只显示文件名）
-            string apiUserInput = userInput;
-            var bubbleFileTags = new List<string>();
-
-            // 新多文件系统
-            foreach (var pf in _pendingFileNames)
+            try
             {
-                int sep = pf.IndexOf('\x01');
-                if (sep < 0) continue;
-                string fname   = pf.Substring(0, sep);
-                string fcontent = pf.Substring(sep + 1);
-                apiUserInput = "【附件：" + fname + "】\n```\n" + fcontent + "\n```\n\n" + apiUserInput;
-                bubbleFileTags.Add(fname);
-            }
-            // 兼容旧单文件字段
-            if (!string.IsNullOrEmpty(_pendingFileName) && _pendingFileName.Contains("\x01"))
-            {
-                int sep = _pendingFileName.IndexOf('\x01');
-                string fname    = _pendingFileName.Substring(0, sep);
-                string fcontent = _pendingFileName.Substring(sep + 1);
-                apiUserInput = "【附件：" + fname + "】\n```\n" + fcontent + "\n```\n\n" + apiUserInput;
-                bubbleFileTags.Add(fname);
-            }
+                string userInput = InputTextBox.Text.Trim();
+                // 构建 API 消息（文件内容内联）和气泡文字（只显示文件名）
+                string apiUserInput = userInput;
+                var bubbleFileTags = new List<string>();
 
-            bool hasAttachment = _pendingImagesBase64.Count > 0 || bubbleFileTags.Count > 0;
-            if (string.IsNullOrWhiteSpace(apiUserInput) && !hasAttachment) return;
-
-            var profile = DataManager.GetProfileForConversation(_conv);
-            if (profile == null)
-            {
-                AddSystemBubble("⚠ 没有选择 API 配置，请从菜单进入 API 配置页面。");
-                return;
-            }
-
-            _isSending = true;
-            SubmitButton.IsEnabled = false;
-
-            // 第一次发送消息时才把对话写入持久化列表
-            if (_isPendingConv)
-            {
-                _isPendingConv = false;
-                DataManager.Data.Conversations.Add(_conv);
-                DataManager.Data.LastActiveConversationId = _conv.Id;
-                _ = DataManager.SaveAsync(); // 立即持久化，防止崩溃丢对话
-            }
-
-            // 把附带图片写入外置 ImageStore，消息里只保留引用 id；
-            // base64 不再随 AppData 持久化/常驻内存（低内存设备卡死的诱因之一）。
-            List<string> imageRefs = null;
-            List<string> imageMimes = null;
-            if (_pendingImagesBase64.Count > 0)
-            {
-                imageRefs  = new List<string>(_pendingImagesBase64.Count);
-                imageMimes = new List<string>(_pendingImagesBase64.Count);
-                for (int ii = 0; ii < _pendingImagesBase64.Count; ii++)
+                // 新多文件系统
+                foreach (var pf in _pendingFileNames)
                 {
-                    string id = await ImageStore.SaveBase64Async(_pendingImagesBase64[ii]);
-                    if (id != null)
-                    {
-                        imageRefs.Add(id);
-                        imageMimes.Add(ii < _pendingImagesMimeType.Count ? _pendingImagesMimeType[ii] : "image/jpeg");
-                    }
+                    int sep = pf.IndexOf('\x01');
+                    if (sep < 0) continue;
+                    string fname   = pf.Substring(0, sep);
+                    string fcontent = pf.Substring(sep + 1);
+                    apiUserInput = "【附件：" + fname + "】\n```\n" + fcontent + "\n```\n\n" + apiUserInput;
+                    bubbleFileTags.Add(fname);
                 }
-                if (imageRefs.Count == 0) { imageRefs = null; imageMimes = null; }
+                // 兼容旧单文件字段
+                if (!string.IsNullOrEmpty(_pendingFileName) && _pendingFileName.Contains("\x01"))
+                {
+                    int sep = _pendingFileName.IndexOf('\x01');
+                    string fname    = _pendingFileName.Substring(0, sep);
+                    string fcontent = _pendingFileName.Substring(sep + 1);
+                    apiUserInput = "【附件：" + fname + "】\n```\n" + fcontent + "\n```\n\n" + apiUserInput;
+                    bubbleFileTags.Add(fname);
+                }
+
+                bool hasAttachment = _pendingImagesBase64.Count > 0 || bubbleFileTags.Count > 0;
+                if (string.IsNullOrWhiteSpace(apiUserInput) && !hasAttachment) return;
+
+                var profile = DataManager.GetProfileForConversation(_conv);
+                if (profile == null)
+                {
+                    AddSystemBubble("⚠ 没有选择 API 配置，请从菜单进入 API 配置页面。");
+                    return;
+                }
+                if (string.IsNullOrWhiteSpace(profile.Url))
+                {
+                    AddSystemBubble("⚠ 当前 API 配置的接口 URL 为空，请在 API 配置页面中进行完善。");
+                    return;
+                }
+                if (string.IsNullOrWhiteSpace(profile.ApiKey) && profile.ProviderType != "ollama" && profile.ProviderType != "local")
+                {
+                    AddSystemBubble("⚠ 当前 API 配置的 API Key 为空，请在 API 配置页面中进行完善。");
+                    return;
+                }
+
+                _isSending = true;
+                SubmitButton.IsEnabled = false;
+
+                // 第一次发送消息时才把对话写入持久化列表
+                if (_isPendingConv)
+                {
+                    _isPendingConv = false;
+                    DataManager.Data.Conversations.Add(_conv);
+                    DataManager.Data.LastActiveConversationId = _conv.Id;
+                    _ = DataManager.SaveAsync(); // 立即持久化，防止崩溃丢对话
+                }
+
+                // 把附带图片写入外置 ImageStore，消息里只保留引用 id；
+                // base64 不再随 AppData 持久化/常驻内存（低内存设备卡死的诱因之一）。
+                List<string> imageRefs = null;
+                List<string> imageMimes = null;
+                if (_pendingImagesBase64.Count > 0)
+                {
+                    imageRefs  = new List<string>(_pendingImagesBase64.Count);
+                    imageMimes = new List<string>(_pendingImagesBase64.Count);
+                    for (int ii = 0; ii < _pendingImagesBase64.Count; ii++)
+                    {
+                        string id = await ImageStore.SaveBase64Async(_pendingImagesBase64[ii]);
+                        if (id != null)
+                        {
+                            imageRefs.Add(id);
+                            imageMimes.Add(ii < _pendingImagesMimeType.Count ? _pendingImagesMimeType[ii] : "image/jpeg");
+                        }
+                    }
+                    if (imageRefs.Count == 0) { imageRefs = null; imageMimes = null; }
+                }
+
+                // Create message first so its Id is available for the bubble
+                var userMsg = new ConversationMessage
+                {
+                    Role = "user", Content = apiUserInput, Timestamp = DateTime.Now,
+                    ImageRefs       = imageRefs,
+                    ImagesMimeType  = imageMimes,
+                    AttachedFileNames = bubbleFileTags.Count > 0 ? new List<string>(bubbleFileTags) : null,
+                };
+                _conv.Messages.Add(userMsg);
+                _conv.UpdatedAt = DateTime.Now;
+
+                // 气泡只显示用户输入 + 文件名标签
+                string bubbleContent = userInput;
+                if (bubbleFileTags.Count > 0)
+                    bubbleContent = (string.IsNullOrEmpty(userInput) ? "" : userInput + "\n")
+                        + string.Join("  ", bubbleFileTags.Select(n => "📎 " + n));
+
+                if (_conv.Messages.Count(m => m.Role == "user") == 1)
+                {
+                    string titleText = string.IsNullOrEmpty(userInput)
+                        ? (bubbleFileTags.Count > 0 ? bubbleFileTags[0] : "附件") : userInput;
+                    _conv.Title = titleText.Length > 20 ? titleText.Substring(0, 20) + "…" : titleText;
+                    UpdateTitleLabel();
+                }
+
+                // User bubble — 首张图显示缩略图
+                Windows.UI.Xaml.Media.ImageSource firstThumb =
+                    _pendingPreviews.Count > 0 ? _pendingPreviews[0].Thumb : null;
+                var userBubble = new ChatBubble
+                {
+                    Role = "user", Content = bubbleContent,
+                    MessageId = userMsg.Id,
+                    BackgroundColor = UserBubbleBg(), ForegroundColor = UserBubbleFg(),
+                    ReasoningBgColor = _reasoningBrush,
+                    ImageSource = firstThumb,
+                    // 优先用外置引用看大图；若外置失败则回退到本次内存里的 base64
+                    ImageRefId = (imageRefs != null && imageRefs.Count > 0) ? imageRefs[0] : null,
+                    FullImageBase64 = (imageRefs != null && imageRefs.Count > 0) ? null : _pendingImageBase64,
+                };
+                if (WelcomePanel != null)
+                    WelcomePanel.Visibility = Windows.UI.Xaml.Visibility.Collapsed;
+                _bubbles.Add(userBubble);
+                InputTextBox.Text = "";
+                // 清理所有附件
+                _pendingImagesBase64.Clear();
+                _pendingImagesMimeType.Clear();
+                _pendingFileNames.Clear();
+                _pendingPreviews.Clear();
+                _pendingFileName = null;
+                ImagePreviewBar.Visibility = Visibility.Collapsed;
+                ScrollToBottom();
+
+                await SendWithExistingUserMessage(userMsg, userBubble);
             }
-
-            // Create message first so its Id is available for the bubble
-            var userMsg = new ConversationMessage
+            catch (Exception ex)
             {
-                Role = "user", Content = apiUserInput, Timestamp = DateTime.Now,
-                ImageRefs       = imageRefs,
-                ImagesMimeType  = imageMimes,
-                AttachedFileNames = bubbleFileTags.Count > 0 ? new List<string>(bubbleFileTags) : null,
-            };
-            _conv.Messages.Add(userMsg);
-            _conv.UpdatedAt = DateTime.Now;
-
-            // 气泡只显示用户输入 + 文件名标签
-            string bubbleContent = userInput;
-            if (bubbleFileTags.Count > 0)
-                bubbleContent = (string.IsNullOrEmpty(userInput) ? "" : userInput + "\n")
-                    + string.Join("  ", bubbleFileTags.Select(n => "📎 " + n));
-
-            if (_conv.Messages.Count(m => m.Role == "user") == 1)
-            {
-                string titleText = string.IsNullOrEmpty(userInput)
-                    ? (bubbleFileTags.Count > 0 ? bubbleFileTags[0] : "附件") : userInput;
-                _conv.Title = titleText.Length > 20 ? titleText.Substring(0, 20) + "…" : titleText;
-                UpdateTitleLabel();
+                _isSending = false;
+                if (SubmitIcon != null) SubmitIcon.Glyph = "";
+                SubmitButton.IsEnabled = true;
+                System.Diagnostics.Debug.WriteLine("SubmitButton_Click error: " + ex);
+                AddSystemBubble("⚠ 发送消息失败: " + ex.Message);
             }
-
-            // User bubble — 首张图显示缩略图
-            Windows.UI.Xaml.Media.ImageSource firstThumb =
-                _pendingPreviews.Count > 0 ? _pendingPreviews[0].Thumb : null;
-            var userBubble = new ChatBubble
-            {
-                Role = "user", Content = bubbleContent,
-                MessageId = userMsg.Id,
-                BackgroundColor = UserBubbleBg(), ForegroundColor = UserBubbleFg(),
-                ReasoningBgColor = _reasoningBrush,
-                ImageSource = firstThumb,
-                // 优先用外置引用看大图；若外置失败则回退到本次内存里的 base64
-                ImageRefId = (imageRefs != null && imageRefs.Count > 0) ? imageRefs[0] : null,
-                FullImageBase64 = (imageRefs != null && imageRefs.Count > 0) ? null : _pendingImageBase64,
-            };
-            if (WelcomePanel != null)
-                WelcomePanel.Visibility = Windows.UI.Xaml.Visibility.Collapsed;
-            _bubbles.Add(userBubble);
-            InputTextBox.Text = "";
-            // 清理所有附件
-            _pendingImagesBase64.Clear();
-            _pendingImagesMimeType.Clear();
-            _pendingFileNames.Clear();
-            _pendingPreviews.Clear();
-            _pendingFileName = null;
-            ImagePreviewBar.Visibility = Visibility.Collapsed;
-            ScrollToBottom();
-
-            await SendWithExistingUserMessage(userMsg, userBubble);
         }
 
     }

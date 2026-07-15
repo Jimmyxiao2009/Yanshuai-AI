@@ -14,72 +14,87 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- 顶栏 -->
-        <Grid Grid.Row="0" Background="{ThemeResource YanshuaiPanelBrush}"
-              BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="0,0,0,1"
-              Padding="14,8">
-            <StackPanel VerticalAlignment="Center">
+        <!-- 页眉：心象点 + 标题 -->
+        <StackPanel Grid.Row="0" Margin="18,22,18,10">
+            <StackPanel Orientation="Horizontal">
+                <Ellipse Width="9" Height="9" Fill="{ThemeResource YanshuaiAccentBrush}"
+                         VerticalAlignment="Center" Margin="0,0,12,0"/>
                 <TextBlock x:Name="PageTitle" Text="用户资料"
-                           FontSize="18" FontWeight="SemiBold" Opacity="0.9"/>
-                <TextBlock x:Name="PageSubtitle" Text="选中资料后点击使用，即可切换当前用户身份"
-                           FontSize="12" Opacity="0.5"/>
+                           FontFamily="{ThemeResource YanshuaiTitleFont}"
+                           FontSize="30"
+                           VerticalAlignment="Center"
+                           Foreground="{ThemeResource YanshuaiTextBrush}"/>
             </StackPanel>
-        </Grid>
+            <TextBlock x:Name="PageSubtitle" Text="选中资料后点击使用，即可切换当前用户身份"
+                       Style="{StaticResource CaptionTextStyle}"
+                       Margin="21,4,0,0"/>
+        </StackPanel>
 
         <!-- 当前活跃资料提示 -->
         <Border Grid.Row="1" Margin="18,8,18,8"
-                Background="{ThemeResource YanshuaiAccentBrush}"
-                Padding="12,8">
+                Background="{ThemeResource YanshuaiAccentWashBrush}"
+                BorderBrush="{ThemeResource YanshuaiAccentBrush}" BorderThickness="1"
+                CornerRadius="{ThemeResource YanshuaiControlCornerRadius}"
+                Padding="14,10">
             <StackPanel Orientation="Horizontal">
-                <FontIcon Glyph="&#xE77B;" FontSize="14" Foreground="White" Margin="0,0,8,0"/>
+                <FontIcon Glyph="&#xE77B;" FontSize="14"
+                          Foreground="{ThemeResource YanshuaiAccentBrush}" Margin="0,0,10,0"/>
                 <TextBlock x:Name="ActiveLabel" Text="当前：未设置"
-                           Foreground="White" FontSize="13" VerticalAlignment="Center"/>
+                           Foreground="{ThemeResource YanshuaiTextBrush}"
+                           FontSize="{StaticResource FontSizeBody}" VerticalAlignment="Center"/>
             </StackPanel>
         </Border>
 
         <ListView x:Name="ProfilesList" Grid.Row="2"
                   SelectionMode="Single"
+                  Padding="14,4,14,30"
                   SelectionChanged="ProfilesList_SelectionChanged">
             <ListView.ItemContainerStyle>
                 <Style TargetType="ListViewItem">
                     <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
                     <Setter Property="Padding" Value="0"/>
-                    <Setter Property="Margin" Value="0"/>
+                    <Setter Property="Margin" Value="0,0,0,8"/>
                     <Setter Property="MinHeight" Value="0"/>
                 </Style>
             </ListView.ItemContainerStyle>
             <ListView.ItemTemplate>
                 <DataTemplate>
-                    <Border BorderBrush="{ThemeResource YanshuaiBorderBrush}"
-                            BorderThickness="0,0,0,1" Padding="18,14">
+                    <Border Style="{StaticResource CardBorderStyle}">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Width="44" Height="44" CornerRadius="22"
+                            <Border Grid.Column="0" Width="48" Height="48" CornerRadius="24"
                                     Background="{ThemeResource YanshuaiSubtlePanelBrush}"
-                                    Margin="0,0,12,0"
+                                    BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="1"
+                                    Margin="0,0,14,0"
                                     Visibility="{Binding AvatarVisibility}">
                                 <Image Source="{Binding AvatarSource}" Stretch="UniformToFill"/>
                             </Border>
-                            <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="{Binding DisplayName}" FontSize="16"/>
-                                <TextBlock Text="{Binding Description}" FontSize="13"
-                                           Opacity="0.55" TextTrimming="CharacterEllipsis"
-                                           MaxLines="1" Margin="0,2,0,0"/>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding DisplayName}"
+                                           FontFamily="{ThemeResource YanshuaiTitleFont}"
+                                           FontSize="{StaticResource FontSizeSubtitle}"
+                                           Foreground="{ThemeResource YanshuaiTextBrush}"/>
+                                <TextBlock Text="{Binding Description}"
+                                           Style="{StaticResource CaptionTextStyle}"
+                                           TextTrimming="CharacterEllipsis"
+                                           MaxLines="1" Margin="0,3,0,0"/>
                             </StackPanel>
                             <Border Grid.Column="2"
-                                    CornerRadius="4"
-                                    Padding="8,4"
+                                    CornerRadius="{ThemeResource YanshuaiControlCornerRadius}"
+                                    Padding="9,4"
                                     Background="{ThemeResource YanshuaiAccentBrush}"
                                     VerticalAlignment="Center"
                                     Visibility="{Binding ActiveVisibility}">
                                 <StackPanel Orientation="Horizontal">
-                                    <FontIcon Glyph="&#xE930;" FontSize="13" Foreground="White"
+                                    <FontIcon Glyph="&#xE930;" FontSize="13"
+                                              Foreground="{ThemeResource YanshuaiOnAccentBrush}"
                                               Margin="0,0,5,0"/>
-                                    <TextBlock Text="{Binding ActiveLabel}" FontSize="12" Foreground="White"/>
+                                    <TextBlock Text="{Binding ActiveLabel}" FontSize="12"
+                                               Foreground="{ThemeResource YanshuaiOnAccentBrush}"/>
                                 </StackPanel>
                             </Border>
                         </Grid>

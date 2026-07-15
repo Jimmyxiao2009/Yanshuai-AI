@@ -358,8 +358,7 @@ namespace yanshuai
 
         // ── Subagent ──────────────────────────────────────────────────────
 
-        private static int _subagentDepth = 0;
-        private const int MaxSubagentDepth = 2;
+        private const int MaxSubagentDepth = 5;
 
     }
 }

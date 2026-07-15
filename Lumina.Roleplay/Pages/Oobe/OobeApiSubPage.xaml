@@ -17,15 +17,20 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- 顶栏 -->
+        <!-- 顶栏：心象点 + 标题字体 -->
         <Grid Grid.Row="0" Background="{ThemeResource YanshuaiPanelBrush}"
               BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="0,0,0,1"
-              Padding="14,8">
-            <StackPanel VerticalAlignment="Center">
-                <TextBlock x:Name="PageTitle" Text="子智能体 API"
-                           FontSize="18" FontWeight="SemiBold" Opacity="0.9"/>
-                <TextBlock x:Name="PageStepHint" Text="步骤 3 / 8  ·  可跳过"
-                           FontSize="12" Opacity="0.5"/>
+              Padding="18,12">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <Ellipse Width="9" Height="9" Fill="{ThemeResource YanshuaiAccentBrush}"
+                         VerticalAlignment="Top" Margin="0,7,12,0"/>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock x:Name="PageTitle" Text="子智能体 API"
+                               FontFamily="{ThemeResource YanshuaiTitleFont}"
+                               FontSize="{StaticResource FontSizeSubtitle}"/>
+                    <TextBlock x:Name="PageStepHint" Text="步骤 3 / 8  ·  可跳过"
+                               Style="{StaticResource CaptionTextStyle}"/>
+                </StackPanel>
             </StackPanel>
         </Grid>
 
@@ -34,7 +39,10 @@
 
                 <TextBlock x:Name="DescText"
                            Text="子智能体用于记忆嵌入、对话摘要、角色卡补全等辅助任务，可使用更轻量的模型。"
-                           FontSize="15" Opacity="0.7" TextWrapping="Wrap" Margin="0,0,0,24"/>
+                           Style="{StaticResource BodyTextStyle}"
+                           Foreground="{ThemeResource YanshuaiMutedTextBrush}"
+                           FontSize="{StaticResource FontSizeBodyLarge}"
+                           TextWrapping="Wrap" Margin="0,0,0,24"/>
 
                 <!-- Use sub-agent toggle -->
                 <Grid Margin="0,0,0,20">
@@ -43,9 +51,9 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                        <TextBlock x:Name="UseSubLabel" Text="使用独立子智能体" FontSize="16" FontWeight="SemiBold"/>
+                        <TextBlock x:Name="UseSubLabel" Text="使用独立子智能体" Style="{StaticResource BodyTextStyle}" FontSize="{StaticResource FontSizeBodyLarge}"/>
                         <TextBlock x:Name="UseSubDesc" Text="关闭则复用主智能体 API 配置"
-                                   FontSize="12" Opacity="0.5" Margin="0,2,0,0"/>
+                                   Style="{StaticResource CaptionTextStyle}" Margin="0,2,0,0"/>
                     </StackPanel>
                     <ToggleSwitch x:Name="UseSubToggle" Grid.Column="1"
                                   HorizontalAlignment="Right" Toggled="UseSubToggle_Toggled"/>
@@ -54,19 +62,19 @@
                 <!-- Sub-agent config fields (visible only when UseSubToggle is on) -->
                 <StackPanel x:Name="SubConfigPanel" Visibility="Collapsed">
 
-                    <TextBlock x:Name="SubUrlLabel" Text="API 地址" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                    <TextBlock x:Name="SubUrlLabel" Text="API 地址" Style="{StaticResource LabelTextStyle}" Margin="0,0,0,8"/>
                     <TextBox x:Name="SubUrlBox" PlaceholderText="https://api.openai.com/v1/chat/completions"
                              FontSize="15" Padding="12,14" Margin="0,0,0,20"/>
 
-                    <TextBlock x:Name="SubKeyLabel" Text="API Key" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                    <TextBlock x:Name="SubKeyLabel" Text="API Key" Style="{StaticResource LabelTextStyle}" Margin="0,0,0,8"/>
                     <PasswordBox x:Name="SubKeyBox" PlaceholderText="sk-…" PasswordRevealMode="Peek"
                                  FontSize="16" Padding="12,14" Margin="0,0,0,20"/>
 
-                    <TextBlock x:Name="SubModelLabel" Text="模型" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                    <TextBlock x:Name="SubModelLabel" Text="模型" Style="{StaticResource LabelTextStyle}" Margin="0,0,0,8"/>
                     <TextBox x:Name="SubModelBox" PlaceholderText="例：gpt-4o-mini / llama-3.1-8b"
                              FontSize="16" Padding="12,14" Margin="0,0,0,20"/>
 
-                    <TextBlock x:Name="SubProviderLabel" Text="提供商类型" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                    <TextBlock x:Name="SubProviderLabel" Text="提供商类型" Style="{StaticResource LabelTextStyle}" Margin="0,0,0,8"/>
                     <ComboBox x:Name="SubProviderBox" Margin="0,0,0,8">
                         <ComboBoxItem x:Name="SubProviderOpenai" Content="OpenAI 兼容" Tag="openai"/>
                         <ComboBoxItem x:Name="SubProviderClaude" Content="Anthropic Claude" Tag="claude"/>
@@ -80,15 +88,15 @@
             <AppBarButton x:Name="NextBtn" Icon="Forward" Label="下一步" Click="NextBtn_Click"/>
             <CommandBar.Content>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0">
-                    <Ellipse Width="10" Height="10" Margin="3,0" Fill="Gray" Opacity="0.4"/>
-                    <Ellipse Width="10" Height="10" Margin="3,0" Fill="Gray" Opacity="0.4"/>
-                    <Ellipse Width="10" Height="10" Margin="3,0" Fill="Gray" Opacity="0.4"/>
-                    <Ellipse Fill="{ThemeResource YanshuaiAccentBrush}" Width="10" Height="10" Margin="3,0"/>
-                    <Ellipse Width="10" Height="10" Margin="3,0" Fill="Gray" Opacity="0.4"/>
-                    <Ellipse Width="10" Height="10" Margin="3,0" Fill="Gray" Opacity="0.4"/>
-                    <Ellipse Width="10" Height="10" Margin="3,0" Fill="Gray" Opacity="0.4"/>
-                    <Ellipse Width="10" Height="10" Margin="3,0" Fill="Gray" Opacity="0.4"/>
-                    <TextBlock x:Name="StepLabel" Text="3/8" FontSize="11" Opacity="0.4" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                    <Ellipse Width="7" Height="7" Margin="3,0" Fill="{ThemeResource YanshuaiMutedTextBrush}" Opacity="{StaticResource OpacityFaint}"/>
+                    <Ellipse Width="7" Height="7" Margin="3,0" Fill="{ThemeResource YanshuaiMutedTextBrush}" Opacity="{StaticResource OpacityFaint}"/>
+                    <Ellipse Fill="{ThemeResource YanshuaiAccentBrush}" Width="7" Height="7" Margin="3,0"/>
+                    <Ellipse Width="7" Height="7" Margin="3,0" Fill="{ThemeResource YanshuaiMutedTextBrush}" Opacity="{StaticResource OpacityFaint}"/>
+                    <Ellipse Width="7" Height="7" Margin="3,0" Fill="{ThemeResource YanshuaiMutedTextBrush}" Opacity="{StaticResource OpacityFaint}"/>
+                    <Ellipse Width="7" Height="7" Margin="3,0" Fill="{ThemeResource YanshuaiMutedTextBrush}" Opacity="{StaticResource OpacityFaint}"/>
+                    <Ellipse Width="7" Height="7" Margin="3,0" Fill="{ThemeResource YanshuaiMutedTextBrush}" Opacity="{StaticResource OpacityFaint}"/>
+                    <Ellipse Width="7" Height="7" Margin="3,0" Fill="{ThemeResource YanshuaiMutedTextBrush}" Opacity="{StaticResource OpacityFaint}"/>
+                    <TextBlock x:Name="StepLabel" Text="3/8" Style="{StaticResource CaptionTextStyle}" FontSize="11" Margin="8,0,0,0" VerticalAlignment="Center"/>
                 </StackPanel>
             </CommandBar.Content>
         </CommandBar>

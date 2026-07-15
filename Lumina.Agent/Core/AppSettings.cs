@@ -253,6 +253,32 @@ namespace yanshuai
             }
         }
 
+        // ── 长记忆(全局,取代旧的每会话 Conversation.Memory* 字段) ─────────────
+        /// <summary>启用 AI 自动总结/注入长记忆(全局)。</summary>
+        public static bool MemoryEnabled
+        {
+            get => Local.Values.ContainsKey("MemoryEnabled") && (bool)Local.Values["MemoryEnabled"];
+            set => Local.Values["MemoryEnabled"] = value;
+        }
+        /// <summary>用于记忆总结的 API 配置 ID(空=用对话当前 API)。</summary>
+        public static string MemoryApiProfileId
+        {
+            get => Local.Values.ContainsKey("MemoryApiId") ? Local.Values["MemoryApiId"] as string ?? "" : "";
+            set => Local.Values["MemoryApiId"] = value;
+        }
+        /// <summary>每隔几轮对话总结一次记忆。</summary>
+        public static int MemorySummaryInterval
+        {
+            get => Local.Values.ContainsKey("MemorySumInterval") ? (int)Local.Values["MemorySumInterval"] : 10;
+            set => Local.Values["MemorySumInterval"] = value;
+        }
+        /// <summary>每隔几轮注入一次记忆到上下文。</summary>
+        public static int MemoryInjectInterval
+        {
+            get => Local.Values.ContainsKey("MemoryInjInterval") ? (int)Local.Values["MemoryInjInterval"] : 1;
+            set => Local.Values["MemoryInjInterval"] = value;
+        }
+
         // ── Helpers ───────────────────────────────────────────────────────────
 
         public static void ApplyTheme(FrameworkElement element)

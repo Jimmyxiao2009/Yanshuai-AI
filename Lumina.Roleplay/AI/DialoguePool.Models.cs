@@ -22,8 +22,14 @@ namespace yanshuai
         [DataMember] public int TotalConversations { get; set; } = 0;
         /// <summary>上次总结时间</summary>
         [DataMember] public DateTime LastUpdated { get; set; } = DateTime.Now;
+        private int _favorability = 0;
         /// <summary>好感度 (0–100)</summary>
-        [DataMember] public int Favorability { get; set; } = 0;
+        [DataMember]
+        public int Favorability
+        {
+            get => _favorability;
+            set => _favorability = Math.Max(0, Math.Min(100, value));
+        }
         /// <summary>好感度趋势 ("up"/"down"/"stable")</summary>
         [DataMember] public string FavorabilityTrend { get; set; } = "stable";
     }

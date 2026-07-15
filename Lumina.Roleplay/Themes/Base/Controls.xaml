@@ -1,10 +1,9 @@
 <!--
     Controls.xaml — 设计系统：控件样式（只定义一次，全主题共用）
-    取代原先 InkScroll/Celadon/MidnightVermilion 各自重复的按钮/图标样式。
     所有颜色 / 字体经 {ThemeResource} 引用主题 token，所以同一套样式自动适配每套主题
-    + Light/Dark + 自定义主色覆盖。
-    注意：不在 Button 上设 CornerRadius（Control.CornerRadius 需 16299，本项目 min=15063），
-    需要圆角时由调用方用 Border 包裹 + {ThemeResource YanshuaiControlCornerRadius}。
+    + Light/Dark + 自定义主色（心象色）覆盖。
+    圆角策略：min=15063 不支持 Control.CornerRadius（需 16299），所以按钮用
+    ControlTemplate 内包 Border 实现圆角；调用方无需再用 Border 包裹。
 -->
 <ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -14,7 +13,7 @@
     <Style x:Key="NavButtonStyle" TargetType="Button">
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="BorderThickness" Value="0"/>
-        <Setter Property="Height" Value="52"/>
+        <Setter Property="Height" Value="{StaticResource NavItemHeight}"/>
         <Setter Property="HorizontalAlignment" Value="Stretch"/>
         <Setter Property="HorizontalContentAlignment" Value="Left"/>
         <Setter Property="FontFamily" Value="{ThemeResource YanshuaiBodyFont}"/>
@@ -38,63 +37,290 @@
                                 <VisualState x:Name="Disabled"/>
                             </VisualStateGroup>
                         </VisualStateManager.VisualStateGroups>
-                        <ContentPresenter Margin="16,0" VerticalAlignment="Center"/>
+                        <!-- 选中态左轨由调用方按需叠加；此处保持轻量 -->
+                        <ContentPresenter Margin="16,0" VerticalAlignment="Center"
+                                          Content="{TemplateBinding Content}"
+                                          ContentTemplate="{TemplateBinding ContentTemplate}"/>
                     </Grid>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
     </Style>
 
-    <!-- ═══ 发送按钮（方形，主色底） ═══ -->
-    <Style x:Key="SendButtonStyle" TargetType="Button">
-        <Setter Property="Background" Value="{ThemeResource YanshuaiAccentBrush}"/>
-        <Setter Property="Foreground" Value="{ThemeResource YanshuaiOnAccentBrush}"/>
-        <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/>
-        <Setter Property="Width" Value="44"/>
-        <Setter Property="Height" Value="44"/>
-        <Setter Property="BorderThickness" Value="0"/>
-    </Style>
-
-    <!-- ═══ 主操作按钮（主色底） ═══ -->
+    <!-- ═══ 主操作按钮（心象色底，圆角，光感 hover） ═══ -->
     <Style x:Key="PrimaryButtonStyle" TargetType="Button">
         <Setter Property="Background" Value="{ThemeResource YanshuaiAccentBrush}"/>
         <Setter Property="Foreground" Value="{ThemeResource YanshuaiOnAccentBrush}"/>
         <Setter Property="BorderThickness" Value="0"/>
-        <Setter Property="Padding" Value="16,8"/>
+        <Setter Property="Padding" Value="18,9"/>
         <Setter Property="FontSize" Value="14"/>
         <Setter Property="FontFamily" Value="{ThemeResource YanshuaiBodyFont}"/>
         <Setter Property="HorizontalContentAlignment" Value="Center"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid>
+                        <Border x:Name="Bg" Background="{TemplateBinding Background}"
+                                CornerRadius="{ThemeResource YanshuaiControlCornerRadius}"/>
+                        <Border x:Name="Overlay" Background="#FFFFFF" Opacity="0"
+                                CornerRadius="{ThemeResource YanshuaiControlCornerRadius}"/>
+                        <ContentPresenter Padding="{TemplateBinding Padding}"
+                                          Content="{TemplateBinding Content}"
+                                          ContentTemplate="{TemplateBinding ContentTemplate}"
+                                          Foreground="{TemplateBinding Foreground}"
+                                          HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal"/>
+                                <VisualState x:Name="PointerOver">
+                                    <VisualState.Setters>
+                                        <Setter Target="Overlay.Opacity" Value="0.12"/>
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <VisualState.Setters>
+                                        <Setter Target="Overlay.Opacity" Value="0.22"/>
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Disabled">
+                                    <VisualState.Setters>
+                                        <Setter Target="Bg.Opacity" Value="0.4"/>
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 
-    <!-- ═══ 次操作按钮（描边） ═══ -->
+    <!-- ═══ 次操作按钮（描边，圆角） ═══ -->
     <Style x:Key="SecondaryButtonStyle" TargetType="Button">
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="Foreground" Value="{ThemeResource YanshuaiTextBrush}"/>
         <Setter Property="BorderBrush" Value="{ThemeResource YanshuaiBorderBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="Padding" Value="16,8"/>
+        <Setter Property="Padding" Value="18,9"/>
         <Setter Property="FontSize" Value="14"/>
         <Setter Property="FontFamily" Value="{ThemeResource YanshuaiBodyFont}"/>
         <Setter Property="HorizontalContentAlignment" Value="Center"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid>
+                        <Border x:Name="Bg" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="{ThemeResource YanshuaiControlCornerRadius}"/>
+                        <Border x:Name="Overlay" Background="{ThemeResource YanshuaiAccentBrush}" Opacity="0"
+                                CornerRadius="{ThemeResource YanshuaiControlCornerRadius}"/>
+                        <ContentPresenter Padding="{TemplateBinding Padding}"
+                                          Content="{TemplateBinding Content}"
+                                          ContentTemplate="{TemplateBinding ContentTemplate}"
+                                          Foreground="{TemplateBinding Foreground}"
+                                          HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal"/>
+                                <VisualState x:Name="PointerOver">
+                                    <VisualState.Setters>
+                                        <Setter Target="Overlay.Opacity" Value="0.08"/>
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <VisualState.Setters>
+                                        <Setter Target="Overlay.Opacity" Value="0.16"/>
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Disabled">
+                                    <VisualState.Setters>
+                                        <Setter Target="Bg.Opacity" Value="0.4"/>
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 
-    <!-- ═══ 主色描边按钮 ═══ -->
-    <Style x:Key="AccentOutlineButtonStyle" TargetType="Button">
-        <Setter Property="Background" Value="Transparent"/>
+    <!-- ═══ 主色描边按钮（继承次操作模板，仅换前景/描边为心象色） ═══ -->
+    <Style x:Key="AccentOutlineButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
         <Setter Property="Foreground" Value="{ThemeResource YanshuaiAccentBrush}"/>
         <Setter Property="BorderBrush" Value="{ThemeResource YanshuaiAccentBrush}"/>
-        <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="Padding" Value="16,8"/>
+    </Style>
+
+    <!-- ═══ 幽灵按钮（透明底，轻 hover；用于行内/工具栏文字操作） ═══ -->
+    <Style x:Key="GhostButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{ThemeResource YanshuaiMutedTextBrush}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="12,7"/>
         <Setter Property="FontSize" Value="14"/>
         <Setter Property="FontFamily" Value="{ThemeResource YanshuaiBodyFont}"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid>
+                        <Border x:Name="Overlay" Background="{ThemeResource YanshuaiAccentBrush}" Opacity="0"
+                                CornerRadius="{ThemeResource YanshuaiControlCornerRadius}"/>
+                        <ContentPresenter Padding="{TemplateBinding Padding}"
+                                          Content="{TemplateBinding Content}"
+                                          ContentTemplate="{TemplateBinding ContentTemplate}"
+                                          Foreground="{TemplateBinding Foreground}"
+                                          HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal"/>
+                                <VisualState x:Name="PointerOver">
+                                    <VisualState.Setters>
+                                        <Setter Target="Overlay.Opacity" Value="0.10"/>
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <VisualState.Setters>
+                                        <Setter Target="Overlay.Opacity" Value="0.18"/>
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Disabled"/>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ═══ 图标按钮（方形 40，达触控目标；消息操作条/工具栏用） ═══ -->
+    <Style x:Key="IconButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{ThemeResource YanshuaiMutedTextBrush}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Width" Value="40"/>
+        <Setter Property="Height" Value="40"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/>
+        <Setter Property="FontSize" Value="{StaticResource IconSizeMedium}"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid>
+                        <Border x:Name="Overlay" Background="{ThemeResource YanshuaiAccentBrush}" Opacity="0"
+                                CornerRadius="{ThemeResource YanshuaiControlCornerRadius}"/>
+                        <ContentPresenter Content="{TemplateBinding Content}"
+                                          ContentTemplate="{TemplateBinding ContentTemplate}"
+                                          Foreground="{TemplateBinding Foreground}"
+                                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal"/>
+                                <VisualState x:Name="PointerOver">
+                                    <VisualState.Setters>
+                                        <Setter Target="Overlay.Opacity" Value="0.12"/>
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <VisualState.Setters>
+                                        <Setter Target="Overlay.Opacity" Value="0.20"/>
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Disabled">
+                                    <VisualState.Setters>
+                                        <Setter Target="Overlay.Opacity" Value="0"/>
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ═══ 发送按钮（心象色方形，圆角） ═══ -->
+    <Style x:Key="SendButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="{ThemeResource YanshuaiAccentBrush}"/>
+        <Setter Property="Foreground" Value="{ThemeResource YanshuaiOnAccentBrush}"/>
+        <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/>
+        <Setter Property="FontSize" Value="{StaticResource IconSizeLarge}"/>
+        <Setter Property="Width" Value="44"/>
+        <Setter Property="Height" Value="44"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid>
+                        <Border x:Name="Bg" Background="{TemplateBinding Background}"
+                                CornerRadius="{ThemeResource YanshuaiControlCornerRadius}"/>
+                        <Border x:Name="Overlay" Background="#FFFFFF" Opacity="0"
+                                CornerRadius="{ThemeResource YanshuaiControlCornerRadius}"/>
+                        <ContentPresenter Content="{TemplateBinding Content}"
+                                          Foreground="{TemplateBinding Foreground}"
+                                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal"/>
+                                <VisualState x:Name="PointerOver">
+                                    <VisualState.Setters>
+                                        <Setter Target="Overlay.Opacity" Value="0.14"/>
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <VisualState.Setters>
+                                        <Setter Target="Overlay.Opacity" Value="0.24"/>
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Disabled">
+                                    <VisualState.Setters>
+                                        <Setter Target="Bg.Opacity" Value="0.4"/>
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 
     <!-- ═══ 工具栏图标 ═══ -->
     <Style x:Key="ToolbarIconStyle" TargetType="FontIcon">
-        <Setter Property="FontSize" Value="15"/>
+        <Setter Property="FontSize" Value="{StaticResource IconSizeMedium}"/>
         <Setter Property="Foreground" Value="{ThemeResource YanshuaiMutedTextBrush}"/>
+    </Style>
+
+    <!-- ═══ 卡片容器（统一面板：面色 + 描边 + 圆角 + 内边距） ═══ -->
+    <Style x:Key="CardBorderStyle" TargetType="Border">
+        <Setter Property="Background" Value="{ThemeResource YanshuaiPanelBrush}"/>
+        <Setter Property="BorderBrush" Value="{ThemeResource YanshuaiBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="{StaticResource CardCornerRadius}"/>
+        <Setter Property="Padding" Value="{StaticResource CardPadding}"/>
+    </Style>
+
+    <!-- ═══ 胶囊（圆角药丸；用于筛选/分组头） ═══ -->
+    <Style x:Key="PillBorderStyle" TargetType="Border">
+        <Setter Property="Background" Value="{ThemeResource YanshuaiSubtlePanelBrush}"/>
+        <Setter Property="CornerRadius" Value="{StaticResource PillCornerRadius}"/>
+        <Setter Property="Padding" Value="12,5"/>
+    </Style>
+
+    <!-- ═══ 标记（小圆角徽标；用于标签/状态/R18G） ═══ -->
+    <Style x:Key="ChipBorderStyle" TargetType="Border">
+        <Setter Property="Background" Value="{ThemeResource YanshuaiAccentWashBrush}"/>
+        <Setter Property="CornerRadius" Value="6"/>
+        <Setter Property="Padding" Value="7,2"/>
     </Style>
 
 </ResourceDictionary>

@@ -11,84 +11,107 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- 顶栏 -->
-        <Grid Grid.Row="0" Background="{ThemeResource YanshuaiPanelBrush}"
-              BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="0,0,0,1"
-              Padding="14,0,0,0">
+        <!-- 顶栏：返回区为空，仅图标操作（编辑 / R18G）通过 IconButtonStyle -->
+        <Grid Grid.Row="0" Background="{ThemeResource YanshuaiChromeBrush}"
+              Padding="16,8,8,8">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-            <TextBlock Grid.Column="0" Text="角色详情" FontSize="18" FontWeight="SemiBold"
-                       VerticalAlignment="Center" Opacity="0.9"/>
+            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                <Ellipse Width="9" Height="9" Fill="{ThemeResource YanshuaiAccentBrush}"
+                         VerticalAlignment="Center" Margin="0,0,12,0"/>
+                <TextBlock Text="角色详情"
+                           FontFamily="{ThemeResource YanshuaiTitleFont}" FontSize="22"
+                           VerticalAlignment="Center"
+                           Foreground="{ThemeResource YanshuaiTextBrush}"/>
+            </StackPanel>
             <Button x:Name="R18GToggleBtn" Grid.Column="1" Click="R18GToggle_Click"
-                    Background="Transparent" BorderThickness="0"
-                    Width="48" Height="48" Padding="0"
+                    Style="{StaticResource IconButtonStyle}"
+                    Width="40" Height="40"
                     ToolTipService.ToolTip="切换 R18G 标注">
-                <FontIcon Glyph="&#xE7FB;" FontSize="16" Opacity="0.7"/>
+                <FontIcon Glyph="&#xE7FB;" FontSize="16"
+                          Foreground="{ThemeResource YanshuaiTextBrush}"
+                          Opacity="{StaticResource OpacityMuted}"/>
             </Button>
-            <Button Grid.Column="2" Click="EditCharaBtn_Click" Background="Transparent"
-                    BorderThickness="0" Width="48" Height="48" Padding="0"
+            <Button Grid.Column="2" Click="EditCharaBtn_Click"
+                    Style="{StaticResource IconButtonStyle}"
+                    Width="40" Height="40"
                     ToolTipService.ToolTip="编辑角色卡">
-                <FontIcon Glyph="&#xE70F;" FontSize="16" Opacity="0.7"/>
+                <FontIcon Glyph="&#xE70F;" FontSize="16"
+                          Foreground="{ThemeResource YanshuaiTextBrush}"
+                          Opacity="{StaticResource OpacityMuted}"/>
             </Button>
         </Grid>
 
-        <!-- 角色头部：头像 + 名称 + 简介 -->
-        <StackPanel Grid.Row="1" Margin="18,16,18,12">
+        <!-- 角色头部（主角区）：头像 + 名称（站酷小薇大字） + 简介 + 立绘 -->
+        <StackPanel Grid.Row="1" Margin="18,18,18,12">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
+                <!-- 主角头像：心象环 -->
                 <Border x:Name="AvatarBorder"
                         Grid.Column="0"
-                        Width="72" Height="72"
-                        CornerRadius="36"
-                        Background="#44FFFFFF"
-                        BorderBrush="#22FFFFFF"
-                        BorderThickness="1">
+                        Width="92" Height="92"
+                        CornerRadius="46"
+                        Background="{ThemeResource YanshuaiAccentWashBrush}"
+                        BorderBrush="{ThemeResource YanshuaiAccentBrush}"
+                        BorderThickness="1.5">
                     <TextBlock x:Name="AvatarPlaceholder"
                                Text="?"
-                               FontSize="28"
-                               Opacity="0.3"
+                               FontSize="34"
+                               Foreground="{ThemeResource YanshuaiAccentBrush}"
+                               Opacity="{StaticResource OpacityFaint}"
                                HorizontalAlignment="Center"
                                VerticalAlignment="Center"/>
                 </Border>
 
-                <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
+                <StackPanel Grid.Column="1" Margin="18,0,0,0" VerticalAlignment="Center">
+                    <!-- 角色名：标题字体，主角 -->
                     <TextBlock x:Name="CharaNameText"
-                               FontSize="24" FontWeight="Light" Opacity="0.95"/>
+                               FontFamily="{ThemeResource YanshuaiTitleFont}"
+                               FontSize="30"
+                               Foreground="{ThemeResource YanshuaiTextBrush}"/>
                     <TextBlock x:Name="CharaGroupText"
-                               FontSize="13" Opacity="0.45"
-                               Margin="0,3,0,0"/>
-                    <TextBlock x:Name="SelectionStatusText"
-                               FontSize="12"
-                               Opacity="0.65"
+                               Style="{StaticResource CaptionTextStyle}"
                                Margin="0,4,0,0"/>
+                    <TextBlock x:Name="SelectionStatusText"
+                               FontSize="{StaticResource FontSizeCaption}"
+                               Foreground="{ThemeResource YanshuaiMutedTextBrush}"
+                               Opacity="{StaticResource OpacityMuted}"
+                               Margin="0,4,0,0"/>
+                    <!-- R18G 标记：用心象徽章而非刺眼红色 -->
                     <Border x:Name="R18GBadge" Visibility="Collapsed"
-                            Background="#CCFF4444" CornerRadius="4"
-                            Padding="6,2" Margin="0,4,0,0"
+                            Background="{ThemeResource YanshuaiAccentBrush}"
+                            CornerRadius="{StaticResource PillCornerRadius}"
+                            Padding="9,2" Margin="0,6,0,0"
                             HorizontalAlignment="Left">
                         <TextBlock Text="R18G" FontSize="11"
-                                   FontWeight="Bold" Foreground="White"/>
+                                   FontWeight="SemiBold"
+                                   Foreground="{ThemeResource YanshuaiOnAccentBrush}"/>
                     </Border>
                 </StackPanel>
             </Grid>
 
             <TextBlock x:Name="CharaDescText"
-                       FontSize="13" Opacity="0.6"
+                       FontFamily="{ThemeResource YanshuaiVoiceFont}"
+                       FontSize="{StaticResource FontSizeBodyLarge}" LineHeight="23"
+                       Foreground="{ThemeResource YanshuaiTextBrush}"
+                       Opacity="{StaticResource OpacityMuted}"
                        TextWrapping="Wrap"
-                       Margin="0,10,0,0"
+                       Margin="0,14,0,0"
                        MaxLines="4"/>
+            <!-- 立绘：作为主角视觉，圆角更大 -->
             <Border x:Name="IllustrationFrame"
                     Visibility="Collapsed"
-                    Height="180"
-                    CornerRadius="6"
-                    Margin="0,12,0,0"
+                    Height="200"
+                    CornerRadius="{StaticResource CardCornerRadius}"
+                    Margin="0,14,0,0"
                     Background="{ThemeResource YanshuaiPanelBrush}"
                     BorderBrush="{ThemeResource YanshuaiBorderBrush}"
                     BorderThickness="1">
@@ -100,7 +123,7 @@
         <!-- 分隔线 -->
         <Border Grid.Row="2"
                 Background="{ThemeResource YanshuaiBorderBrush}"
-                Height="1" Opacity="0.4"
+                Height="1" Opacity="{StaticResource OpacityFaint}"
                 Margin="18,0"/>
 
         <!-- 对话区（旧称对话池） -->
@@ -113,29 +136,40 @@
             <!-- 对话池表头 — 可点击进入记忆编辑 -->
             <Button Grid.Row="0"
                     Click="MemoryHeader_Click"
-                    Background="Transparent"
-                    BorderThickness="0"
+                    Style="{StaticResource GhostButtonStyle}"
                     HorizontalAlignment="Stretch"
-                    Height="44"
+                    Height="48"
                     Padding="18,0">
                 <Grid>
                     <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0"
+                    <!-- 心象竖条标记 -->
+                    <Rectangle Grid.Column="0" Width="3" Height="15" RadiusX="1.5" RadiusY="1.5"
+                               Fill="{ThemeResource YanshuaiAccentBrush}"
+                               VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <TextBlock Grid.Column="1"
                                x:Name="PoolTitleText"
                                Text="对话池"
-                               FontSize="15" FontWeight="SemiBold"
+                               FontFamily="{ThemeResource YanshuaiTitleFont}"
+                               FontSize="15"
                                VerticalAlignment="Center"
-                               Opacity="0.8"/>
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                        <FontIcon Glyph="&#xE945;" FontSize="13" Opacity="0.4"
+                               Foreground="{ThemeResource YanshuaiTextBrush}"/>
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                        <FontIcon Glyph="&#xE945;" FontSize="13"
+                                  Foreground="{ThemeResource YanshuaiMutedTextBrush}"
+                                  Opacity="{StaticResource OpacityFaint}"
                                   Margin="0,0,6,0"/>
                         <TextBlock Text="记忆库"
-                                   FontSize="12" Opacity="0.4"
+                                   FontSize="{StaticResource FontSizeCaption}"
+                                   Foreground="{ThemeResource YanshuaiMutedTextBrush}"
+                                   Opacity="{StaticResource OpacityFaint}"
                                    VerticalAlignment="Center"/>
-                        <FontIcon Glyph="&#xE76C;" FontSize="12" Opacity="0.55"
+                        <FontIcon Glyph="&#xE76C;" FontSize="12"
+                                  Foreground="{ThemeResource YanshuaiMutedTextBrush}"
+                                  Opacity="{StaticResource OpacitySubtle}"
                                   Margin="6,0,0,0"/>
                     </StackPanel>
                 </Grid>

@@ -9,55 +9,70 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- ═══ 顶栏：返回 + 搜索 + URL导入 + 设置 ═══ -->
-        <Grid Grid.Row="0" Background="{ThemeResource YanshuaiPanelBrush}"
-              BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="0,0,0,1"
-              Padding="2,4,2,4">
+        <!-- ═══ 顶栏：搜索 + URL导入 + 设置 ═══ -->
+        <Grid Grid.Row="0" Background="{ThemeResource YanshuaiChromeBrush}"
+              Padding="14,10,8,10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-            <!-- 搜索栏 -->
-            <Grid Grid.Column="0" Margin="2,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <TextBox x:Name="SearchInput" Grid.Column="0"
-                         PlaceholderText="搜索角色卡..."
-                         Padding="10,7" MinHeight="38" AcceptsReturn="False"
-                         VerticalAlignment="Center"
-                         KeyDown="SearchInput_KeyDown"/>
-                <Button x:Name="SearchBtn" Grid.Column="1"
-                        MinHeight="38" Margin="4,0,0,0" Padding="12,7" BorderThickness="0"
-                        VerticalAlignment="Center"
-                        Background="{ThemeResource YanshuaiAccentBrush}"
-                        Foreground="White"
-                        Click="SearchBtn_Click">
-                    <FontIcon Glyph="&#xE721;" FontSize="14"/>
-                </Button>
-            </Grid>
+            <!-- 搜索栏：圆角胶囊 + 内嵌搜索图标按钮 -->
+            <Border Grid.Column="0"
+                    Background="{ThemeResource YanshuaiSurfaceBrush}"
+                    BorderBrush="{ThemeResource YanshuaiBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="{StaticResource PillCornerRadius}"
+                    Padding="2,2,2,2">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox x:Name="SearchInput" Grid.Column="0"
+                             PlaceholderText="搜索角色卡..."
+                             Background="Transparent" BorderThickness="0"
+                             Padding="12,7" MinHeight="36" AcceptsReturn="False"
+                             VerticalAlignment="Center"
+                             KeyDown="SearchInput_KeyDown"/>
+                    <Button x:Name="SearchBtn" Grid.Column="1"
+                            Style="{StaticResource IconButtonStyle}"
+                            Width="38" Height="36"
+                            VerticalAlignment="Center"
+                            Click="SearchBtn_Click"
+                            ToolTipService.ToolTip="搜索">
+                        <FontIcon Glyph="&#xE721;" FontSize="14"
+                                  Foreground="{ThemeResource YanshuaiAccentBrush}"/>
+                    </Button>
+                </Grid>
+            </Border>
 
             <!-- URL 导入 -->
-            <Button Grid.Column="1" Background="Transparent"
-                    BorderThickness="0" Width="44" Height="44" Padding="0">
-                <FontIcon Glyph="&#xE71B;" FontSize="16" Opacity="0.7"/>
+            <Button Grid.Column="1" Margin="6,0,0,0"
+                    Style="{StaticResource IconButtonStyle}"
+                    Width="40" Height="40"
+                    ToolTipService.ToolTip="粘贴链接导入">
+                <FontIcon Glyph="&#xE71B;" FontSize="16"
+                          Foreground="{ThemeResource YanshuaiTextBrush}"
+                          Opacity="{StaticResource OpacityMuted}"/>
                 <Button.Flyout>
                     <Flyout x:Name="UrlFlyout">
                         <StackPanel Width="280">
-                            <TextBlock Text="粘贴角色卡链接" FontSize="14"
-                                       FontWeight="SemiBold" Opacity="0.8"/>
+                            <TextBlock Text="粘贴角色卡链接"
+                                       FontFamily="{ThemeResource YanshuaiTitleFont}"
+                                       FontSize="{StaticResource FontSizeSubtitle}"
+                                       Foreground="{ThemeResource YanshuaiTextBrush}"/>
                             <TextBlock Text="自动识别 Chub/花屿/星野/云酒馆/电子魅魔 等"
-                                       FontSize="11" Opacity="0.4" TextWrapping="Wrap"/>
+                                       Style="{StaticResource CaptionTextStyle}"
+                                       Margin="0,4,0,8" TextWrapping="Wrap"/>
                             <TextBox x:Name="UrlInput"
                                      PlaceholderText="https://..."
-                                     Padding="10,8" AcceptsReturn="False"/>
+                                     Padding="10,8" AcceptsReturn="False"
+                                     Margin="0,0,0,8"/>
                             <Button x:Name="UrlDownloadBtn" Content="下载并预览"
-                                    Background="{ThemeResource YanshuaiAccentBrush}"
-                                    Foreground="White" BorderThickness="0"
-                                    Padding="14,8" HorizontalAlignment="Stretch"
+                                    Style="{StaticResource PrimaryButtonStyle}"
+                                    HorizontalAlignment="Stretch"
                                     Click="UrlDownloadBtn_Click"/>
                             <StackPanel x:Name="UrlResultPanel"/>
                         </StackPanel>
@@ -66,18 +81,22 @@
             </Button>
 
             <!-- 设置 -->
-            <Button Grid.Column="2" Background="Transparent"
-                    BorderThickness="0" Width="44" Height="44" Padding="0">
-                <FontIcon Glyph="&#xE713;" FontSize="16" Opacity="0.7"/>
+            <Button Grid.Column="2" Margin="4,0,0,0"
+                    Style="{StaticResource IconButtonStyle}"
+                    Width="40" Height="40"
+                    ToolTipService.ToolTip="平台开关">
+                <FontIcon Glyph="&#xE713;" FontSize="16"
+                          Foreground="{ThemeResource YanshuaiTextBrush}"
+                          Opacity="{StaticResource OpacityMuted}"/>
                 <Button.Flyout>
                     <Flyout x:Name="SettingsFlyout">
                         <StackPanel Width="240">
-                            <TextBlock Text="平台开关" FontSize="14"
-                                       FontWeight="SemiBold" Opacity="0.8"
+                            <TextBlock Text="平台开关"
+                                       Style="{StaticResource LabelTextStyle}"
                                        Margin="0,0,0,6"/>
                             <TextBlock Text="关闭后该平台不出现在信息流和搜索中"
-                                       FontSize="11" Opacity="0.4" Margin="0,0,0,8"
-                                       TextWrapping="Wrap"/>
+                                       Style="{StaticResource CaptionTextStyle}"
+                                       Margin="0,0,0,8" TextWrapping="Wrap"/>
                             <ToggleSwitch x:Name="ToggleChub" Header="Chub.ai"
                                           Tag="chub" Toggled="SourceToggle_Toggled"/>
                             <ToggleSwitch x:Name="ToggleHuayu" Header="花屿"
@@ -98,9 +117,12 @@
         <ScrollViewer x:Name="FeedScrollViewer" Grid.Row="1"
                       VerticalScrollBarVisibility="Auto"
                       ViewChanged="FeedScrollViewer_ViewChanged">
-            <StackPanel Margin="10,8,10,30">
-                <TextBlock x:Name="FeedStatusText" FontSize="12" Opacity="0.4"
-                           Margin="0,4,0,6" Visibility="Collapsed"
+            <StackPanel Margin="10,10,10,30">
+                <TextBlock x:Name="FeedStatusText"
+                           FontSize="{StaticResource FontSizeCaption}"
+                           Foreground="{ThemeResource YanshuaiMutedTextBrush}"
+                           Opacity="{StaticResource OpacityFaint}"
+                           Margin="0,4,0,8" Visibility="Collapsed"
                            HorizontalAlignment="Center" TextWrapping="Wrap"/>
 
                 <Grid x:Name="FeedCardContainer">
@@ -113,10 +135,10 @@
                 </Grid>
 
                 <Button x:Name="LoadMoreBtn" Content="加载更多"
-                        HorizontalAlignment="Stretch" Margin="0,8,0,0"
-                        Padding="14,12" BorderThickness="0"
-                        Background="{ThemeResource YanshuaiAccentBrush}"
-                        Foreground="White" Visibility="Collapsed"
+                        Style="{StaticResource SecondaryButtonStyle}"
+                        HorizontalAlignment="Stretch" Margin="0,12,0,0"
+                        Padding="14,12"
+                        Visibility="Collapsed"
                         Click="LoadMoreBtn_Click"/>
 
                 <ProgressRing x:Name="FeedLoadingRing"

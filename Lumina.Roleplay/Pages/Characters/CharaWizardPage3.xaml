@@ -12,58 +12,77 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- 顶栏 -->
-        <Grid Grid.Row="0" Background="{ThemeResource YanshuaiPanelBrush}"
-              BorderBrush="{ThemeResource YanshuaiBorderBrush}" BorderThickness="0,0,0,1"
-              Padding="14,8">
-            <StackPanel VerticalAlignment="Center">
+        <!-- 顶栏：心象点 + 标题（站酷小薇） + 步骤指示器 -->
+        <StackPanel Grid.Row="0" Background="{ThemeResource YanshuaiChromeBrush}"
+                    Padding="{StaticResource PagePadding}">
+            <StackPanel Orientation="Horizontal">
+                <Ellipse Width="9" Height="9" Fill="{ThemeResource YanshuaiAccentBrush}"
+                         VerticalAlignment="Center" Margin="0,0,12,0"/>
                 <TextBlock x:Name="PageTitleBlock" Text="新建角色卡"
-                           FontSize="18" FontWeight="SemiBold" Opacity="0.9"/>
-                <TextBlock x:Name="StepText" Text="第 3 步 / 共 4 步  ·  提示词与附加信息"
-                           FontSize="12" Opacity="0.5"/>
+                           FontFamily="{ThemeResource YanshuaiTitleFont}" FontSize="30"
+                           VerticalAlignment="Center"
+                           Foreground="{ThemeResource YanshuaiTextBrush}"/>
             </StackPanel>
-        </Grid>
+
+            <!-- 步骤进度条（第 3 步：前三段为心象色） -->
+            <StackPanel Orientation="Horizontal" Margin="0,14,0,2">
+                <Rectangle Width="40" Height="3" RadiusX="1.5" RadiusY="1.5"
+                           Fill="{ThemeResource YanshuaiAccentBrush}" Margin="0,0,6,0"/>
+                <Rectangle Width="40" Height="3" RadiusX="1.5" RadiusY="1.5"
+                           Fill="{ThemeResource YanshuaiAccentBrush}" Margin="0,0,6,0"/>
+                <Rectangle Width="40" Height="3" RadiusX="1.5" RadiusY="1.5"
+                           Fill="{ThemeResource YanshuaiAccentBrush}" Margin="0,0,6,0"/>
+                <Rectangle Width="40" Height="3" RadiusX="1.5" RadiusY="1.5"
+                           Fill="{ThemeResource YanshuaiBorderBrush}"/>
+            </StackPanel>
+            <TextBlock x:Name="StepText" Text="第 3 步 / 共 4 步  ·  提示词与附加信息"
+                       Style="{StaticResource CaptionTextStyle}" Margin="0,8,0,0"/>
+        </StackPanel>
 
         <ScrollViewer Grid.Row="1">
-            <StackPanel Margin="18,18,18,36">
+            <StackPanel Margin="{StaticResource PagePadding}" Padding="0,4,0,40">
 
-                <TextBlock x:Name="SysPromptLabel" Text="系统提示词（可选）" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                <TextBlock x:Name="SysPromptLabel" Text="系统提示词（可选）"
+                           Style="{StaticResource LabelTextStyle}" Margin="0,0,0,6"/>
                 <TextBlock x:Name="SysPromptHint" Text="角色专属系统级指令，注入到对话开头。可留空。"
-                           FontSize="13" Opacity="0.5" Margin="0,0,0,10"/>
+                           Style="{StaticResource CaptionTextStyle}" Margin="0,0,0,10"/>
                 <TextBox x:Name="SystemPromptBox"
                          PlaceholderText="例：始终以第一人称回答，不要跳出角色…"
                          AcceptsReturn="True" TextWrapping="Wrap"
-                         FontSize="15" Padding="12,12"
+                         FontSize="{StaticResource FontSizeBodyLarge}" Padding="12,12"
                          Height="120" Margin="0,0,0,28"/>
 
-                <TextBlock x:Name="PostHistoryLabel" Text="历史后注入（可选）" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                <TextBlock x:Name="PostHistoryLabel" Text="历史后注入（可选）"
+                           Style="{StaticResource LabelTextStyle}" Margin="0,0,0,6"/>
                 <TextBlock x:Name="PostHistoryHint" Text="每次发送时追加到消息列表末尾的指令，用于强化角色扮演。"
-                           FontSize="13" Opacity="0.5" Margin="0,0,0,10"/>
+                           Style="{StaticResource CaptionTextStyle}" Margin="0,0,0,10"/>
                 <TextBox x:Name="PostHistoryBox"
                          PlaceholderText="例：[以上是对话记录，请继续扮演角色]"
                          AcceptsReturn="True" TextWrapping="Wrap"
-                         FontSize="15" Padding="12,12"
+                         FontSize="{StaticResource FontSizeBodyLarge}" Padding="12,12"
                          Height="90" Margin="0,0,0,28"/>
 
-                <TextBlock x:Name="MesExampleLabel" Text="示例对话（可选）" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                <TextBlock x:Name="MesExampleLabel" Text="示例对话（可选）"
+                           Style="{StaticResource LabelTextStyle}" Margin="0,0,0,6"/>
                 <TextBlock x:Name="MesExampleHint" Text="用于展示角色说话风格的对话示例，格式参考 SillyTavern 规范。"
-                           FontSize="13" Opacity="0.5" Margin="0,0,0,10"/>
+                           Style="{StaticResource CaptionTextStyle}" Margin="0,0,0,10"/>
                 <TextBox x:Name="MesExampleBox"
                          PlaceholderText="例：&#x0a;&lt;START&gt;&#x0a;{{user}}: 你好&#x0a;{{char}}: （微微颔首）有何贵干。"
                          AcceptsReturn="True" TextWrapping="Wrap"
-                         FontSize="15" Padding="12,12"
+                         FontSize="{StaticResource FontSizeBodyLarge}" Padding="12,12"
                          Height="90" Margin="0,0,0,28"/>
 
-                <TextBlock x:Name="ExtraLabel" Text="作者备注 / 标签 / 版本（可选）" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                <TextBlock x:Name="ExtraLabel" Text="作者备注 / 标签 / 版本（可选）"
+                           Style="{StaticResource LabelTextStyle}" Margin="0,0,0,8"/>
                 <TextBox x:Name="CreatorNotesBox"
                          Header="作者备注"
                          AcceptsReturn="True" TextWrapping="Wrap"
-                         FontSize="15" Padding="12,12"
+                         FontSize="{StaticResource FontSizeBodyLarge}" Padding="12,12"
                          Height="60" Margin="0,0,0,10"/>
                 <TextBox x:Name="TagsBox"
                          Header="标签（逗号分隔）"
                          PlaceholderText="例：古风, 武侠, 恋爱"
-                         FontSize="15" Padding="12,12"
+                         FontSize="{StaticResource FontSizeBodyLarge}" Padding="12,12"
                          Margin="0,0,0,10"/>
                 <Grid Margin="0,0,0,10">
                     <Grid.ColumnDefinitions>
@@ -74,12 +93,12 @@
                     <TextBox x:Name="CreatorBox"
                              Grid.Column="0"
                              Header="作者"
-                             FontSize="15" Padding="12,12"/>
+                             FontSize="{StaticResource FontSizeBodyLarge}" Padding="12,12"/>
                     <TextBox x:Name="VersionBox"
                              Grid.Column="2"
                              Header="版本"
                              PlaceholderText="例：1.0"
-                             FontSize="15" Padding="12,12"/>
+                             FontSize="{StaticResource FontSizeBodyLarge}" Padding="12,12"/>
                 </Grid>
 
             </StackPanel>

@@ -205,9 +205,9 @@ namespace yanshuai
                             // 把PNG本身存为头像
                             card.AvatarBase64   = Convert.ToBase64String(pngBytes);
                             card.AvatarMimeType  = "image/png";
-                            // 也存为立绘
-                            card.IllustrationBase64   = card.AvatarBase64;
-                            card.IllustrationMimeType = "image/png";
+                            // 不再重复存储立绘，运行时自动回退到头像
+                            card.IllustrationBase64   = null;
+                            card.IllustrationMimeType = null;
                         }
                         return card;
                     }

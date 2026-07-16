@@ -180,12 +180,7 @@ namespace yanshuai
                     if (img != null) { card.IllustrationBase64 = img.Base64; card.IllustrationMimeType = img.MimeType; }
                 }
 
-                // 立绘下载失败时，用头像作为立绘
-                if (!card.HasIllustration && card.HasAvatar)
-                {
-                    card.IllustrationBase64 = card.AvatarBase64;
-                    card.IllustrationMimeType = card.AvatarMimeType;
-                }
+
 
                 System.Diagnostics.Debug.WriteLine($"[CharaSource] Huayu HTML parsed: name='{card.Name}', hasAvatar={card.HasAvatar}, hasIllust={card.HasIllustration}");
                 return card;
@@ -303,12 +298,7 @@ namespace yanshuai
                     }
                 }
 
-                // 立绘下载失败时，用头像作为立绘
-                if (!card.HasIllustration && card.HasAvatar)
-                {
-                    card.IllustrationBase64 = card.AvatarBase64;
-                    card.IllustrationMimeType = card.AvatarMimeType;
-                }
+
 
                 return card;
             }

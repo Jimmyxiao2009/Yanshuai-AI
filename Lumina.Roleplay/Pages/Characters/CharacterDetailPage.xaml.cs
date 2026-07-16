@@ -79,7 +79,8 @@ namespace yanshuai
             {
                 try
                 {
-                    byte[] bytes = Convert.FromBase64String(_card.IllustrationBase64);
+                    string base64 = string.IsNullOrEmpty(_card.IllustrationBase64) ? _card.AvatarBase64 : _card.IllustrationBase64;
+                    byte[] bytes = Convert.FromBase64String(base64);
                     var bmp = new BitmapImage();
                     using (var ms = new Windows.Storage.Streams.InMemoryRandomAccessStream())
                     {

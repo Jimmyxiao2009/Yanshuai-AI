@@ -111,7 +111,8 @@ namespace yanshuai
                 var chara = DataManager.GetCharacterForConversation(_conv);
                 if (chara != null && chara.HasIllustration)
                 {
-                    app = new ConvAppearance { BackgroundType = "image", BackgroundValue = chara.IllustrationBase64 };
+                    string illust = string.IsNullOrEmpty(chara.IllustrationBase64) ? chara.AvatarBase64 : chara.IllustrationBase64;
+                    app = new ConvAppearance { BackgroundType = "image", BackgroundValue = illust };
                 }
             }
 

@@ -59,7 +59,7 @@ namespace yanshuai
         [DataMember] public string GroupName { get; set; } = "";
         public override string ToString() => Name ?? "Unnamed";
         public bool HasAvatar => !string.IsNullOrEmpty(AvatarBase64);
-        public bool HasIllustration => !string.IsNullOrEmpty(IllustrationBase64);
+        public bool HasIllustration => !string.IsNullOrEmpty(IllustrationBase64) || !string.IsNullOrEmpty(AvatarBase64);
 
         // UI helper — not persisted
         public Windows.UI.Xaml.Visibility PinIconVisibility =>

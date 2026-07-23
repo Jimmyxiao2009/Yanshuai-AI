@@ -1,6 +1,6 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10" xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest" xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10" IgnorableNamespaces="uap mp">
-  <Identity Name="com.yanshuai.roleplay" Publisher="CN=1b4e28ba" Version="2.1.0.0" />
+  <Identity Name="com.yanshuai.roleplay" Publisher="CN=1b4e28ba" Version="4.0.0.0" />
   <mp:PhoneIdentity PhoneProductId="2c5e2329-7a48-44c2-8a0f-6c22153307f3" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
   <Properties>
     <DisplayName>言枢 AI</DisplayName>

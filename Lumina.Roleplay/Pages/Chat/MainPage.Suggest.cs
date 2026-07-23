@@ -51,7 +51,7 @@ namespace yanshuai
                     {
                         int fav = pool.Profile.Favorability;
                         string trend = pool.Profile.FavorabilityTrend ?? "stable";
-                        string icon = trend == "up" ? "♥" : trend == "down" ? "♡" : "♥";
+                        string icon = trend == "up" ? "▲" : trend == "down" ? "▼" : "─";
                         FavorabilityLabel.Text = $"{icon} {fav}";
                         FavorabilityLabel.Visibility = Visibility.Visible;
                         // 低好感度→冷色（蓝灰），高好感度→暖色（粉红）
@@ -84,7 +84,12 @@ namespace yanshuai
 
         private async Task GenerateSuggestedRepliesAsync()
         {
-            if (_conv == null || _conv.Messages.Count < 2) return;
+            if (_conv == null || _conv.Messages.Count < 2)
+            {
+                await ShowSuggestMessageAsync(AppSettings.S("暂无推荐回复，请先确保已配置 API 并有至少 2 条对话。",
+                    "No suggestions available. Configure API and have at least 2 messages."));
+                return;
+            }
             await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
             {
                 if (SuggestLoadingPanel != null)
@@ -97,14 +102,24 @@ namespace yanshuai
             try
             {
                 var profile = DataManager.GetProfileForConversation(_conv);
-                if (profile == null) return;
+                if (profile == null)
+                {
+                    await ShowSuggestMessageAsync(AppSettings.S("没有可用的 API 配置，请先在设置中配置。",
+                        "No API profile available. Configure one in settings first."));
+                    return;
+                }
 
                 // 取最近几轮对话
                 var recent = _conv.Messages
                     .Skip(Math.Max(0, _conv.Messages.Count - 6))
                     .Where(m => m.Role == "user" || m.Role == "assistant")
                     .ToList();
-                if (recent.Count == 0) return;
+                if (recent.Count == 0)
+                {
+                    await ShowSuggestMessageAsync(AppSettings.S("对话内容不足，无法生成推荐回复。",
+                        "Not enough conversation content for suggestions."));
+                    return;
+                }
 
                 var prompt = new StringBuilder();
                 prompt.AppendLine("你是一个角色扮演回复建议助手。根据以下对话历史，生成 8-12 条简短、风格多样的用户可能回复建议。");
@@ -126,10 +141,18 @@ namespace yanshuai
 
                 using (var resp = await _http.SendAsync(req))
                 {
-                    if (!resp.IsSuccessStatusCode) return;
+                    if (!resp.IsSuccessStatusCode)
+                    {
+                        await ShowSuggestMessageAsync(AppSettings.S("生成推荐回复失败：API 返回错误。", "Failed to generate suggestions: API error."));
+                        return;
+                    }
                     var body = await resp.Content.ReadAsStringAsync();
                     var text = ExtractResponseText(body, profile.ProviderType == "claude");
-                    if (string.IsNullOrWhiteSpace(text)) return;
+                    if (string.IsNullOrWhiteSpace(text))
+                    {
+                        await ShowSuggestMessageAsync(AppSettings.S("生成推荐回复失败：响应为空。", "Failed to generate suggestions: empty response."));
+                        return;
+                    }
 
                     _suggestedReplies = text.Split('\n')
                         .Select(l => l.Trim())
@@ -140,7 +163,7 @@ namespace yanshuai
                         .ToList();
                 }
 
-                if (_suggestedReplies.Count > 0)
+                if (_suggestedReplies != null && _suggestedReplies.Count > 0)
                 {
                     _suggestPage = 0;
                     await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
@@ -148,8 +171,16 @@ namespace yanshuai
                         BuildSuggestPanel();
                     });
                 }
+                else
+                {
+                    await ShowSuggestMessageAsync(AppSettings.S("暂无推荐回复，请先确保已配置 API 并有至少 2 条对话。",
+                        "No suggestions available. Configure API and have at least 2 messages."));
+                }
             }
-            catch { /* 出错静默，不强刷 */ }
+            catch (Exception ex)
+            {
+                await ShowSuggestMessageAsync(AppSettings.S("生成推荐回复失败: ", "Failed to generate: ") + ex.Message);
+            }
             finally
             {
                 await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
@@ -163,8 +194,27 @@ namespace yanshuai
             }
         }
 
+        private async Task ShowSuggestMessageAsync(string message)
+        {
+            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            {
+                if (SuggestPanelInner == null) return;
+                SuggestPanelInner.Children.Clear();
+                SuggestPanelInner.Children.Add(new TextBlock
+                {
+                    Text = message,
+                    FontSize = 13,
+                    Opacity = 0.7,
+                    TextWrapping = TextWrapping.Wrap,
+                    Margin = new Thickness(0, 8, 0, 8)
+                });
+            });
+        }
+
         private void BuildSuggestPanel()
         {
+            if (SuggestPanelInner == null) return;
+            if (_suggestedReplies == null) _suggestedReplies = new List<string>();
             SuggestPanelInner.Children.Clear();
             var titleRow = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 8) };
             titleRow.Children.Add(new TextBlock
@@ -224,10 +274,12 @@ namespace yanshuai
                 };
                 btn.Click += (s, e) =>
                 {
+                    if (_isSending) return;
                     InputTextBox.Text = reply;
                     InputTextBox.SelectionStart = reply.Length;
                     SuggestPanelOverlay.Visibility = Visibility.Collapsed;
-                    InputTextBox.Focus(FocusState.Programmatic);
+                    // 直接发送，而非仅填入文本框
+                    SubmitButton_Click(s, e);
                 };
                 SuggestPanelInner.Children.Add(btn);
             }

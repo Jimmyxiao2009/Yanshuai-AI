@@ -205,6 +205,8 @@ namespace yanshuai
                         PlaySound();
                         _isSending = false;
                         SubmitButton.IsEnabled = true;
+                        // 发送完成后预生成推荐回复，便于下次直接点选
+                        _ = GenerateSuggestedRepliesAsync();
                     }
                 });
             });

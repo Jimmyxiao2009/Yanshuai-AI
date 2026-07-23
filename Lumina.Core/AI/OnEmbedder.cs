@@ -150,6 +150,7 @@ namespace yanshuai
         /// <summary>SIMD 余弦相似度</summary>
         public static double CosineSim(float[] a, float[] b)
         {
+            if (a == null || b == null || a.Length != b.Length) return 0;
             int len = a.Length, i = 0, vEnd = len - VW;
             var dot = Vector<float>.Zero;
             var sqA = Vector<float>.Zero;

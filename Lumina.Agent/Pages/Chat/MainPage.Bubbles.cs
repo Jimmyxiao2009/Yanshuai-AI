@@ -128,6 +128,12 @@ namespace yanshuai
             catch { }
         }
 
+        private void PruneBranchPointsFrom(int startIndex)
+        {
+            if (_conv?.BranchPoints == null) return;
+            _conv.BranchPoints.RemoveAll(bp => bp.AnchorIndex >= startIndex);
+        }
+
         // Delete this message and everything after it
         private void DeleteMsg_Click(object sender, RoutedEventArgs e)
         {
@@ -141,6 +147,7 @@ namespace yanshuai
                 int idx = _conv.Messages.IndexOf(msg);
                 if (idx < 0) return;
 
+                PruneBranchPointsFrom(idx);
                 _conv.Messages.RemoveRange(idx, _conv.Messages.Count - idx);
                 _displayEnd = _conv.Messages.Count;
                 // 用气泡的实际位置裁剪（窗口懒加载下 _bubbles 与消息下标不一定对齐）
@@ -214,6 +221,7 @@ namespace yanshuai
                 bp.ActiveIndex = bp.Branches.Count - 1;
 
                 // Truncate conversation and add new message
+                PruneBranchPointsFrom(anchorIdx + 1);
                 _conv.Messages.RemoveRange(anchorIdx, _conv.Messages.Count - anchorIdx);
                 _conv.Messages.Add(newMsg);
 
@@ -271,7 +279,7 @@ namespace yanshuai
                     {
                         Role    = m.Role.Equals("user", StringComparison.OrdinalIgnoreCase) ? "user" : "assistant",
                         Content = m.Content,
-                        // 继续功能不重发图片：历史图片已处理过，重发浪费token且部分API会报错
+                        // 继续功能不重载图片：历史图片已处理过，重发浪费token且部分API会报错
                     });
 
                 // 隐藏的继续指令，不写入对话记录
@@ -364,8 +372,40 @@ namespace yanshuai
                 int idx = _conv.Messages.IndexOf(msg);
                 if (idx < 0) return;
 
+                int anchorIdx = -1;
+                for (int i = idx - 1; i >= 0; i--)
+                {
+                    if (_conv.Messages[i].Role == "user")
+                    {
+                        anchorIdx = i;
+                        break;
+                    }
+                }
+                if (anchorIdx >= 0)
+                {
+                    var userMsg = _conv.Messages[anchorIdx];
+                    if (_conv.BranchPoints == null) _conv.BranchPoints = new List<BranchPoint>();
+                    var bp = _conv.BranchPoints.FirstOrDefault(x => x.AnchorIndex == anchorIdx);
+                    if (bp == null)
+                    {
+                        bp = new BranchPoint { AnchorIndex = anchorIdx, AnchorMessageId = userMsg.Id };
+                        _conv.BranchPoints.Add(bp);
+                    }
+                    var snapshot = new ConversationBranch
+                    {
+                        Messages = _conv.Messages.Skip(anchorIdx).Select(m2 => m2.Clone()).ToList()
+                    };
+                    if (bp.ActiveIndex < bp.Branches.Count)
+                        bp.Branches[bp.ActiveIndex] = snapshot;
+                    else
+                        bp.Branches.Add(snapshot);
+                }
+
+                PruneBranchPointsFrom(idx);
+
                 // Remove this AI message and all after (data layer)
                 _conv.Messages.RemoveRange(idx, _conv.Messages.Count - idx);
+                _displayEnd = _conv.Messages.Count;
                 _displayEnd = _conv.Messages.Count;
 
                 // Remove bubbles from the tapped one onward — use the bubble's ACTUAL

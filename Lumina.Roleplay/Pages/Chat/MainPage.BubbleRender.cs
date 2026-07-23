@@ -55,11 +55,43 @@ namespace yanshuai
 
         // ── Suggest panel toggle ─────────────────────────────────────────────
 
-        private void SuggestBtn_Click(object sender, RoutedEventArgs e)
+        private bool _isSuggesting = false;
+
+        private async void SuggestBtn_Click(object sender, RoutedEventArgs e)
         {
-            BuildSuggestPanel();
-            SuggestPanelOverlay.Visibility = SuggestPanelOverlay.Visibility == Visibility.Visible
-                ? Visibility.Collapsed : Visibility.Visible;
+            // 已展开 → 收起
+            if (SuggestPanelOverlay.Visibility == Visibility.Visible)
+            {
+                SuggestPanelOverlay.Visibility = Visibility.Collapsed;
+                return;
+            }
+
+            // 防连点：正在生成时直接展开已有面板
+            if (_isSuggesting)
+            {
+                SuggestPanelOverlay.Visibility = Visibility.Visible;
+                return;
+            }
+
+            // 已有推荐且数量>0 → 直接展开
+            if (_suggestedReplies != null && _suggestedReplies.Count > 0)
+            {
+                BuildSuggestPanel();
+                SuggestPanelOverlay.Visibility = Visibility.Visible;
+                return;
+            }
+
+            // 首次点击：自动生成
+            SuggestPanelOverlay.Visibility = Visibility.Visible;
+            _isSuggesting = true;
+            try
+            {
+                await GenerateSuggestedRepliesAsync();
+            }
+            finally
+            {
+                _isSuggesting = false;
+            }
         }
 
         private void SuggestPanelOverlay_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)

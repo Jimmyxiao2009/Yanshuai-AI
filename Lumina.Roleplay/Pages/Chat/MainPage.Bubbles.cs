@@ -217,29 +217,45 @@ namespace yanshuai
                 ScrollToBottom();
 
                 string requestJson = BuildRequestJson(profile.Model, apiMessages, true, profile.VisionEnabled, profile.ProviderType == "claude");
+                var continueCts = _streamCts;
                 try
                 {
                     var req = new HttpRequestMessage(HttpMethod.Post, profile.Url);
                     ApplyAuthHeaders(req, profile);
                     req.Content = new StringContent(requestJson, Encoding.UTF8, "application/json");
-                    using (var resp = await _http.SendAsync(req, HttpCompletionOption.ResponseHeadersRead))
+                    using (var resp = await _http.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, continueCts.Token))
                     {
                         string ct = resp.Content.Headers.ContentType?.MediaType ?? "";
                         if (ct.Contains("event-stream") || ct.Contains("stream"))
-                            await HandleStreamingResponse(resp, aiBubble, _streamCts.Token);
+                            await HandleStreamingResponse(resp, aiBubble, continueCts.Token);
                         else
                             await HandleRegularResponse(resp, aiBubble);
                         ApiLogger.Log(profile.ProviderType, profile.Model, requestJson, aiBubble.Content, !resp.IsSuccessStatusCode);
                     }
+                }
+                catch (System.OperationCanceledException)
+                {
+                    // 用户点停止：若空内容则不落盘
                 }
                 catch (Exception ex) { aiBubble.Content = $"连接错误：{ex.Message}"; aiBubble.HasError = true; ApiLogger.Log(profile.ProviderType, profile.Model, requestJson, ex.Message, true); }
 
                 aiBubble.IsStreamingReasoning = false;
                 aiBubble.IsStreaming = false;
                 aiBubble.ReasoningExpanded = AppSettings.ReasoningExpandedByDefault;
-                _streamCts?.Dispose();
-                _streamCts = null;
+                continueCts?.Dispose();
+                if (_streamCts == continueCts) _streamCts = null;
                 if (SubmitIcon != null) SubmitIcon.Glyph = "\uE74A";
+
+                // 中途取消且无内容：移除空气泡
+                if ((continueCts?.Token.IsCancellationRequested ?? false) &&
+                    string.IsNullOrEmpty(aiBubble.Content) &&
+                    string.IsNullOrEmpty(aiBubble.ReasoningContent))
+                {
+                    _bubbles.Remove(aiBubble);
+                    _isSending = false;
+                    SubmitButton.IsEnabled = true;
+                    return;
+                }
 
                 var aiMsg = new ConversationMessage
                 {

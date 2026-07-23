@@ -40,7 +40,7 @@ namespace yanshuai
             int otherChars = 0;
             foreach (char c in text)
             {
-                if (c >= 0x4E00 && c <= 0x9FFF || c >= 0x3400 && c <= 0x4DBF)
+                if (c >= 0x4E00 && c <= 0x9FFF || c >= 0x3400 && c <= 0x4DBF || c >= 0x3000 && c <= 0x303F || c >= 0xFF00 && c <= 0xFFEF)
                     chineseChars++;
                 else if (!char.IsWhiteSpace(c))
                     otherChars++;

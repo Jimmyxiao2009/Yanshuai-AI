@@ -100,18 +100,25 @@ namespace yanshuai
                     // （包含所有对话 + base64 图片，可达数十 MB）再 ToArray() 复制一遍——
                     // 这个内存峰值在低内存设备上是发送时卡死/OOM 的诱因之一。
                     // 序列化是 CPU 密集型，放到线程池执行，避免阻塞 UI 线程。
+                    byte[] bytes = null;
+                    if (Data?.Conversations != null)
+                        foreach (var conv in Data.Conversations)
+                            conv.SyncActiveBranch();
+
+                    using (var ms = new MemoryStream())
+                    {
+                        var ser = new DataContractJsonSerializer(typeof(AppData));
+                        ser.WriteObject(ms, Data);
+                        bytes = ms.ToArray();
+                    }
+
                     var folder = ApplicationData.Current.LocalFolder;
                     var tmp = await folder.CreateFileAsync(FileName + ".tmp", CreationCollisionOption.ReplaceExisting);
                     using (var stream = await tmp.OpenStreamForWriteAsync())
                     {
                         await Task.Run(() =>
                         {
-                            if (Data?.Conversations != null)
-                                foreach (var conv in Data.Conversations)
-                                    conv.SyncActiveBranch();
-
-                            var ser = new DataContractJsonSerializer(typeof(AppData));
-                            ser.WriteObject(stream, Data);
+                            stream.Write(bytes, 0, bytes.Length);
                             stream.Flush();
                         });
                     }

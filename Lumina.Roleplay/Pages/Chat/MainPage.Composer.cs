@@ -230,8 +230,13 @@ namespace yanshuai
                 _streamCts?.Cancel();
                 return;
             }
+            if (_conv == null)
+            {
+                AddSystemBubble("⚠ 当前没有可用对话，请先选择或新建对话。");
+                return;
+            }
             string userInput = InputTextBox.Text.Trim();
-            if (string.IsNullOrWhiteSpace(userInput)) return;
+            if (string.IsNullOrWhiteSpace(userInput) && string.IsNullOrEmpty(_pendingImageBase64)) return;
 
             var profile = DataManager.GetProfileForConversation(_conv);
             if (profile == null)

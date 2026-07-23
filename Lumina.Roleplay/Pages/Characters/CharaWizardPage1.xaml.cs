@@ -1,5 +1,9 @@
 using System;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading.Tasks;
+using Windows.Graphics.Imaging;
+using Windows.Storage;
+using Windows.Storage.Streams;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Imaging;
@@ -30,7 +34,7 @@ namespace yanshuai
             try
             {
                 var bytes = Convert.FromBase64String(b64);
-                    var bmp = AppSettings.LoadBitmapSync(bytes);
+                var bmp = AppSettings.LoadBitmapSync(bytes);
                 img.Source = bmp;
                 img.Visibility = Visibility.Visible;
                 placeholder.Visibility = Visibility.Collapsed;
@@ -46,9 +50,10 @@ namespace yanshuai
             picker.FileTypeFilter.Add(".png"); picker.FileTypeFilter.Add(".webp");
             var file = await picker.PickSingleFileAsync();
             if (file == null) return;
-            var buf = await Windows.Storage.FileIO.ReadBufferAsync(file);
-            CharaWizardData.AvatarBase64   = Convert.ToBase64String(buf.ToArray());
-            CharaWizardData.AvatarMimeType = file.ContentType;
+            var compressed = await CompressImageFileAsync(file, 1024);
+            if (compressed == null) return;
+            CharaWizardData.AvatarBase64   = compressed.Item1;
+            CharaWizardData.AvatarMimeType = compressed.Item2;
             LoadImageToControl(CharaWizardData.AvatarBase64, AvatarImage, AvatarPlaceholder);
         }
 
@@ -67,9 +72,10 @@ namespace yanshuai
             picker.FileTypeFilter.Add(".png"); picker.FileTypeFilter.Add(".webp");
             var file = await picker.PickSingleFileAsync();
             if (file == null) return;
-            var buf = await Windows.Storage.FileIO.ReadBufferAsync(file);
-            CharaWizardData.IllustBase64   = Convert.ToBase64String(buf.ToArray());
-            CharaWizardData.IllustMimeType = file.ContentType;
+            var compressed = await CompressImageFileAsync(file, 1280);
+            if (compressed == null) return;
+            CharaWizardData.IllustBase64   = compressed.Item1;
+            CharaWizardData.IllustMimeType = compressed.Item2;
             LoadImageToControl(CharaWizardData.IllustBase64, IllustImage, IllustPlaceholder);
         }
 
@@ -105,6 +111,56 @@ namespace yanshuai
         private void BackButton_Click(object sender, RoutedEventArgs e)
         {
             if (Frame.CanGoBack) Frame.GoBack();
+        }
+
+        /// <summary>
+        /// 限制最大边并转 JPEG，避免超大头像/立绘整图 Base64 打爆内存。
+        /// </summary>
+        private static async Task<Tuple<string, string>> CompressImageFileAsync(StorageFile file, uint maxDim)
+        {
+            try
+            {
+                using (var stream = await file.OpenReadAsync())
+                {
+                    var decoder = await BitmapDecoder.CreateAsync(stream);
+                    uint w = decoder.OrientedPixelWidth, h = decoder.OrientedPixelHeight;
+                    uint newW = w, newH = h;
+                    if (w > maxDim || h > maxDim)
+                    {
+                        if (w > h) { newW = maxDim; newH = (uint)(h * (double)maxDim / w); }
+                        else { newH = maxDim; newW = (uint)(w * (double)maxDim / h); }
+                    }
+
+                    uint scaleW = newW, scaleH = newH;
+                    if (decoder.OrientedPixelWidth != decoder.PixelWidth &&
+                        decoder.OrientedPixelWidth == decoder.PixelHeight)
+                    {
+                        scaleW = newH;
+                        scaleH = newW;
+                    }
+
+                    var transform = new BitmapTransform { ScaledWidth = scaleW, ScaledHeight = scaleH };
+                    var pixels = await decoder.GetPixelDataAsync(
+                        BitmapPixelFormat.Rgba8, BitmapAlphaMode.Premultiplied, transform,
+                        ExifOrientationMode.RespectExifOrientation, ColorManagementMode.DoNotColorManage);
+
+                    using (var ms = new InMemoryRandomAccessStream())
+                    {
+                        var encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, ms);
+                        encoder.SetPixelData(BitmapPixelFormat.Rgba8, BitmapAlphaMode.Premultiplied,
+                            newW, newH, 96, 96, pixels.DetachPixelData());
+                        await encoder.FlushAsync();
+                        ms.Seek(0);
+                        var bytes = new byte[ms.Size];
+                        await ms.ReadAsync(bytes.AsBuffer(), (uint)ms.Size, InputStreamOptions.None);
+                        return Tuple.Create(Convert.ToBase64String(bytes), "image/jpeg");
+                    }
+                }
+            }
+            catch
+            {
+                return null;
+            }
         }
     }
 }

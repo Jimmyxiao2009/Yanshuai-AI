@@ -285,6 +285,13 @@ namespace yanshuai
         }
     }
 
+    [DataContract]
+    public class EmbeddingRequest
+    {
+        [DataMember(Name = "input")] public string Input { get; set; }
+        [DataMember(Name = "model")] public string Model { get; set; }
+    }
+
     /// <summary>RAG 检索器：处理嵌入生成 + 检索 + 上下文构建</summary>
     public static class RagRetriever
     {
@@ -297,17 +304,17 @@ namespace yanshuai
             if (!IsNetworkAvailable()) return null;
 
             // 构建 embeddings API 请求
-            var m = profile.Model ?? "";
-            var payload = new
+            var modelName = !string.IsNullOrEmpty(profile.EmbeddingModel) ? profile.EmbeddingModel : (profile.Model ?? "");
+            var payload = new EmbeddingRequest
             {
-                input = text.Length > 8000 ? text.Substring(0, 8000) : text,
-                model = m.StartsWith("text-embedding", StringComparison.Ordinal) ? m : "text-embedding-ada-002"
+                Input = text.Length > 8000 ? text.Substring(0, 8000) : text,
+                Model = modelName
             };
 
             string json;
             using (var ms = new MemoryStream())
             {
-                var ser = new DataContractJsonSerializer(payload.GetType());
+                var ser = new DataContractJsonSerializer(typeof(EmbeddingRequest));
                 ser.WriteObject(ms, payload);
                 json = Encoding.UTF8.GetString(ms.ToArray());
             }

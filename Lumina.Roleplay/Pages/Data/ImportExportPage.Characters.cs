@@ -182,12 +182,15 @@ namespace yanshuai
         // ── PNG角色卡解析（读tEXt chunk里的chara字段）────────────────────────
         internal static CharacterCard ParseCharaPng(byte[] pngBytes)
         {
-            // PNG tEXt chunk格式: 4字节长度 + 4字节"tEXt" + keyword text + 4字节CRC
-            // 找所有tEXt chunk，找keyword=="chara"的
-            int pos = 8; // 跳过PNG signature
+            if (pngBytes == null || pngBytes.Length < 20) return null;
+            // PNG tEXt chunk format: 4-byte length + "tEXt" + keyword text + CRC
+            // Scan tEXt chunks for keyword == "chara"
+            int pos = 8; // skip PNG signature
             while (pos + 12 <= pngBytes.Length)
             {
                 int len = (pngBytes[pos] << 24) | (pngBytes[pos+1] << 16) | (pngBytes[pos+2] << 8) | pngBytes[pos+3];
+                // malformed PNG: negative/oversized length must stop to avoid OOB/infinite loop
+                if (len < 0 || pos + 12L + len > pngBytes.Length) break;
                 string type = System.Text.Encoding.ASCII.GetString(pngBytes, pos + 4, 4);
                 if (type == "tEXt" && len > 0 && pos + 8 + len <= pngBytes.Length)
                 {

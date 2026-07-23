@@ -138,7 +138,11 @@ namespace yanshuai
                 recentText += " " + _conv.Messages[i].Content.ToLower();
 
             bool hasWB = false;
-            foreach (var entry in DataManager.Data.WorldBookEntries)
+            var worldEntries = (DataManager.Data.WorldBookEntries ?? new List<WorldBookEntry>())
+                .Where(entry => entry != null && !entry.Disable)
+                .OrderBy(entry => entry.Order)
+                .ThenBy(entry => entry.Name ?? "");
+            foreach (var entry in worldEntries)
             {
                 string activeCharId = _conv?.CharacterCardId ?? "";
                 bool scopeMatch = entry.CharacterIds == null || entry.CharacterIds.Count == 0
@@ -245,9 +249,13 @@ namespace yanshuai
 
         private bool HasKeywordMatch(string text, string keywords)
         {
-            if (string.IsNullOrEmpty(keywords)) return false;
-            return keywords.Split(',').Select(k => k.Trim().ToLower())
-                .Where(k => k.Length > 0).Any(k => text.Contains(k));
+            if (string.IsNullOrEmpty(keywords) || string.IsNullOrEmpty(text)) return false;
+            // 兼容中英文逗号/分号分隔
+            char[] seps = { ',', '，', ';', '；', '|' };
+            return keywords.Split(seps)
+                .Select(k => k.Trim().ToLower())
+                .Where(k => k.Length > 0)
+                .Any(k => text.Contains(k));
         }
 
         private void MaybeShowFirstMessage()
